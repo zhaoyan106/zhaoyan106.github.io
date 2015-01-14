@@ -1,0 +1,815 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>常用工具方法总结 - My iOS Journey</title>
+  <meta name="author" content="Your Name">
+
+  
+  <meta name="description" content="一.文件操作常用方法总结: 1.写入文件 + (BOOL)writeFileName:(NSString *)fileName data:(id)result{ NSString *pathName = [LSCacheFile filePath:fileName]; if ([ &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://zhaoyan106.github.io/blog/2014/11/24/chang-yong-gong-ju-fang-fa-zong-jie">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My iOS Journey" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My iOS Journey</a></h1>
+  
+    <h2>Fighting And More</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="zhaoyan106.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">常用工具方法总结</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-11-24T10:02:28+08:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>10:02 am</span></time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h3>一.文件操作常用方法总结:</h3>
+
+<h4>1.写入文件</h4>
+
+<pre><code>+ (BOOL)writeFileName:(NSString *)fileName data:(id)result{
+   NSString *pathName =  [LSCacheFile filePath:fileName];
+    if ([LSCacheFile isExistsFile:pathName]) {
+        [[NSFileManager defaultManager] removeItemAtPath:pathName error:nil];
+    }
+    return [LSCacheFile writeFile:pathName object:result];
+}
+</code></pre>
+
+<h4>2.读出文件</h4>
+
+<pre><code>+ (id)readFileName:(NSString *)fileName{
+
+    if (!fileName) {
+        return nil;
+    }
+    if(![LSCacheFile isExistsFile:fileName]){
+        return nil;
+    }
+
+    id object = [LSCacheFile readFile:[LSCacheFile filePath:fileName]];
+    if (!object) {
+        return nil;
+    }
+    return object;
+}
+</code></pre>
+
+<h4>3.计算文件大小</h4>
+
+<pre><code>+ (NSString *)folderSizeStringAtPath:(NSString *)folderPath
+{
+    long long folderSize = [LSCacheFile folderSizeAtPath:folderPath];
+    return [self sizeStringFromSizeLong:folderSize];
+}
+
+// 计算文件夹下文件的总大小
++ (long long)folderSizeAtPath:(NSString*)folderPath{
+    NSFileManager* manager = [NSFileManager defaultManager];
+    if (![manager fileExistsAtPath:folderPath]) return 0;
+    NSEnumerator *childFilesEnumerator = [[manager subpathsAtPath:folderPath] objectEnumerator];
+    NSString* fileName;
+    long long folderSize = 0;
+    while ((fileName = [childFilesEnumerator nextObject]) != nil){
+        NSString* fileAbsolutePath = [folderPath stringByAppendingPathComponent:fileName];
+        folderSize += [LSCacheFile fileSizeAtPath:fileAbsolutePath];
+    }
+    return folderSize;
+}
+// 根据文件大小返回对应单位
++(NSString*)sizeStringFromSizeLong:(long long) folderSize{
+    if (folderSize &lt; 1024) {
+        return @"0K";
+    }else if(folderSize/1024.0 &lt; 1024){
+        return [NSString stringWithFormat:@"%.2fK",folderSize/1024.0];
+    }else if(folderSize/1024.0/1024.0 &lt; 1024){
+        return [NSString stringWithFormat:@"%.2fM",folderSize/1024.0/1024.0];
+    }else if(folderSize/1024.0/1024.0/1024.0 &lt; 1024){
+        return [NSString stringWithFormat:@"%.2fG",folderSize/1024.0/1024.0/1024.0];
+    }
+    return @"";
+}
+</code></pre>
+
+<h4>4.格式化size单位</h4>
+
+<pre><code>+ (NSString *)formatFileSize:(int)fileSize {
+    float size = fileSize;
+    if (fileSize &lt; 1023) {
+        return([NSString stringWithFormat:@"%i bytes",fileSize]);
+    }
+
+    size = size / 1024.0f;
+    if (size &lt; 1023) {
+        return([NSString stringWithFormat:@"%1.2f KB",size]);
+    }
+
+    size = size / 1024.0f;
+    if (size &lt; 1023) {
+        return([NSString stringWithFormat:@"%1.2f MB",size]);
+    }
+
+    size = size / 1024.0f;
+    return [NSString stringWithFormat:@"%1.2f GB",size];
+}
+</code></pre>
+
+<h4>5.获取目录下的文件大小(返回字节)</h4>
+
+<pre><code>+ (long long)folderSizeAtPath:(NSString*)folderPath{
+    NSFileManager* manager = [NSFileManager defaultManager];
+    if (![manager fileExistsAtPath:folderPath]) return 0;
+    NSEnumerator *childFilesEnumerator = [[manager subpathsAtPath:folderPath] objectEnumerator];
+    NSString* fileName;
+    long long folderSize = 0;
+    while ((fileName = [childFilesEnumerator nextObject]) != nil){
+        NSString* fileAbsolutePath = [folderPath stringByAppendingPathComponent:fileName];
+        folderSize += [LSCacheFile fileSizeAtPath:fileAbsolutePath];
+    }
+    return folderSize;
+}
+</code></pre>
+
+<h4>6.判断文件是否存在</h4>
+
+<pre><code>+ (BOOL)isExistsFile:(NSString *)filepath{
+    NSFileManager *filemanage = [NSFileManager defaultManager];
+    return [filemanage fileExistsAtPath:[LSCacheFile filePath:filepath]];
+}
+</code></pre>
+
+<h4>7.删除缓存文件</h4>
+
+<pre><code>+(void)deleteCacheFile:(NSString *)filepath
+{
+    if([[NSFileManager defaultManager] fileExistsAtPath:filepath isDirectory:NO])
+    {
+        [[NSFileManager defaultManager] removeItemAtPath:filepath error:nil];
+    }
+}
+</code></pre>
+
+<h4>8.创建文件夹</h4>
+
+<pre><code>+ (BOOL)createFolder:(NSString*)folderPath isDirectory:(BOOL)isDirectory {
+    NSString *path = nil;
+    if(isDirectory) {
+        path = folderPath;
+    } else {
+        path = [folderPath stringByDeletingLastPathComponent];
+    }
+
+    if(folderPath &amp;&amp; [[NSFileManager defaultManager] fileExistsAtPath:path] == NO) {
+        NSError *error = nil;
+        BOOL ret;
+
+        ret = [[NSFileManager defaultManager] createDirectoryAtPath:path
+                                        withIntermediateDirectories:YES
+                                                         attributes:nil
+                                                              error:&amp;error];
+        if(!ret &amp;&amp; error) {
+            NSLog(@"create folder failed at path '%@',error:%@,%@",folderPath,[error localizedDescription],[error localizedFailureReason]);
+            return NO;
+        }
+    }
+
+    return YES;
+}
+</code></pre>
+
+<h4>9.得到用户document中的一个路径</h4>
+
+<pre><code>+ (NSString*)getPathInUserDocument:(NSString*) aPath{
+    NSString *fullPath = nil;
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    if ([paths count] &gt; 0)
+    {
+        fullPath = (NSString *)[paths objectAtIndex:0];
+        if(aPath != nil &amp;&amp; [aPath compare:@""] != NSOrderedSame)
+        {
+            fullPath = [fullPath stringByAppendingPathComponent:aPath];
+        }
+    }
+    return fullPath;
+}
+</code></pre>
+
+<h4>10.文件创建日期</h4>
+
+<pre><code>+ (NSDate*)dateOfFileCreateWithFolderName:(NSString *)folderName cacheName:(NSString *)cacheName
+{
+    NSString *folder = [[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:folderName];
+    NSString *filePath = [folder stringByAppendingPathComponent:cacheName];
+    NSError *error;
+    NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:&amp;error];
+
+    if(!error) {
+        return [attributes objectForKey:NSFileCreationDate];
+    }
+
+    return nil;
+}
+</code></pre>
+
+<h4>11.获取NSBundele中的资源图片</h4>
+
+<pre><code>+ (UIImage *)imageAtApplicationDirectoryWithName:(NSString *)fileName {
+    if(fileName) {
+        NSString *path = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:[fileName stringByDeletingPathExtension]];
+        path = [NSString stringWithFormat:@"%@@2x.%@",path,[fileName pathExtension]];
+        if(![[NSFileManager defaultManager] fileExistsAtPath:path]) {
+            path = nil;
+        }
+
+        if(!path) {
+            path = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:fileName];
+        }
+        return [UIImage imageWithContentsOfFile:path];
+    }
+    return nil;
+}
+</code></pre>
+
+<h4>12.移除某个文件夹下的所有文件(非遍历)并重新创建被删除的文件夹</h4>
+
+<pre><code>+ (void) deleteContentsOfFolder:(NSString *)folderPath {
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    [fileManager removeItemAtPath:folderPath error:nil];
+    BOOL isDir = NO;
+    BOOL existed = [fileManager fileExistsAtPath:folderPath isDirectory:&amp;isDir];
+    if ( !(isDir == YES &amp;&amp; existed == YES) ) {
+        [fileManager createDirectoryAtPath:folderPath withIntermediateDirectories:YES attributes:nil error:nil];
+    }
+}
+</code></pre>
+
+<h3>二.文件操作常用方法总结:</h3>
+
+<h4>1.获取请求sign</h4>
+
+<pre><code>+(NSString *)getSign{
+    NSString *username = @"zhaoyan106";
+    NSString *pwd = @"zhaoyan106";
+    NSString *pwd_md5 = [pwd md5];
+    NSString *time_key_md5 = [[NSString stringWithFormat:@"%@%@",[self getTimeStamp],@"zhaoyan106"] md5];
+    NSString *sign = [[NSString stringWithFormat:@"%@%@%@",username, pwd_md5,time_key_md5] md5];
+    return sign;
+}
+
+- (NSString*)md5 {
+    const char* string = [self UTF8String];
+    unsigned char result[16];
+    CC_MD5(string, strlen(string), result);
+    NSString* hash = [NSString stringWithFormat:@"%@%@@%%@%@@@%@@%@@%@@@@@%@@@@%@@@%@@%@@@%@@%",
+                      result[0], result[1], result[2], result[3], result[4], result[5], result[6], result[7],
+                      result[8], result[9], result[10], result[11], result[12], result[13], result[14], result[15]];
+    return [hash lowercaseString];
+}
+
+// 获取时间戳
++(NSString *)getTimeStamp{
+    NSDate* dat = [NSDate dateWithTimeIntervalSinceNow:0];
+    NSTimeInterval a=[dat timeIntervalSince1970];
+    NSString *timeString = [NSString stringWithFormat:@"%.0f", a];
+    return timeString;
+}
+</code></pre>
+
+<h4>2.获取时间戳</h4>
+
+<pre><code>+(NSString *)getTimeStamp{
+    NSDate* dat = [NSDate dateWithTimeIntervalSinceNow:0];
+    NSTimeInterval a=[dat timeIntervalSince1970];
+    NSString *timeString = [NSString stringWithFormat:@"%.0f", a];
+    return timeString;
+}
+</code></pre>
+
+<h4>3.将对象转化为json字符串</h4>
+
+<pre><code>+ (NSString *)jsonStringFromObject:(id)object{
+    if([NSJSONSerialization isValidJSONObject:object]){
+        NSData *data = [NSJSONSerialization dataWithJSONObject:object options:NSJSONWritingPrettyPrinted error:nil];
+        NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        return jsonString;
+    }
+    return @"";
+}
+</code></pre>
+
+<h4>4.去除字典元素(去除NSNull)</h4>
+
+<pre><code>+ (id)valueForKey:(NSString *)key object:(NSDictionary *)object{
+    if([object isKindOfClass:[NSDictionary class]]){
+        id value = [object objectForKey:key];
+        if([value isKindOfClass:[NSNull class]]){
+            return nil;
+        }
+        return value;
+    }
+    return nil;
+}
+</code></pre>
+
+<h4>5.http request header 访问信息</h4>
+
+<p>关于UDID等标识不清楚的可以参考下这篇文章<a href="http://www.cocoachina.com/industry/20130715/6597.html">http://www.cocoachina.com/industry/20130715/6597.html</a></p>
+
+<pre><code>+ (NSString *)getTraceInfo {
+    //版本号
+    NSString *versionname  = [NSString stringWithFormat:@"%.1f", ((NSString *)[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"]).integerValue-1.0+7.0];
+    //内部版本
+    NSString *versioncode  = ([[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"]);
+    //发布版本
+    NSString *buildversion = ([[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"]);
+    //系统版本
+    NSString *osversion = [[UIDevice currentDevice] systemVersion];
+    //设备型号
+    NSString *model = [self deviceType];
+    //软件名称
+    NSString *appname = @"stem";
+    //软件平台
+    NSString *clientname = @"iphone";
+    //广告唯一标识符
+    NSString *idfa = [self getAdvertisingIdentifier];
+    //UDID
+    NSString *clientid = [LSHelper getCurrentDeviceUDID];
+//    NSString *traceInfo = [NSString stringWithFormat:@"versionname=%@;appname=%@;clientname=%@;",versionname,appname,clientname];
+    NSString *traceInfo = [NSString stringWithFormat:@"versionname=%@;versioncode=%@;buildversion=%@;osversion=%@;model=%@;appname=%@;clientname=%@;idfa=%@;clientid=%@;",versionname,versioncode,buildversion,osversion,model,appname,clientname,idfa,clientid];
+    return traceInfo;
+}
+
+// 获取当前设备类型如ipod，iphone，ipad
++ (NSString *)deviceType {
+    struct utsname systemInfo;
+    uname(&amp;systemInfo);
+    return [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding];
+}
+
+// 获取用户的ADFA
++ (NSString *) getAdvertisingIdentifier{
+    return [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
+}
+
+// 获取当前设备的UDID
++(NSString*) getCurrentDeviceUDID
+{
+    if ([self getCurrentDeviceVersion]&gt;=7.0) {
+    // OpenUDID
+        return [OpenUDID value];
+    }else{
+        return [self UUID];
+    }
+
+}
+
+
+// 获取当前设备的UDID(ios7.0以下系统)
++ (NSString *)UUID {
+    NSInteger mib[6];
+    size_t              len;
+    char                *buf;
+    unsigned char       *ptr;
+    struct if_msghdr    *ifm;
+    struct sockaddr_dl  *sdl;
+
+    mib[0] = CTL_NET;
+    mib[1] = AF_ROUTE;
+    mib[2] = 0;
+    mib[3] = AF_LINK;
+    mib[4] = NET_RT_IFLIST;
+
+    if ((mib[5] = if_nametoindex("en0")) == 0) {
+        printf("Error: if_nametoindex error\n");
+        return NULL;
+    }
+
+    if (sysctl(mib, 6, NULL, &amp;len, NULL, 0) &lt; 0) {
+        printf("Error: sysctl, take 1\n");
+        return NULL;
+    }
+
+    if ((buf = malloc(len)) == NULL) {
+        printf("Could not allocate memory. error!\n");
+        return NULL;
+    }
+
+    if (sysctl(mib, 6, buf, &amp;len, NULL, 0) &lt; 0) {
+        free(buf);
+        printf("Error: sysctl, take 2");
+        return NULL;
+    }
+
+    ifm = (struct if_msghdr *)buf;
+    sdl = (struct sockaddr_dl *)(ifm + 1);
+    ptr = (unsigned char *)LLADDR(sdl);
+    NSString *macaddress = [NSString stringWithFormat:@"%02X:%02X:%02X:%02X:%02X:%02X",
+                            *ptr, *(ptr+1), *(ptr+2), *(ptr+3), *(ptr+4), *(ptr+5)];
+    free(buf);
+
+
+    if (macaddress) {
+        NSString *uniqueIdentifier = [macaddress stringByReplacingOccurrencesOfString:@":" withString:@""];
+        return uniqueIdentifier;
+    } else {
+        NSUserDefaults *handler = [NSUserDefaults standardUserDefaults];
+        NSString *result = (NSString *)[handler objectForKey:kUUID];
+
+        if (NULL == result || 46 &gt; [result length]) {
+            CFUUIDRef uuid = CFUUIDCreate(NULL);
+            CFStringRef uuidStr = CFUUIDCreateString(NULL, uuid);
+
+            result = [NSString stringWithFormat:@"%@", uuidStr];
+            CFRelease(uuidStr);
+            CFRelease(uuid);
+
+            [handler setObject:result forKey:kUUID];
+            [handler synchronize];
+        }
+
+        return result;
+    }
+}
+</code></pre>
+
+<h4>6.(参数 + url)md5加密</h4>
+
+<pre><code>+(NSString *)keyMD5StringWithParamDic:(NSDictionary *)paramDic methodName:(NSString *)methodName
+{
+    NSMutableString *keyMutableString = nil;
+    if (paramDic == nil) {
+        return nil;
+    }
+
+    NSArray *keys = [paramDic allKeys];
+    NSArray *sortedArray = [keys sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        return [obj1 compare:obj2 options:NSNumericSearch];
+    }];
+
+    keyMutableString = [NSMutableString string];
+    for (NSInteger index = 0; index &lt; sortedArray.count; index++) {
+        NSString *key = [sortedArray objectAtIndex:index];
+        NSString *value = [paramDic objectForKey:key];
+        if (index == 0) {
+            [keyMutableString appendFormat:@"%@=%@",key,value];
+        } else {
+            [keyMutableString appendFormat:@"|%@=%@",key,value];
+        }
+    }
+    NSString *url = [NSString stringWithFormat:@"%@%@",kServerAddress,methodName];
+    [keyMutableString appendString:url];
+    return [keyMutableString md5];
+}
+</code></pre>
+
+<h4>7.cookie操作</h4>
+
+<pre><code>// 设置cooike
++ (void)setHttpCookieValue:(NSString *)value{
+    //过期时间一个小时
+    NSDate *date = [NSDate dateWithTimeIntervalSinceNow:60*60];
+    //设置了过期时间，如果过期，则NSURLRequest就不会使用此cookie
+    NSHTTPCookie *cookie = [NSHTTPCookie cookieWithProperties:@{NSHTTPCookiePath:@"/", NSHTTPCookieName:@"JSESSIONID", NSHTTPCookieValue:value, NSHTTPCookieOriginURL:kServerAddress, NSHTTPCookieExpires:date}];
+    [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookie:cookie];
+    [self writeFileName:kSpecialCookieFileName data:@[cookie]];
+}
+// 读取cookie
++ (NSString *)valueFromHttpCookie{
+    NSArray *cookieArr = [self readFileName:kSpecialCookieFileName];
+    NSMutableArray *mutableArr = [NSMutableArray arrayWithArray:cookieArr];
+    NSString *value = nil;
+    for(NSHTTPCookie *cookie in cookieArr){
+        if([cookie.name isEqual:@"JSESSIONID"] &amp;&amp; cookie.value.length &gt; 0){
+            //如果过期了，则删除本地
+            if([cookie.expiresDate compare:[NSDate date]] == NSOrderedAscending){
+                [mutableArr removeObject:cookie];
+            }
+            else{
+                [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookie:cookie];
+                value = cookie.value;
+            }
+        }
+    }
+    [self writeFileName:kSpecialCookieFileName data:mutableArr];
+    return value;
+}
+// 删除cookie
++ (void)removeHttpCookieCache{
+    [self deleteCacheFile:kSpecialCookieFileName];
+}
+</code></pre>
+
+<h3>三.时间常用方法总结:</h3>
+
+<h4>1.获取当前时间</h4>
+
+<pre><code>+ (NSString *)getCurrentTime
+{
+    NSDate *senddate = [NSDate date];
+
+    NSDateFormatter *dateformatter = [[NSDateFormatter alloc] init];
+
+    [dateformatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+
+    NSString *locationString = [dateformatter stringFromDate:senddate];
+
+    return locationString;
+
+}
+</code></pre>
+
+<h4>2.字符时间转date</h4>
+
+<pre><code>+ (NSDate *)dateFromString:(NSString *)dateString {
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"eee, dd MMM yyyy HH:mm:ss ZZZZ"];
+    NSDate *date = [formatter dateFromString:dateString];
+    return date;
+}
+</code></pre>
+
+<h4>3.date转字符串</h4>
+
+<pre><code>+ (NSString *)stringFromDate:(NSDate *)date {
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    //zzz表示时区，zzz可以删除，这样返回的日期字符将不包含时区信息。
+    [dateFormatter setDateFormat:@"yyyy-MM-dd"];
+    NSString *destDateString = [dateFormatter stringFromDate:date];
+    return destDateString;
+}
+</code></pre>
+
+<h4>4.自1970年距离现在时间转换</h4>
+
+<pre><code>+ (NSString *)timeFactorySeconds:(NSNumber *)seconds andFormat:(TimeFormat)type {
+    float second = [seconds doubleValue];
+    if (second == 0) {
+        return nil;
+    }
+    NSString *result = nil;
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:[seconds doubleValue]/1000];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    switch (type) {
+        case YearMonthDayHourMin: {
+            [formatter setDateFormat:@"yyyy-MM-dd HH:mm"];
+            result = [formatter stringFromDate:date];
+        }
+            break;
+        case YearMonthDay: {
+            [formatter setDateFormat:@"yyyy-MM-dd"];
+            result = [formatter stringFromDate:date];
+        }
+            break;
+        case MonthDayHourMin: {
+            [formatter setDateFormat:@"MM-dd HH:mm"];
+            result = [formatter stringFromDate:date];
+        }
+            break;
+        case YearMonthDayHZ: {
+            [formatter setDateFormat:@"yyyy年MM月dd日"];
+            result = [formatter stringFromDate:date];
+        }
+            break;
+        default:
+            break;
+    }
+    return result;
+}
+</code></pre>
+
+<h4>5. 数组按时间排序</h4>
+
+<pre><code>//数组按时间排序
++ (NSArray *)resortHomePageData:(NSArray *)data {
+// NSSortDescriptor可以直接对对象的某个属性进行排列
+    NSArray *sortDescriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"mtime" ascending:YES]];
+    return [data sortedArrayUsingDescriptors:sortDescriptors];
+}
+</code></pre>
+
+<h3>四.图片操作</h3>
+
+<h4>1.去最大的正方形</h4>
+
+<pre><code>+ (UIImage *)cutToRect:(UIImage *)image {
+    double width = ((UIImage *)image).size.width * image.scale;
+    double height = ((UIImage *)image).size.height * image.scale;
+    UIImage *img = nil;
+    if (width &gt; height) {
+        CGImageRef imageRef = CGImageCreateWithImageInRect([image CGImage], CGRectMake((width - height)/2.0f, 0, height, height));
+        img = [UIImage imageWithCGImage:imageRef scale:image.scale orientation:image.imageOrientation];
+        CGImageRelease(imageRef);
+    }
+    else {
+        CGImageRef imageRef = CGImageCreateWithImageInRect([image CGImage], CGRectMake(0, (height - width)/2.0f, width, width));
+        img = [UIImage imageWithCGImage:imageRef scale:image.scale orientation:image.imageOrientation];
+        CGImageRelease(imageRef);
+    }
+    return img;
+}
+</code></pre>
+
+<h4>2.按比例取最大图片</h4>
+
+<pre><code>+ (UIImage *)cutToBigRect:(UIImage *)image size:(CGSize)size {
+    UIImage *imageRemove = [self imageResize:image size:image.size];//去掉拍照 图片带的方向信息
+    double width = imageRemove.size.width * imageRemove.scale;
+    double height = imageRemove.size.height * imageRemove.scale;
+    UIImage *img = nil;
+    CGImageRef imageRef;
+    if (height / width &lt;= size.height / size.width) {//height小
+        imageRef = CGImageCreateWithImageInRect([imageRemove CGImage], CGRectMake((width - height * (size.width / size.height))/2.0f, 0, height * (size.width / size.height), height));
+    }
+    else {
+        imageRef = CGImageCreateWithImageInRect([imageRemove CGImage], CGRectMake(0, (height - width * (size.height / size.width))/2.0f, width, width * (size.height / size.width)));
+
+    }
+    img = [UIImage imageWithCGImage:imageRef scale:imageRemove.scale orientation:imageRemove.imageOrientation];
+    CGImageRelease(imageRef);
+    return img;
+}
+</code></pre>
+
+<h4>3.将图片放缩到指定大小</h4>
+
+<pre><code>+ (UIImage*)imageResize:(UIImage*)image size:(CGSize)size {
+    UIGraphicsBeginImageContext(size);
+    [image drawInRect:CGRectMake(0,0,size.width, size.height)];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+}
+</code></pre>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Your Name</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2014-11-24T10:02:28+08:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>10:02 am</span></time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://zhaoyan106.github.io/blog/2014/11/24/chang-yong-gong-ju-fang-fa-zong-jie/" data-via="" data-counturl="http://zhaoyan106.github.io/blog/2014/11/24/chang-yong-gong-ju-fang-fa-zong-jie/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/11/21/pu-bu-liu-(mo-fang-tableview)/" title="Previous Post: 瀑布流（模仿TableView）">&laquo; 瀑布流（模仿TableView）</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2015/01/05/ioskai-fa-zhong-%5B%3F%5D-xie-xiao-ji-qiao/" title="Next Post: iOS开发中一些小技巧">iOS开发中一些小技巧 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2015/01/13/li-yong-crashdui-zhan-xin-xi-ding-wei-dian-xing-de-ye-zhi-zhen-cuo-wu/">利用crash堆栈信息定位典型的野指针错误</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/01/12/li-yong-crashdui-zhan-xin-xi-ding-wei-dai-ma-beng-kui-wei-zhi/">利用crash堆栈信息定位代码崩溃位置</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/01/05/uiwebviewxiu-gai-ye-mian-xiang-guan/">UIWebView修改页面相关</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/01/05/ioskai-fa-zhong-%5B%3F%5D-xie-xiao-ji-qiao/">iOS开发中一些小技巧</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/11/24/chang-yong-gong-ju-fang-fa-zong-jie/">常用工具方法总结</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - Your Name -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

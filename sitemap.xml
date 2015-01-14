@@ -1,14 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://zhaoyan106.github.io/blog/2015/01/13/li-yong-crashdui-zhan-xin-xi-ding-wei-dian-xing-de-ye-zhi-zhen-cuo-wu/</loc>
+    <lastmod>2015-01-13T17:13:23+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2015/01/12/li-yong-crashdui-zhan-xin-xi-ding-wei-dai-ma-beng-kui-wei-zhi/</loc>
+    <lastmod>2015-01-12T18:32:15+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2015/01/05/uiwebviewxiu-gai-ye-mian-xiang-guan/</loc>
+    <lastmod>2015-01-05T17:56:03+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2015/01/05/ioskai-fa-zhong-%5B%3F%5D-xie-xiao-ji-qiao/</loc>
+    <lastmod>2015-01-05T11:13:29+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2014/11/24/chang-yong-gong-ju-fang-fa-zong-jie/</loc>
+    <lastmod>2014-11-24T10:02:28+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2014/11/21/pu-bu-liu-(mo-fang-tableview)/</loc>
+    <lastmod>2014-11-21T16:22:24+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2014/11/19/pu-bu-liu-(collectionviewzi-ding-yi-bu-ju-)/</loc>
+    <lastmod>2014-11-19T14:47:19+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2014/10/30/ding-wei-ji-di-li-bian-ma/</loc>
+    <lastmod>2014-10-30T17:04:55+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2014/10/30/afnetworkingyuan-ma-jie-xi-san/</loc>
+    <lastmod>2014-10-30T15:02:47+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2014/10/29/afnnetworkingyuan-ma-jie-xi-(er-)/</loc>
+    <lastmod>2014-10-29T13:26:44+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2014/10/28/afnetworkingyuan-ma-jie-xi-%5B%3F%5D/</loc>
+    <lastmod>2014-10-28T15:02:47+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2014/10/14/at-tableviewcelltuo-dong/</loc>
+    <lastmod>2014-10-14T17:54:15+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2014/10/13/gitfen-zhi-mo-xing/</loc>
+    <lastmod>2014-10-13T09:39:03+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>http://zhaoyan106.github.io/blog/archives/</loc>
-    <lastmod>2015-01-14T20:02:30+08:00</lastmod>
+    <lastmod>2015-01-14T20:04:36+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>http://zhaoyan106.github.io/</loc>
-    <lastmod>2015-01-14T20:02:30+08:00</lastmod>
+    <lastmod>2015-01-14T20:04:36+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
