@@ -127,10 +127,12 @@
 
 <p>容器类对象深浅复制,对于容器而言，其元素对象始终是指针复制。如果需要元素对象也是对象复制，就需要实现深拷贝.</p>
 
-<pre><code>  NSArray *array = [NSArray arrayWithObjects:[NSMutableString stringWithString:@"first"],[NSStringstringWithString:@"b"],@"c",nil];
-    NSArray *deepCopyArray=[[NSArray alloc] initWithArray: array copyItems: YES];
-    NSArray* trueDeepCopyArray = [NSKeyedUnarchiver unarchiveObjectWithData:
-    [NSKeyedArchiver archivedDataWithRootObject: array]];
+<pre><code>NSArray *array = [NSArray arrayWithObjects:[NSMutableString stringWithString:@"first"],[NSStringstringWithString:@"b"],@"c",nil];
+// 里面的元素浅复制
+NSArray *deepCopyArray=[[NSArray alloc] initWithArray: array copyItems: YES];
+// 里面的元素深复制
+NSArray* trueDeepCopyArray = [NSKeyedUnarchiver unarchiveObjectWithData:
+[NSKeyedArchiver archivedDataWithRootObject: array]];
 </code></pre>
 
 <p>自己实现深拷贝的方法</p>

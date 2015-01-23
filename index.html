@@ -130,10 +130,12 @@
 
 <p>容器类对象深浅复制,对于容器而言，其元素对象始终是指针复制。如果需要元素对象也是对象复制，就需要实现深拷贝.</p>
 
-<pre><code>  NSArray *array = [NSArray arrayWithObjects:[NSMutableString stringWithString:@"first"],[NSStringstringWithString:@"b"],@"c",nil];
-    NSArray *deepCopyArray=[[NSArray alloc] initWithArray: array copyItems: YES];
-    NSArray* trueDeepCopyArray = [NSKeyedUnarchiver unarchiveObjectWithData:
-    [NSKeyedArchiver archivedDataWithRootObject: array]];
+<pre><code>NSArray *array = [NSArray arrayWithObjects:[NSMutableString stringWithString:@"first"],[NSStringstringWithString:@"b"],@"c",nil];
+// 里面的元素浅复制
+NSArray *deepCopyArray=[[NSArray alloc] initWithArray: array copyItems: YES];
+// 里面的元素深复制
+NSArray* trueDeepCopyArray = [NSKeyedUnarchiver unarchiveObjectWithData:
+[NSKeyedArchiver archivedDataWithRootObject: array]];
 </code></pre>
 
 <p>自己实现深拷贝的方法</p>
@@ -1479,6 +1481,72 @@ self.navigationBar.translucent = YES;
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2014/11/01/afnetworkingyuan-ma-jie-xi-si/">AFNetworking源码解析(四)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-11-01T15:02:47+08:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2014</span></span> <span class='time'>3:02 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>原文地址：<a href="http://www.cocoachina.com/ios/20141120/10265.html">http://www.cocoachina.com/ios/20141120/10265.html</a>
+本篇主要讲解AFURLResponseSerialization。</p>
+
+<h4>结构</h4>
+
+<p>AFURLResponseSerialization负责解析网络返回数据，检查数据是否合法，把NSData数据转成相应的对象，内置的转换器有json,xml,plist,image，用户可以很方便地继承基类AFHTTPResponseSerializer去解析更多的数据格式，AFNetworking这一套响应解析机制结构很简单，主要就是两个方法：</p>
+
+<h6>1.-validateResponse:data:error:</h6>
+
+<p>基类AFHTTPResponseSerializer的这个方法检测返回的HTTP状态码和数据类型是否合法，属性acceptableStatusCodes和acceptableContentTypes规定了合法的状态码和数据类型，例如JSONSerialization就把acceptableContentTypes设为@”application/json”, @”text/json”, @”text/javascript”，若不是这三者之一，就验证失败，返回相应的NSError对象。一般子类不需要重写这个方法，只需要设置好acceptableStatusCodes和acceptableContentTypes就行了。</p>
+
+<h6>2.-responseObjectForResponse:data:error:</h6>
+
+<p>这个方法解析数据，把NSData转成相应的对象，上层AFURLConnectionOperation会调用这个方法获取转换后的对象。</p>
+
+<p>在解析数据之前会先调上述的validateResponse方法检测HTTP响应是否合法，要注意的是即使这里检测返回不合法，也会继续解析数据生成对象，因为有可能错误信息就在返回的数据里。</p>
+
+<p>如果validateResponse返回error，这里的解析数据又出错，这时有两个error对象，怎样返回给上层？这里的处理是把解析数据的NSError对象保存到validateResponse NSError的userInfo里，作为UnderlyingError，NSError专门给了个NSUnderlyingErrorKey作为这种错误包含错误的键值。</p>
+
+<p>剩下的就是NSecureCoding相关方法了，如果子类增加了property，需要加上相应的NSecureCoding方法。</p>
+
+<h4>JSON解析</h4>
+
+<p>AFJSONResponseSerializer使用系统内置的NSJSONSerialization解析json，NSJSON只支持解析UTF8编码的数据（还有UTF-16LE之类的，都不常用），所以要先把返回的数据转成UTF8格式。这里会尝试用HTTP返回的编码类型和自己设置的stringEncoding去把数据解码转成字符串NSString，再把NSString用UTF8编码转成NSData，再用NSJSONSerialization解析成对象返回。</p>
+
+<p>上述过程是NSData->NSString->NSData->NSObject，这里有个问题，如果你能确定服务端返回的是UTF8编码的json数据，那NSData->NSString->NSData这两步就是无意义的，而且这两步进行了两次编解码，很浪费性能，所以如果确定服务端返回utf8编码数据，就建议自己再写个JSONResponseSerializer，跳过这两个步骤。</p>
+
+<p>此外AFJSONResponseSerializer专门写了个方法去除NSNull，直接把对象里值是NSNull的键去掉，还蛮贴心，若不去掉，上层很容易忽略了这个数据类型，判断了数据是否nil没判断是否NSNull，进行了错误的调用导致core。</p>
+
+<h4>图片解压</h4>
+
+<p>当我们调用UIImage的方法imageWithData:方法把数据转成UIImage对象后，其实这时UIImage对象还没准备好需要渲染到屏幕的数据，现在的网络图像PNG和JPG都是压缩格式，需要把它们解压转成bitmap后才能渲染到屏幕上，如果不做任何处理，当你把UIImage赋给UIImageView，在渲染之前底层会判断到UIImage对象未解压，没有bitmap数据，这时会在主线程对图片进行解压操作，再渲染到屏幕上。这个解压操作是比较耗时的，如果任由它在主线程做，可能会导致速度慢UI卡顿的问题。</p>
+
+<p>AFImageResponseSerializer除了把返回数据解析成UIImage外，还会把图像数据解压，这个处理是在子线程（AFNetworking专用的一条线程，详见AFURLConnectionOperation），处理后上层使用返回的UIImage在主线程渲染时就不需要做解压这步操作，主线程减轻了负担，减少了UI卡顿问题。</p>
+
+<p>具体实现上在AFInflatedImageFromResponseWithDataAtScale里，创建一个画布，把UIImage画在画布上，再把这个画布保存成UIImage返回给上层。只有JPG和PNG才会尝试去做解压操作，期间如果解压失败，或者遇到CMKY颜色格式的jpg，或者图像太大(解压后的bitmap太占内存，一个像素3-4字节，搞不好内存就爆掉了)，就直接返回未解压的图像。</p>
+
+<p>另外在代码里看到iOS才需要这样手动解压，MacOS上已经有封装好的对象NSBitmapImageRep可以做这个事。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2014/10/30/ding-wei-ji-di-li-bian-ma/">定位及地理编码</a></h1>
     
     
@@ -1562,94 +1630,6 @@ else {
 </code></pre>
 
 <p>高德地图的火星坐标需要进行处理,在此代理方法中对坐标进行地理编码操作,注意: 定位可以在没有网络的情况下进行,但是地理编码需要依靠网络.</p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/10/30/afnetworkingyuan-ma-jie-xi-san/">AFNetworking源码解析(三)</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-10-30T15:02:47+08:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>30</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>3:02 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>原文地址：<a href="http://www.cocoachina.com/ios/20140916/9632.html">http://www.cocoachina.com/ios/20140916/9632.html</a></p>
-
-<p>安全相关的AFSecurityPolicy模块，AFSecurityPolicy用于验证HTTPS请求的证书，先来看看HTTPS的原理和证书相关的几个问题。</p>
-
-<p>HTTPS
-HTTPS连接建立过程大致是，客户端和服务端建立一个连接，服务端返回一个证书，客户端里存有各个受信任的证书机构根证书，用这些根证书对服务端 返回的证书进行验证，经验证如果证书是可信任的，就生成一个pre-master  secret，用这个证书的公钥加密后发送给服务端，服务端用私钥解密后得到pre-master secret，再根据某种算法生成master  secret，客户端也同样根据这种算法从pre-master secret生成master secret，随后双方的通信都用这个master  secret对传输数据进行加密解密。</p>
-
-<p>这里说下一开始我比较费解的两个问题：</p>
-
-<h4>1.证书是怎样验证的？怎样保证中间人不能伪造证书？</h4>
-
-<p>首先要知道非对称加密算法的特点，非对称加密有一对公钥私钥，用公钥加密的数据只能通过对应的私钥解密，用私钥加密的数据只能通过对应的公钥解密。</p>
-
-<p>我们来看最简单的情况：一个证书颁发机构(CA)，颁发了一个证书A，服务器用这个证书建立https连接。客户端在信任列表里有这个CA机构的根证书。</p>
-
-<p>首先CA机构颁发的证书A里包含有证书内容F，以及证书加密内容F1，加密内容F1就是用这个证书机构的私钥对内容F加密的结果。（这中间还有一次hash算法，略过。）</p>
-
-<p>建立https连接时，服务端返回证书A给客户端，客户端的系统里的CA机构根证书有这个CA机构的公钥，用这个公钥对证书A的加密内容F1解密得 到F2，跟证书A里内容F对比，若相等就通过验证。整个流程大致是：F->CA私钥加密->F1->客户端CA公钥解密->F。 因为中间人不会有CA机构的私钥，客户端无法通过CA公钥解密，所以伪造的证书肯定无法通过验证。</p>
-
-<h4>2.什么是SSL Pinning？</h4>
-
-<p>可以理解为证书绑定，是指客户端直接保存服务端的证书，建立https连接时直接对比服务端返回的和客户端保存的两个证书是否一样，一样就表明证书 是真的，不再去系统的信任证书机构里寻找验证。这适用于非浏览器应用，因为浏览器跟很多未知服务端打交道，无法把每个服务端的证书都保存到本地，但CS架 构的像手机APP事先已经知道要进行通信的服务端，可以直接在客户端保存这个服务端的证书用于校验。</p>
-
-<p>为什么直接对比就能保证证书没问题？如果中间人从客户端取出证书，再伪装成服务端跟其他客户端通信，它发送给客户端的这个证书不就能通过验证吗？确 实可以通过验证，但后续的流程走不下去，因为下一步客户端会用证书里的公钥加密，中间人没有这个证书的私钥就解不出内容，也就截获不到数据，这个证书的私 钥只有真正的服务端有，中间人伪造证书主要伪造的是公钥。</p>
-
-<p>为什么要用SSL  Pinning？正常的验证方式不够吗？如果服务端的证书是从受信任的的CA机构颁发的，验证是没问题的，但CA机构颁发证书比较昂贵，小企业或个人用户 可能会选择自己颁发证书，这样就无法通过系统受信任的CA机构列表验证这个证书的真伪了，所以需要SSL Pinning这样的方式去验证。</p>
-
-<p>AFSecurityPolicy
-NSURLConnection已经封装了https连接的建立、数据的加密解密功能，我们直接使用NSURLConnection是可以访问 https网站的，但NSURLConnection并没有验证证书是否合法，无法避免中间人攻击。要做到真正安全通讯，需要我们手动去验证服务端返回的 证书，AFSecurityPolicy封装了证书验证的过程，让用户可以轻易使用，除了去系统信任CA机构列表验证，还支持SSL  Pinning方式的验证。使用方法：</p>
-
-<pre><code>//把服务端证书(需要转换成cer格式)放到APP项目资源里，AFSecurityPolicy会自动寻找根目录下所有cer文件
-AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey];
-securityPolicy.allowInvalidCertificates = YES;
-[AFHTTPRequestOperationManager manager].securityPolicy = securityPolicy;
-[manager GET:@"https://example.com/" parameters:nil success:^(AFHTTPRequestOperation *operation, id     responseObject) {
-} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-}];
-</code></pre>
-
-<p>AFSecurityPolicy分三种验证模式：</p>
-
-<p>AFSSLPinningModeNone</p>
-
-<p>这个模式表示不做SSL pinning，只跟浏览器一样在系统的信任机构列表里验证服务端返回的证书。若证书是信任机构签发的就会通过，若是自己服务器生成的证书，这里是不会通过的。</p>
-
-<p>AFSSLPinningModeCertificate</p>
-
-<p>这个模式表示用证书绑定方式验证证书，需要客户端保存有服务端的证书拷贝，这里验证分两步，第一步验证证书的域名/有效期等信息，第二步是对比服务端返回的证书跟客户端返回的是否一致。</p>
-
-<p>这里还没弄明白第一步的验证是怎么进行的，代码上跟去系统信任机构列表里验证一样调用了SecTrustEvaluate，只是这里的列表换成了客户端保存的那些证书列表。若要验证这个，是否应该把服务端证书的颁发机构根证书也放到客户端里？</p>
-
-<p>AFSSLPinningModePublicKey</p>
-
-<p>这个模式同样是用证书绑定方式验证，客户端要有服务端的证书拷贝，只是验证时只验证证书里的公钥，不验证证书的有效期等信息。只要公钥是正确的，就能保证通信不会被窃听，因为中间人没有私钥，无法解开通过公钥加密的数据。</p>
-
-<p>整个AFSecurityPolicy就是实现这这几种验证方式，剩下的就是实现细节了，详见源码。</p>
-
-<h4>3.源码注释</h4>
-
-<p>AFSecurityPolicy</p>
 </div>
   
   
