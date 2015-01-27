@@ -1,0 +1,383 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>网络多线程应用 - My iOS Journey</title>
+  <meta name="author" content="zhao yan">
+
+  
+  <meta name="description" content="一、发送网络请求所需 网络请求中一定会用的类:NSOperation、NSOperationQueue、NSRunLoop、NSURLRequest、NSURLConnection，这些都是发送网络请求必须得，其中NSOperation、NSOperationQueue、 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://zhaoyan106.github.io/blog/2015/01/26/wang-luo-duo-xian-cheng-ying-yong">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My iOS Journey" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My iOS Journey</a></h1>
+  
+    <h2>Fighting And More</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.baidu.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="zhaoyan106.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">网络多线程应用</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-01-26T16:46:41+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>26</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>4:46 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>一、发送网络请求所需</h2>
+
+<p>网络请求中一定会用的类:NSOperation、NSOperationQueue、NSRunLoop、NSURLRequest、NSURLConnection，这些都是发送网络请求必须得，其中NSOperation、NSOperationQueue、NSRunLoop这些是用在多线程发送网络请求中的。</p>
+
+<h4>1、NSOperation</h4>
+
+<h6>NSOperation有三种使用方法：NSInvocationOperation、NSBlockOperation、自定义NSOperation（NSOperation的子类）</h6>
+
+<p>1、NSInvocationOperation：创建operation object。如果你已经有现有的方法来执行需要的任务，就可以使用这个类。</p>
+
+<p>2、NSBlockOperation：可以直接使用的类，用来并发地执行一个或多个block对象。operation object使用“组”的语义来执行多个block对象，所有相关的block都执行完成之后，operation object才算完成。</p>
+
+<p>3、自定义NSOperation：继承NSOperation可以完全控制operation object的实现，包括修改操作执行和状态报告的方式。</p>
+
+<h6>operation objects都支持以下关键特性：</h6>
+
+<p>1、支持建立基于图的operation objects依赖。可以阻止某个operation运行，直到它依赖的所有operation都已经完成。</p>
+
+<p>2、支持可选的completion block，在operation的主任务完成后调用。</p>
+
+<p>3、支持应用使用KVO通知来监控operation的执行状态。</p>
+
+<p>4、支持operation优先级，从而影响相对的执行顺序</p>
+
+<p>5、支持取消，允许你中止正在执行的任务</p>
+
+<h6>自定义NSOperation</h6>
+
+<p>NSOperation 类提供通用的子类继承点，而且实现了许多重要的基础设施来处理依赖和KVO通知。继承所需的工作量主要取决于你要实现非并发还是并发的operation。</p>
+
+<p>定义非并发operation要简单许多，只需要执行主任务，并正确地响应取消事件;NSOperation 处理了其它所有事情。对于并发operation，你必须替换某些现有的基础设施代码。</p>
+
+<p>串行：</p>
+
+<p>1、每个operation对象至少需要实现以下方法：</p>
+
+<p>2、自定义initialization方法：初始化，将operation 对象设置为已知状态</p>
+
+<p>3、自定义main方法：执行你的任务</p>
+
+<p>4、你也可以选择性地实现以下方法：</p>
+
+<p>5、main方法中需要调用的其它自定义方法</p>
+
+<p>6、Accessor方法：设置和访问operation对象的数据</p>
+
+<p>7、dealloc方法：清理operation对象分配的所有内存</p>
+
+<p>8、NSCoding 协议的方法：允许operation对象archive和unarchive</p>
+
+<p>并行：</p>
+
+<pre><code>- (void)start;
+</code></pre>
+
+<p>（必须）所有并发操作都必须覆盖这个方法，以自定义的实现替换默认行为。手动执行一个操作时，你会调用start方法。因此你对这个方法的实现是操作的起点，设置一个线程或其它执行环境，来执行你的任务。你的实现在任何时候都绝对不能调用super。</p>
+
+<pre><code>- (void)main;
+</code></pre>
+
+<p>（可选）这个方法通常用来实现operation对象相关联的任务。尽管你可以在start方法中执行任务，使用main来实现任务可以让你的代码更加清晰地分离设置和任务代码</p>
+
+<pre><code>isExecuting、isFinished
+</code></pre>
+
+<p>（必须）并发操作负责设置自己的执行环境，并向外部client报告执行环境的状态。因此并发操作必须维护某些状态信息，以知道是否正在执行任务，是否已经完成任务。使用这两个方法报告自己的状态。
+这两个方法的实现必须能够在其它多个线程中同时调用。另外这些方法报告的状态变化时，还需要为相应的key path产生适当的KVO通知。</p>
+
+<pre><code>isConcurrent
+</code></pre>
+
+<p>（必须）标识一个操作是否并发operation，覆盖这个方法并返回YES</p>
+
+<h4>2、NSOperationQueue</h4>
+
+<p>Operation Queues是Cocoa版本的并发dispatch queue，由 NSOperationQueue 类实现。dispatch queue总是按先进先出的顺序执行任务，而 Operation Queues 在确定任务执行顺序时，还会考虑其它因素。最主要的一个因素是指定任务是否依赖于另一个任务的完成。你在定义任务时配置依赖性，从而创建复杂的任务执行顺序图。</p>
+
+<p>提交到Operation Queues的任务必须是 NSOperation 对象，operation object封装了你要执行的工作，以及所需的所有数据。由于 NSOperation 是一个抽象基类，通常你需要定义自定义子类来执行任务。不过Foundation framework自带了一些具体子类，你可以创建并执行相关的任务。</p>
+
+<p>Operation objects会产生key-value observing(KVO)通知，对于监控任务的进程非常有用。虽然operation queue总是并发地执行任务，你可以使用依赖，在需要时确保顺序执行</p>
+
+<h2>二、封装NSURLRequest</h2>
+
+<p>通过一个继承自NSObject的类，提供相关的类方法，快速创建网络请求。</p>
+
+<pre><code>NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
+NSMutableString *targetUrl = [[NSMutableString alloc] init];
+[request setValue:self.channelID forHTTPHeaderField:@"channelid"];
+[request setValue:self.version forHTTPHeaderField:@"version"];
+[request setValue:self.deviceID forHTTPHeaderField:@"deviceid"];
+[request setValue:self.authCode forHTTPHeaderField:@"AuthCode"];
+return request;
+</code></pre>
+
+<h2>三、自定义NSOperation</h2>
+
+<p>重写start方法</p>
+
+<pre><code>// 状态机
+typedef enum {
+    eLongOperationPausedState      = -1,   // 暂停
+    eLongOperationReadyState       = 1,    // 准备就绪
+    eLongOperationExecutingState   = 2,    // 正在运行
+    eLongOperationFinishedState    = 3,    // 完成
+}elongOperationState;
+
+@property (nonatomic, assign) elongOperationState state;    // 状态机
+
+@property (nonatomic, strong, readonly) NSMutableURLRequest *currentReq;    // 网络请求
+
+@property (nonatomic,retain) NSRecursiveLock *lock;    // 数据锁
+
+// 创建一个单例线程用来处理所有请求
++ (NSThread *)httpRequest{
+    static NSThread *httpThread = nil;
+    static dispatch_once_t oncePredicate;
+    dispatch_once(&amp;oncePredicate, ^{
+        httpThread = [[NSThread alloc] initWithTarget:self selector:@selector(httpThreadWork) object:nil];
+        [httpThread start];
+    });
+    return httpThread;
+}
+
+// 子线程显式创建runloop 
++ (void)httpThreadWork{
+    @autoreleasepool {
+        // 线程命名，方便调试
+        [[NSThread currentThread] setName:@"eLongHttpThread"];
+        // runloop一直运行
+        NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+        [runLoop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];
+        [runLoop run];
+    }
+}
+
+// 创建网络请求，初始化数据锁，设置状态机为ready状态
+- (id)initWithRequest:(NSMutableURLRequest *)request {
+    if (self = [super init]) {
+        self.currentReq = request;
+        NSRecursiveLock *lock = [[NSRecursiveLock alloc] init];
+        self.lock = lock;
+        self.lock.name = @"elong.httpOperation.lock";
+        _state = eLongOperationReadyState;
+    }
+    return self;
+}
+
+// 重写start方法，当自定义operation加入到队列中自动并发调用
+- (void)start{
+    [self.lock lock];
+    if ([self isCancelled]) {
+        [self performSelector:@selector(cancelConnection) onThread:[[self class] httpRequest] withObject:nil waitUntilDone:NO modes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
+    }else if ([self isReady]) {
+        self.state = eLongOperationExecutingState;
+        [self performSelector:@selector(operationDidStart) onThread:[[self class] httpRequest] withObject:nil waitUntilDone:NO modes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
+    }
+    [self.lock unlock];
+}
+
+// 创建NSURLConnection并开始
+- (void)operationDidStart {
+    [self.lock lock];
+    if (![self isCancelled]) {
+        //  startImmediately:NO 一定要设置为NO否则无法修改runloop
+        NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:self.currentReq delegate:self startImmediately:NO];
+        self.connection = connection;
+        NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+        // 这里需要设置RunLoop模式为NSRunLoopCommonModes，否则会影响主线程刷新UI会暂停网络,将connection加入runloop或者
+        [self.connection scheduleInRunLoop:runLoop forMode:NSRunLoopCommonModes];
+        [self.connection start];
+    }
+    [self.lock unlock];
+}
+</code></pre>
+
+<h2>四、利用NSOperationQueue开启并发网络请求</h2>
+
+<pre><code>- (id)init{
+    self = [super init];
+    if (!self) {
+        return nil;
+    }
+    // 创建网络请求队列
+    static dispatch_once_t oncePredicate;
+    dispatch_once(&amp;oncePredicate, ^{
+        httpQueue = [[NSOperationQueue alloc] init];    // 创建请求队列
+        httpQueue.maxConcurrentOperationCount = 4;      // 最大并发数
+    });
+    self.callBackObjectDict = [[NSMutableDictionary alloc] initWithCapacity:3];
+    NSRecursiveLock *lock = [[NSRecursiveLock alloc] init];
+    self.lock = lock;
+    self.lock.name = @"elong.httpReq.lock";
+    return self;
+}
+
+- (void)startWith:(eLongHTTPRequestOperation *)httpRequestOperation{
+    [httpQueue addOperation:httpRequestOperation];
+}
+</code></pre>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">zhao yan</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2015-01-26T16:46:41+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>26</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>4:46 pm</span></time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2015/01/23/shen-kao-bei-yu-qian-kao-bei-fen-xi/" title="Previous Post: 深拷贝与浅拷贝分析">&laquo; 深拷贝与浅拷贝分析</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2015/01/26/wang-luo-duo-xian-cheng-ying-yong/">网络多线程应用</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/01/23/shen-kao-bei-yu-qian-kao-bei-fen-xi/">深拷贝与浅拷贝分析</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/01/13/li-yong-crashdui-zhan-xin-xi-ding-wei-dian-xing-de-ye-zhi-zhen-cuo-wu/">利用crash堆栈信息定位典型的野指针错误</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/01/12/li-yong-crashdui-zhan-xin-xi-ding-wei-dai-ma-beng-kui-wei-zhi/">利用crash堆栈信息定位代码崩溃位置</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/01/05/uiwebviewxiu-gai-ye-mian-xiang-guan/">UIWebView修改页面相关</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - zhao yan -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
