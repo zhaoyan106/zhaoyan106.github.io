@@ -9,7 +9,9 @@
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="一、发送网络请求所需 网络请求中一定会用的类:NSOperation、NSOperationQueue、NSRunLoop、NSURLRequest、NSURLConnection，这些都是发送网络请求必须得，其中NSOperation、NSOperationQueue、 &hellip;">
+  <meta name="description" content="一、线程 线程中的术语 线程(线程)用于指代独立执行的代码段。
+进程(process)用于指代一个正在运行的可执行程序,它可以包含多个线程。
+任务(task)用于指代抽象的概念,表示需要执行工作。 线程的模式 线程启动之后,线 程就进入三个状态中的任何一个:运行(running)、就绪(ready &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -65,6 +67,124 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/01/30/wang-luo-duo-xian-cheng-de-%5B%3F%5D-xie-zhu-yi-dian/">网络多线程总结</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-01-30T13:28:20+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>30</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>1:28 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h4>一、线程</h4>
+
+<h6>线程中的术语</h6>
+
+<p>线程(线程)用于指代独立执行的代码段。
+进程(process)用于指代一个正在运行的可执行程序,它可以包含多个线程。
+任务(task)用于指代抽象的概念,表示需要执行工作。</p>
+
+<h6>线程的模式</h6>
+
+<p>线程启动之后,线 程就进入三个状态中的任何一个:运行(running)、就绪(ready)、阻塞(blocked)</p>
+
+<h6>注意：因为底层内核的支持,操作对象(Operation objectis)可能创建线程更快。它们使用内核 里面常驻线程池里面的线程来节省创建的时间,而不是每次都创建新的线程。关于更多使用操作 对象(Operation objects)的信息,参阅并发编程指南(Concurrency Programming Guide)。</h6>
+
+<h6>1、线程的使用</h6>
+
+<p>1、隐式开启一个线程</p>
+
+<pre><code>[NSThread detachNewThreadSelector:@selector(myThreadMainMethod:) toTarget:self withObject:nil];
+//使用 detachNewThreadSelector:toTarget:withObject:类方法来生成一个新的线程。
+</code></pre>
+
+<p>2、显示开启线程
+    NSThread* myThread = [[NSThread alloc] initWithTarget:self selector:@selector(myThreadMainMethod:) object:nil]; [myThread start];
+    //创建一个新的 NSThread 对象,并调用它的 start 方法。
+3、子类化NSthread，重写run方法 使用 initWithTarget:selector:object:
+方法的替代办法是子类化 NSThread,并重写 它的 main 方法。你可以使用你重写的该方法的版本来实现你线程的主体入口。</p>
+
+<p>4、调用NSObject方法使用NSThread对象,它的线程当前真正运行,你可以给该线程发送 消息的唯一方法是在你应用程序里面的任何对象使用performSelector:onThread:withObject:waitUntilDone:</p>
+
+<h6>（注意：目标线程必须在它的 run loop 里面运行，也就是说目标线程必须受到开启runloop，后面runloop会涉及）</h6>
+
+<p>5、调用NSObject方法 performSelectorInBackground:withObject:新生成 一个脱离的线程,使用指定的方法作为新线程的主体入口点</p>
+
+<h6>（注意：在selectore内部,你必须配置线程就像你在任何线程里面一样。比如,你可能需要设置一个自动 释放池(如果你没有使用垃圾回收机制),在你要使用它的时候配置线程的 run loop）</h6>
+
+<h6>2、线程主题入口点需要做的</h6>
+
+<p>1、创建一个自动释放池</p>
+
+<p>如果应用程序使用的垃圾回收机制,而不是管理的内存模型,那么创建一个自动 释放池不是绝对必要的。在垃圾回收的应用程序里面,一个自动释放池是无害的,而 且大部分情况是被忽略。允许通过个代码管理必须同时支持垃圾回收和内存管理模 型。在这种情况下,内存管理模型必须支持自动释放池,当应用程序运行垃圾回收的 时候,自动释放池只是被忽略而已。</p>
+
+<p>2、设置异常处理</p>
+
+<p>3、设置一个runloop</p>
+
+<pre><code>+ (void)httpThreadWork{
+    @autoreleasepool { // 创建一个自动释放池子
+        // 线程命名，方便调试
+        [[NSThread currentThread] setName:@"eLongHttpThread"];
+
+        // runloop一直运行 （注意：runloop运行的几条必须要素）
+        NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+        [runLoop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];
+        [runLoop run];
+    }
+}
+</code></pre>
+
+<h4>二、Run Loop</h4>
+
+<h6>1、runloop基本介绍</h6>
+
+<p>使用 run loop 的目的是让你的线 程在有工作的时候忙于工作,而没工作的时候处于休眠状态（节能）。</p>
+
+<p>应用程序不需要显式的创建这些对象(run loop objects)，每个线程,包括程序的主线程都有与之对应的 run loop object。</p>
+
+<p>只有辅助线程（子线程）需要显式的运行它的。</p>
+
+<p>输入源(input source)和定时源 (timer source)。输入源传递异步事件,通常消息来自于其他线程或程序。定时源 则传递同步事件,发生在特定时间或者重复的时间间隔。两种源都使用程序的某一特 定的处理例程来处理到达的事件。
+<img src="/Users/user/Desktop/runloop.png" alt="runloop icon" /></p>
+
+<h6>2、runloop模式</h6>
+
+<p>run loops 会生成关于 run loop 行为的通知 (notifications)。注册 run loop 观察者(run-loop Observers)可以收到这些通知, 并在线程上面使用它们来做额外的处理,</p>
+
+<p>在 run loop 运行过程中,只有和模式相关的源才会被监视并允许他们传递事件 消息。(类似的,只有和模式相关的观察者会通知 run loop 的进程)。和其他模式关 联的源只有在 run loop 运行在其模式下才会运行,否则处于暂停状态</p>
+
+<pre><code>￼NSDefaultRunLoopMode(Cocoa)  // 最常用的一种模式，大多数的时候都使用他
+￼￼kCFRunLoopDefaultMode (Core￼￼Foundation)
+￼NSRunLoopCommonModes(Cocoa) // 一般模式，注意网络请求使用这个，否则主线程刷新UI，网络请求会暂停   ￼￼kCFRunLoopCommonModes (CoreFoundation) 
+</code></pre>
+
+<h6>3、输入源</h6>
+
+<p>事件来源取决于输入源的种类:基于端口的 输入源和自定义输入源。基于端口的输入源监听程序相应的端口。自定义输入源则监 听自定义的事件源。至于 run loop,它不关心输入源的是基于端口的输入源还是自 定义的输入源。系统会实现两种输入源供你使用。
+两类输入源的区别在于如何显示: 基于端口的输入源由内核自动发送,而自定义的则需要人工从其他线程发送。
+1、基于端口的输入源Cocoa 和 Core Foundation 内置支持使用端口相关的对象和函数来创建的基于端 口的源。例如,在 Cocoa 里面你从来不需要直接创建输入源。你只要简单的创建端口 对象,并使用 NSPort 的方法把该端口添加到 run loop。端口对象会自己处理创建和 配置输入源。
+2、自定义输入源，在 Core Foundation,你必须人工创建端口和它的 run loop 源.在两种情况下, 你都可以使用端口相关的函数(CFMachPortRef,CFMessagePortRef,CFSocketRef) 来创建合适的对象。
+Cocoa 执行 Selector 的源</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1703,72 +1823,6 @@ self.navigationBar.translucent = YES;
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/11/01/afnetworkingyuan-ma-jie-xi-si/">AFNetworking源码解析(四)</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-11-01T15:02:47+08:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2014</span></span> <span class='time'>3:02 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>原文地址：<a href="http://www.cocoachina.com/ios/20141120/10265.html">http://www.cocoachina.com/ios/20141120/10265.html</a>
-本篇主要讲解AFURLResponseSerialization。</p>
-
-<h4>结构</h4>
-
-<p>AFURLResponseSerialization负责解析网络返回数据，检查数据是否合法，把NSData数据转成相应的对象，内置的转换器有json,xml,plist,image，用户可以很方便地继承基类AFHTTPResponseSerializer去解析更多的数据格式，AFNetworking这一套响应解析机制结构很简单，主要就是两个方法：</p>
-
-<h6>1.-validateResponse:data:error:</h6>
-
-<p>基类AFHTTPResponseSerializer的这个方法检测返回的HTTP状态码和数据类型是否合法，属性acceptableStatusCodes和acceptableContentTypes规定了合法的状态码和数据类型，例如JSONSerialization就把acceptableContentTypes设为@”application/json”, @”text/json”, @”text/javascript”，若不是这三者之一，就验证失败，返回相应的NSError对象。一般子类不需要重写这个方法，只需要设置好acceptableStatusCodes和acceptableContentTypes就行了。</p>
-
-<h6>2.-responseObjectForResponse:data:error:</h6>
-
-<p>这个方法解析数据，把NSData转成相应的对象，上层AFURLConnectionOperation会调用这个方法获取转换后的对象。</p>
-
-<p>在解析数据之前会先调上述的validateResponse方法检测HTTP响应是否合法，要注意的是即使这里检测返回不合法，也会继续解析数据生成对象，因为有可能错误信息就在返回的数据里。</p>
-
-<p>如果validateResponse返回error，这里的解析数据又出错，这时有两个error对象，怎样返回给上层？这里的处理是把解析数据的NSError对象保存到validateResponse NSError的userInfo里，作为UnderlyingError，NSError专门给了个NSUnderlyingErrorKey作为这种错误包含错误的键值。</p>
-
-<p>剩下的就是NSecureCoding相关方法了，如果子类增加了property，需要加上相应的NSecureCoding方法。</p>
-
-<h4>JSON解析</h4>
-
-<p>AFJSONResponseSerializer使用系统内置的NSJSONSerialization解析json，NSJSON只支持解析UTF8编码的数据（还有UTF-16LE之类的，都不常用），所以要先把返回的数据转成UTF8格式。这里会尝试用HTTP返回的编码类型和自己设置的stringEncoding去把数据解码转成字符串NSString，再把NSString用UTF8编码转成NSData，再用NSJSONSerialization解析成对象返回。</p>
-
-<p>上述过程是NSData->NSString->NSData->NSObject，这里有个问题，如果你能确定服务端返回的是UTF8编码的json数据，那NSData->NSString->NSData这两步就是无意义的，而且这两步进行了两次编解码，很浪费性能，所以如果确定服务端返回utf8编码数据，就建议自己再写个JSONResponseSerializer，跳过这两个步骤。</p>
-
-<p>此外AFJSONResponseSerializer专门写了个方法去除NSNull，直接把对象里值是NSNull的键去掉，还蛮贴心，若不去掉，上层很容易忽略了这个数据类型，判断了数据是否nil没判断是否NSNull，进行了错误的调用导致core。</p>
-
-<h4>图片解压</h4>
-
-<p>当我们调用UIImage的方法imageWithData:方法把数据转成UIImage对象后，其实这时UIImage对象还没准备好需要渲染到屏幕的数据，现在的网络图像PNG和JPG都是压缩格式，需要把它们解压转成bitmap后才能渲染到屏幕上，如果不做任何处理，当你把UIImage赋给UIImageView，在渲染之前底层会判断到UIImage对象未解压，没有bitmap数据，这时会在主线程对图片进行解压操作，再渲染到屏幕上。这个解压操作是比较耗时的，如果任由它在主线程做，可能会导致速度慢UI卡顿的问题。</p>
-
-<p>AFImageResponseSerializer除了把返回数据解析成UIImage外，还会把图像数据解压，这个处理是在子线程（AFNetworking专用的一条线程，详见AFURLConnectionOperation），处理后上层使用返回的UIImage在主线程渲染时就不需要做解压这步操作，主线程减轻了负担，减少了UI卡顿问题。</p>
-
-<p>具体实现上在AFInflatedImageFromResponseWithDataAtScale里，创建一个画布，把UIImage画在画布上，再把这个画布保存成UIImage返回给上层。只有JPG和PNG才会尝试去做解压操作，期间如果解压失败，或者遇到CMKY颜色格式的jpg，或者图像太大(解压后的bitmap太占内存，一个像素3-4字节，搞不好内存就爆掉了)，就直接返回未解压的图像。</p>
-
-<p>另外在代码里看到iOS才需要这样手动解压，MacOS上已经有封装好的对象NSBitmapImageRep可以做这个事。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/2">&larr; Older</a>
@@ -1784,6 +1838,10 @@ self.navigationBar.translucent = YES;
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/01/30/wang-luo-duo-xian-cheng-de-%5B%3F%5D-xie-zhu-yi-dian/">网络多线程总结</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/01/26/wang-luo-duo-xian-cheng-ying-yong/">网络多线程应用</a>
       </li>
     
@@ -1797,10 +1855,6 @@ self.navigationBar.translucent = YES;
     
       <li class="post">
         <a href="/blog/2015/01/12/li-yong-crashdui-zhan-xin-xi-ding-wei-dai-ma-beng-kui-wei-zhi/">利用crash堆栈信息定位代码崩溃位置</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/01/05/uiwebviewxiu-gai-ye-mian-xiang-guan/">UIWebView修改页面相关</a>
       </li>
     
   </ul>
