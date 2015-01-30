@@ -103,7 +103,7 @@
 
 <h6>注意：因为底层内核的支持,操作对象(Operation objectis)可能创建线程更快。它们使用内核 里面常驻线程池里面的线程来节省创建的时间,而不是每次都创建新的线程。关于更多使用操作 对象(Operation objects)的信息,参阅并发编程指南(Concurrency Programming Guide)。</h6>
 
-<h6>1、线程的使用</h6>
+<h4>1、线程的使用</h4>
 
 <p>1、隐式开启一个线程</p>
 
@@ -113,8 +113,9 @@
 
 <p>2、显示开启线程
     NSThread* myThread = [[NSThread alloc] initWithTarget:self selector:@selector(myThreadMainMethod:) object:nil]; [myThread start];
-    //创建一个新的 NSThread 对象,并调用它的 start 方法。
-3、子类化NSthread，重写run方法 使用 initWithTarget:selector:object:
+    //创建一个新的 NSThread 对象,并调用它的 start 方法。</p>
+
+<p>3、子类化NSthread，重写run方法 使用 initWithTarget:selector:object:
 方法的替代办法是子类化 NSThread,并重写 它的 main 方法。你可以使用你重写的该方法的版本来实现你线程的主体入口。</p>
 
 <p>4、调用NSObject方法使用NSThread对象,它的线程当前真正运行,你可以给该线程发送 消息的唯一方法是在你应用程序里面的任何对象使用performSelector:onThread:withObject:waitUntilDone:</p>
@@ -125,7 +126,7 @@
 
 <h6>（注意：在selectore内部,你必须配置线程就像你在任何线程里面一样。比如,你可能需要设置一个自动 释放池(如果你没有使用垃圾回收机制),在你要使用它的时候配置线程的 run loop）</h6>
 
-<h6>2、线程主题入口点需要做的</h6>
+<h4>2、线程主题入口点需要做的</h4>
 
 <p>1、创建一个自动释放池</p>
 
@@ -150,7 +151,7 @@
 
 <h4>二、Run Loop</h4>
 
-<h6>1、runloop基本介绍</h6>
+<h5>1、runloop基本介绍</h5>
 
 <p>使用 run loop 的目的是让你的线 程在有工作的时候忙于工作,而没工作的时候处于休眠状态（节能）。</p>
 
@@ -161,7 +162,7 @@
 <p>输入源(input source)和定时源 (timer source)。输入源传递异步事件,通常消息来自于其他线程或程序。定时源 则传递同步事件,发生在特定时间或者重复的时间间隔。两种源都使用程序的某一特 定的处理例程来处理到达的事件。
 <img src="/Users/user/Desktop/runloop.png" alt="runloop icon" /></p>
 
-<h6>2、runloop模式</h6>
+<h5>2、runloop模式</h5>
 
 <p>run loops 会生成关于 run loop 行为的通知 (notifications)。注册 run loop 观察者(run-loop Observers)可以收到这些通知, 并在线程上面使用它们来做额外的处理,</p>
 
@@ -172,13 +173,51 @@
 ￼NSRunLoopCommonModes(Cocoa) // 一般模式，注意网络请求使用这个，否则主线程刷新UI，网络请求会暂停   ￼￼kCFRunLoopCommonModes (CoreFoundation) 
 </code></pre>
 
-<h6>3、输入源</h6>
+<h5>3、输入源</h5>
 
 <p>事件来源取决于输入源的种类:基于端口的 输入源和自定义输入源。基于端口的输入源监听程序相应的端口。自定义输入源则监 听自定义的事件源。至于 run loop,它不关心输入源的是基于端口的输入源还是自 定义的输入源。系统会实现两种输入源供你使用。
 两类输入源的区别在于如何显示: 基于端口的输入源由内核自动发送,而自定义的则需要人工从其他线程发送。
 1、基于端口的输入源Cocoa 和 Core Foundation 内置支持使用端口相关的对象和函数来创建的基于端 口的源。例如,在 Cocoa 里面你从来不需要直接创建输入源。你只要简单的创建端口 对象,并使用 NSPort 的方法把该端口添加到 run loop。端口对象会自己处理创建和 配置输入源。
 2、自定义输入源，在 Core Foundation,你必须人工创建端口和它的 run loop 源.在两种情况下, 你都可以使用端口相关的函数(CFMachPortRef,CFMessagePortRef,CFSocketRef) 来创建合适的对象。
-Cocoa 执行 Selector 的源</p>
+3、Cocoa 执行 Selector 的源
+    ￼performSelectorOnMainThread:withObject:waitUntilDone:    ￼￼performSelectorOnMainThread:withObject:waitUntilDone:modes
+    ￼performSelector:onThread:withObject:waitUntilDone:   performSelector:onThread:withObject:waitUntilDone:modes:
+    ￼performSelector:withObject:afterDelay:
+    performSelector:withObject:afterDelay:inModes:</p>
+
+<pre><code>￼￼￼￼￼cancelPreviousPerformRequestWithTarget:
+￼￼￼￼￼cancelPreviousPerformRequestWithTarget:selector:object:
+</code></pre>
+
+<p>4、定时源</p>
+
+<p>如果定时器被设定在某一特定时间开始 并 5 秒重复一次,那么定时器会在那个特定时间后 5 秒启动,即使在那个特定的触发 时间延迟了。如果定时器被延迟以至于它错过了一个或多个触发时间,那么定时器会 在下一个最近的触发事件启动,而后面会按照触发间隔正常执行。</p>
+
+<h5>4、何时使用 Run Loop</h5>
+
+<p>仅当在为你的程序创建辅助线程的时候,你才需要显式运行一个 run loop</p>
+
+<p>对于辅助线程,你需要判断一个 run loop 是否是必须的。如果是必须的,那么 你要自己配置并启动它。你不需要在任何情况下都去启动一个线程的 run loop。比 如,你使用线程来处理一个预先定义的长时间运行的任务时,你应该避免启动 run loop。Run loop 在你要和线程有更多的交互时才需要,比如以下情况:
+使用端口或自定义输入源来和其他线程通信
+使用线程的定时器Cocoa中使用任何performSelector&hellip;的方法
+使线程周期性工作</p>
+
+<h5>4、使用 Run Loop 对象</h5>
+
+<p>1、获取runloop
+为了获得当前线程的 run loop,Cocoa 程序中,使用 NSRunLoop 的 currentRunLoop 类方法来检索一个NSRunLoop 对象。
+2、配置runloop
+在你在辅助线程运行 run loop 之前,你必须至少添加一输入源或定时器给它。 如果 run loop 没有任何源需要监视的话,它会在你启动之际立马退出。</p>
+
+<p>（当当前长时间运行的线程配置 run loop 的时候,最好添加至少一个输入源到 run loop 以接收消息。虽然你可以使用附属的定时器来进入 run loop,但是一旦定时器 触发后,它通常就变为无效了,这会导致 run loop 退出。虽然附加一个循环的定时 器可以让 run loop 运行一个相对较长的周期,但是这也会导致周期性的唤醒线程, 这实际上是轮询(polling)的另一种形式而已。与之相反,输入源会一直等待某事 件发生,在事情导致前它让线程处于休眠状态。）</p>
+
+<p>2、启动runloop有几种方式可以启动 run loop,包括以下这些:
+无条件的
+设置超时时间
+特定的模式
+3、 退出runloop
+给 run loop 设置超时时间
+通知 run loop 停止</p>
 </div>
   
   
