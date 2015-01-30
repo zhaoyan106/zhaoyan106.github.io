@@ -73,7 +73,7 @@
       
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2015/01/30/wang-luo-duo-xian-cheng-de-%5B%3F%5D-xie-zhu-yi-dian/">网络多线程总结</a></h1>
+      <h1 class="entry-title"><a href="/blog/2015/01/30/wang-luo-duo-xian-cheng-de-%5B%3F%5D-xie-zhu-yi-dian/">多线程总结</a></h1>
     
     
       <p class="meta">
@@ -168,9 +168,7 @@
 
 <p>在 run loop 运行过程中,只有和模式相关的源才会被监视并允许他们传递事件 消息。(类似的,只有和模式相关的观察者会通知 run loop 的进程)。和其他模式关 联的源只有在 run loop 运行在其模式下才会运行,否则处于暂停状态</p>
 
-<pre><code>￼NSDefaultRunLoopMode(Cocoa)  // 最常用的一种模式，大多数的时候都使用他
-￼￼kCFRunLoopDefaultMode (Core￼￼Foundation)
-￼NSRunLoopCommonModes(Cocoa) // 一般模式，注意网络请求使用这个，否则主线程刷新UI，网络请求会暂停   ￼￼kCFRunLoopCommonModes (CoreFoundation) 
+<pre><code>￼NSDefaultRunLoopMode(Cocoa)  // 最常用的一种模式，大多数的时候都使用他    ￼￼kCFRunLoopDefaultMode (Core￼￼Foundation)  ￼NSRunLoopCommonModes(Cocoa) // 一般模式，注意网络请求使用这个，否则主线程刷新UI，网络请求会暂停   ￼￼kCFRunLoopCommonModes (CoreFoundation) 
 </code></pre>
 
 <h5>3、输入源</h5>
@@ -180,8 +178,7 @@
 1、基于端口的输入源Cocoa 和 Core Foundation 内置支持使用端口相关的对象和函数来创建的基于端 口的源。例如,在 Cocoa 里面你从来不需要直接创建输入源。你只要简单的创建端口 对象,并使用 NSPort 的方法把该端口添加到 run loop。端口对象会自己处理创建和 配置输入源。
 2、自定义输入源，在 Core Foundation,你必须人工创建端口和它的 run loop 源.在两种情况下, 你都可以使用端口相关的函数(CFMachPortRef,CFMessagePortRef,CFSocketRef) 来创建合适的对象。
 3、Cocoa 执行 Selector 的源
-    ￼performSelectorOnMainThread:withObject:waitUntilDone:    ￼￼performSelectorOnMainThread:withObject:waitUntilDone:modes
-    ￼performSelector:onThread:withObject:waitUntilDone:   performSelector:onThread:withObject:waitUntilDone:modes:
+    ￼performSelectorOnMainThread:withObject:waitUntilDone:    ￼￼performSelectorOnMainThread:withObject:waitUntilDone:modes        ￼performSelector:onThread:withObject:waitUntilDone:   performSelector:onThread:withObject:waitUntilDone:modes:
     ￼performSelector:withObject:afterDelay:
     performSelector:withObject:afterDelay:inModes:</p>
 
@@ -1877,7 +1874,7 @@ self.navigationBar.translucent = YES;
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2015/01/30/wang-luo-duo-xian-cheng-de-%5B%3F%5D-xie-zhu-yi-dian/">网络多线程总结</a>
+        <a href="/blog/2015/01/30/wang-luo-duo-xian-cheng-de-%5B%3F%5D-xie-zhu-yi-dian/">多线程总结</a>
       </li>
     
       <li class="post">
