@@ -4,7 +4,7 @@
   <title><![CDATA[My iOS Journey]]></title>
   <link href="http://zhaoyan106.github.io/atom.xml" rel="self"/>
   <link href="http://zhaoyan106.github.io/"/>
-  <updated>2015-02-02T10:43:49+08:00</updated>
+  <updated>2015-02-02T10:52:51+08:00</updated>
   <id>http://zhaoyan106.github.io/</id>
   <author>
     <name><![CDATA[zhao yan]]></name>
@@ -79,12 +79,21 @@
 
 <p>3、设置一个runloop</p>
 
-<pre><code>+ (void)httpThreadWork{     @autoreleasepool { // 创建一个自动释放池子            // 线程命名，方便调试          [[NSThread currentThread] setName:@"eLongHttpThread"];                  // runloop一直运行 （注意：runloop运行的几条必须要素）            NSRunLoop *runLoop = [NSRunLoop currentRunLoop];            [runLoop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];           [runLoop run];      }   }
+<pre><code>+ (void)httpThreadWork{
+    @autoreleasepool {
+        // 线程命名，方便调试
+        [[NSThread currentThread] setName:@"eLongHttpThread"];
+
+        // runloop一直运行
+        NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+        [runLoop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];
+        [runLoop run];
+    }
+}
+##二、runloop####1、runloop的基本介绍
 </code></pre>
 
-<h2>二、runloop####1、runloop的基本介绍</h2>
-
-<p>使用 run loop 的目的是让你的线 程在有工作的时候忙于工作,而没工作的时候处于休眠状态（节能）。应用程序不需要显式的创建这些对象(run loop objects)，每个线程,包括程序的主线程都有与之对应的 run loop object。只有辅助线程（子线程）需要显式的运行它的。输入源(input source)和定时源 (timer source)。输入源传递异步事件,通常消息来自于其他线程或程序。定时源 则传递同步事件,发生在特定时间或者重复的时间间隔。两种源都使用程序的某一特 定的处理例程来处理到达的事件。<img src="http://s10.sinaimg.cn/mw690/711e3e8cte08231c837c9&amp;690" alt="runloop icon" /></p>
+<p>使用 run loop 的目的是让你的线 程在有工作的时候忙于工作,而没工作的时候处于休眠状态（节能）。应用程序不需要显式的创建这些对象(run loop objects)，每个线程,包括程序的主线程都有与之对应的 run loop object。只有辅助线程（子线程）需要显式的运行它的。输入源(input source)和定时源 (timer source)。输入源传递异步事件,通常消息来自于其他线程或程序。定时源 则传递同步事件,发生在特定时间或者重复的时间间隔。两种源都使用程序的某一特 定的处理例程来处理到达的事件。<img src="http://img.blog.csdn.net/20130703215237531?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd3p6dmljdG9yeV90anNk/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="runloop icon" /></p>
 
 <h4>2、runloop模式</h4>
 
@@ -153,9 +162,15 @@ performSelector:withObject:afterDelay:inModes:
 
 <p>无条件的</p>
 
+<p>无条件的进入 run loop 是最简单的方法,但也最不推荐使用的。因为这样会使你的线程处在一个永久的循环中,这会让你对 run loop本身的控制很少。你可以添加或删除输入源和定时器,但是退出 run loop 的唯一方法是杀死它。没有任何办法 可以让这run loop运行在自定义模式下。</p>
+
 <p>设置超时时间</p>
 
+<p>替代无条件进入 run loop 更好的办法是用预设超时时间来运行 run loop,这样 run loop 运作直到某一事件到达或者规定的时间已经到期。如果是事件到达,消息 会被传递给相应的处理程序来处理,然后 run loop 退出。你可以重新启动 run loop 来等待下一事件。如果是规定时间到期了,你只需简单的重启 run loop 或使用此段 时间来做任何的其他工作。</p>
+
 <p>特定模式</p>
+
+<p>除了超时机制,你也可以使用特定的模式来运行你的 run loop。模式和超时不是 互斥的,他们可以在启动 run loop 的时候同时使用。</p>
 
 <p>4、退出runloop</p>
 
