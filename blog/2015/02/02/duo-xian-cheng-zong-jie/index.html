@@ -249,6 +249,88 @@ performSelector:withObject:afterDelay:inModes:
 
 <p>使用 CFRunLoopStop 来显式的停止 run loop 和使用超时时间产生的结果相似。Run loop 把所有剩余的通知发送出去再退出。与设置超时的不同的是你可以在无条 件启动的 run loop 里面使用该技术。
 尽管移除 run loop 的输入源和定时器也可能导致 run loop 退出,但这并不是可靠的退出 run loop 的方法。一些系统例程会添加输入源到 run loop 里面来处理所需事件。因为你的代码未必会考虑到这些输入源,这样可能导致你无法没从系统例程中移除它们。</p>
+
+<h4>6、定义自定义输入源</h4>
+
+<p>1、创建自定义输入源包括定义一下内容
+输入源要处理的信息
+如何与其他线程进行交互
+处理与其他线程之间的交互
+终止输入源
+2、配置定时源
+为了创建一个定时源,你所需要做只是创建一个定时器对象并把它调度到你的runloop。Cocoa程序中使用NSTimer类来创建一个新的定时器对象,而 Core Foundation 中使用 CFRunLoopTimerRef 不透明类型。本质上,NSTimer 类是 Core Foundation 的简单扩展,它提供了便利的特征,例如能使用相同的方法创建和调配定时器。
+Cocoa 中可以使用以下 NSTimer 类方法来创建并调配一个定时器:
+    scheduledTimerWithTimeInterval:target:selector:userInfo:repeats:    scheduledTimerWithTimeInterval:invocation:repeats:
+上述方法创建了定时器并以默认模式把它们添加到当前线程的run loop。你可以手工的创建 NSTimer对象,并通过NSRunLoop 的addTimer:forMode:把它添加到run loop。两种方法都做了相同的事,区别在于你对定时器配置的控制权。例如,如果你手工创建定时器并把它添加到 run loop,你可以选择要添加的模式而不使用默认模式。显示了如何使用这这两种方法创建定时器。第一个定时器在初始化后 1 秒开始运行,此后每隔 0.1 秒运行。第二个定时器则在初始化后 0.2 秒开始运行, 此后每隔 0.2 秒运行。
+    NSRunLoop<em> myRunLoop = [NSRunLoop currentRunLoop];
+    NSDate</em> futureDate = [NSDate dateWithTimeIntervalSinceNow:1.0];
+    NSTimer* myTimer = [[NSTimer alloc] initWithFireDate:futureDate interval:0.1 target:self selector:@selector(myDoFireTimer1:) userInfo:nil repeats:YES];
+    ￼[myRunLoop addTimer:myTimer forMode:NSDefaultRunLoopMode];</p>
+
+<pre><code>// Create and schedule the second timer.    [NSTimer scheduledTimerWithTimeInterval:0.2 target:self selector:@selector(myDoFireTimer2:) userInfo:nil repeats:YES];
+</code></pre>
+
+<p>3、配置基于端口的输入源
+Cocoa 和 Core Foundation 都提供了基于端口的对象用于线程或进程间的通信。以下部分显示如何使用几种不同类型的端口对象建立端口通信。￼￼
+配置 NSMachPort 对象
+为了和 NSMachPort 对象建立稳定的本地连接,你需要创建端口对象并将之加入 相应的线程的 run loop。当运行辅助线程的时候,你传递端口对象到线程的主体入 口点。辅助线程可以使用相同的端口对象将消息返回给原线程。</p>
+
+<p>a) 实现主线程的代码</p>
+
+<pre><code>- (void)launchThread{
+    NSPort *myport = [NSMachPort port];
+    if (myport) {
+        [myport setDelegate:self];
+        [[NSRunLoop currentRunLoop] addPort:myport forMode:NSDefaultRunLoopMode];
+        [NSThread detachNewThreadSelector:@selector(LaunchThreadWithPort:) toTarget:self withObject:myport];
+    }
+}
+</code></pre>
+
+<p>为了在你的线程间建立双向的通信,你需要让你的工作线程在签到的消息中发送自己的本地端口到主线程。主线程接收到签到消息后就可以知道辅助线程运行正常, 并且提供了发送消息给辅助线程的方法。
+主要线程的 handlePortMessage:方法。当由数据到达线程的本地端口时,该方法被调用。当签到消息到达时,此方法可以直接从辅助线程里面检索 端口并保存下来以备后续使用。
+    - (void)handlePortMessage:(NSPortMessage <em>)portMessage{
+        unsigned int message = [portMessage msgid];
+        NSPort </em>distantPort = nil;
+        if (message == kCheckinMessage) {
+            // Get the worker thread’s communications port.
+            distantPort = [portMessage sendMessegae];
+            // Retain and save the worker port for later use.
+            [self storeDistantPort];
+        }else{
+            // Handle other messages.
+        }
+    }</p>
+
+<p>b) 辅助线程的实现代码</p>
+
+<p>对于辅助工作线程,你必须配置线程使用特定的端口以发送消息返回给主要线程。
+创建了线程的自动释放池后,紧接着创建工作对象驱动线程运行。工作对象的 sendCheckinMessage:方法创建了工作线程的本地端口并发送签到消息回主线程。
+    + (void)LaunchThreadWithPort:(id)inData{        NSAutoreleasePool<em> pool = [[NSAutoreleasePool alloc] init];
+        NSPort </em>distantPort = (NSPort <em>)inData;
+        UIViewController</em> workerObj = [[self alloc] init];
+        [workerObj sendCheckinMessage:distantPort];
+        [distantPort release];
+        // Let the run loop process things.
+        do{
+            [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];</p>
+
+<pre><code>    }while (![workerObj shouldExit]);
+    [workerObj release];
+    [pool release];
+}
+</code></pre>
+
+<p>当使用 NSMachPort 时候,本地和远程线程可以使用相同的端口对象在线程间进行单边通信。换句话说,一个线程创建的本地端口对象成为另一个线程的远程端口对象。</p>
+
+<p>显示了辅助线程的签到例程,该方法为之后的通信设置自己的本地端口,然后发送签到消息给主线程。它使用 LaunchThreadWithPort:方法中收到的端口对象做为目标消息。</p>
+
+<pre><code>- (void)sendCheckinMessage:(NSPort*)outPort{        // Retain and save the remote port for future use.      [self setRemotePort:outPort];
+    // Create and configure the worker thread port.     NSPort* myPort = [NSMachPort port];
+    [myPort setDelegate:self];      [[NSRunLoop currentRunLoop] addPort:myPort forMode:NSDefaultRunLoopMode];       // Create the check-in message.
+    NSPortMessage* messageObj = [[NSPortMessage alloc] initWithSendPort:outPort receivePort:myPort components:nil];     if (messageObj){            // Finish configuring the message and send it immediately.          [messageObj setMsgId:setMsgid:kCheckinMessage];         [messageObj sendBeforeDate:[NSDate date]];      }￼￼
+}
+</code></pre>
 </div>
 
 
