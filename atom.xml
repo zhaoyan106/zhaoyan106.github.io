@@ -4,7 +4,7 @@
   <title><![CDATA[My iOS Journey]]></title>
   <link href="http://zhaoyan106.github.io/atom.xml" rel="self"/>
   <link href="http://zhaoyan106.github.io/"/>
-  <updated>2015-02-02T13:34:56+08:00</updated>
+  <updated>2015-02-02T14:05:08+08:00</updated>
   <id>http://zhaoyan106.github.io/</id>
   <author>
     <name><![CDATA[zhao yan]]></name>
@@ -103,7 +103,9 @@
     ￼NSRunLoopCommonModes(Cocoa) // 一般模式，注意网络请求使用这个，否则主线程刷新UI，网络请求会暂停
     ￼￼kCFRunLoopCommonModes (CoreFoundation)</p>
 
-<h4>3、输入源事件来源取决于输入源的种类:基于端口的输入源和自定义输入源。基于端口的输入源监听程序相应的端口。自定义输入源则监 听自定义的事件源。至于 run loop,它不关心输入源的是基于端口的输入源还是自定义的输入源。系统会实现两种输入源供你使用。</h4>
+<h4>3、输入源</h4>
+
+<p>事件来源取决于输入源的种类:基于端口的输入源和自定义输入源。基于端口的输入源监听程序相应的端口。自定义输入源则监 听自定义的事件源。至于 run loop,它不关心输入源的是基于端口的输入源还是自定义的输入源。系统会实现两种输入源供你使用。</p>
 
 <p>两类输入源的区别在于如何显示: 基于端口的输入源由内核自动发送,而自定义的则需要人工从其他线程发送。</p>
 
@@ -158,8 +160,9 @@ performSelector:withObject:afterDelay:inModes:
 
 <p><code>（当前长时间运行的线程配置 run loop 的时候,最好添加至少一个输入源到 run loop 以接收消息。虽然你可以使用附属的定时器来进入 run loop,但是一旦定时器 触发后,它通常就变为无效了,这会导致 run loop 退出。虽然附加一个循环的定时 器可以让 run loop 运行一个相对较长的周期,但是这也会导致周期性的唤醒线程, 这实际上是轮询(polling)的另一种形式而已。与之相反,输入源会一直等待某事 件发生,在事情导致前它让线程处于休眠状态。）</code></p>
 
-<p>3、启动runloop
-有几种方式可以启动runloop,包括以下这些:</p>
+<p>3、启动runloop</p>
+
+<p>有几种方式可以启动runloop,包括以下这些:</p>
 
 <p>无条件的</p>
 
@@ -195,13 +198,15 @@ performSelector:withObject:afterDelay:inModes:
 为了创建一个定时源,你所需要做只是创建一个定时器对象并把它调度到你的runloop。Cocoa程序中使用NSTimer类来创建一个新的定时器对象,而 Core Foundation 中使用 CFRunLoopTimerRef 不透明类型。本质上,NSTimer 类是 Core Foundation 的简单扩展,它提供了便利的特征,例如能使用相同的方法创建和调配定时器。
 Cocoa 中可以使用以下 NSTimer 类方法来创建并调配一个定时器:
     scheduledTimerWithTimeInterval:target:selector:userInfo:repeats:    scheduledTimerWithTimeInterval:invocation:repeats:
-上述方法创建了定时器并以默认模式把它们添加到当前线程的run loop。你可以手工的创建 NSTimer对象,并通过NSRunLoop 的addTimer:forMode:把它添加到run loop。两种方法都做了相同的事,区别在于你对定时器配置的控制权。例如,如果你手工创建定时器并把它添加到 run loop,你可以选择要添加的模式而不使用默认模式。显示了如何使用这这两种方法创建定时器。第一个定时器在初始化后 1 秒开始运行,此后每隔 0.1 秒运行。第二个定时器则在初始化后 0.2 秒开始运行, 此后每隔 0.2 秒运行。
-    NSRunLoop<em> myRunLoop = [NSRunLoop currentRunLoop];
-    NSDate</em> futureDate = [NSDate dateWithTimeIntervalSinceNow:1.0];
-    NSTimer* myTimer = [[NSTimer alloc] initWithFireDate:futureDate interval:0.1 target:self selector:@selector(myDoFireTimer1:) userInfo:nil repeats:YES];
-    ￼[myRunLoop addTimer:myTimer forMode:NSDefaultRunLoopMode];</p>
+上述方法创建了定时器并以默认模式把它们添加到当前线程的run loop。你可以手工的创建 NSTimer对象,并通过NSRunLoop 的addTimer:forMode:把它添加到run loop。两种方法都做了相同的事,区别在于你对定时器配置的控制权。例如,如果你手工创建定时器并把它添加到 run loop,你可以选择要添加的模式而不使用默认模式。
+显示了如何使用这这两种方法创建定时器。第一个定时器在初始化后1秒开始运行,此后每隔0.1秒运行。第二个定时器则在初始化后0.2秒开始运行,此后每隔0.2秒运行。</p>
 
-<pre><code>// Create and schedule the second timer.    [NSTimer scheduledTimerWithTimeInterval:0.2 target:self selector:@selector(myDoFireTimer2:) userInfo:nil repeats:YES];
+<pre><code>NSRunLoop* myRunLoop = [NSRunLoop currentRunLoop];
+NSDate* futureDate = [NSDate dateWithTimeIntervalSinceNow:1.0];
+NSTimer* myTimer = [[NSTimer alloc] initWithFireDate:futureDate interval:0.1 target:self selector:@selector(myDoFireTimer1:) userInfo:nil repeats:YES];
+￼[myRunLoop addTimer:myTimer forMode:NSDefaultRunLoopMode];
+
+// Create and schedule the second timer.    [NSTimer scheduledTimerWithTimeInterval:0.2 target:self selector:@selector(myDoFireTimer2:) userInfo:nil repeats:YES];
 </code></pre>
 
 <p>3、配置基于端口的输入源
