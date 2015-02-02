@@ -1,0 +1,41 @@
+---
+layout: post
+title: "AFNetworking源码解析(四)"
+date: 2014-11-01 15:02:47 +0800
+comments: true
+categories: 
+---
+原文地址：<http://www.cocoachina.com/ios/20141120/10265.html>
+本篇主要讲解AFURLResponseSerialization。
+
+####结构
+AFURLResponseSerialization负责解析网络返回数据，检查数据是否合法，把NSData数据转成相应的对象，内置的转换器有json,xml,plist,image，用户可以很方便地继承基类AFHTTPResponseSerializer去解析更多的数据格式，AFNetworking这一套响应解析机制结构很简单，主要就是两个方法：
+
+######1.-validateResponse:data:error:
+
+基类AFHTTPResponseSerializer的这个方法检测返回的HTTP状态码和数据类型是否合法，属性acceptableStatusCodes和acceptableContentTypes规定了合法的状态码和数据类型，例如JSONSerialization就把acceptableContentTypes设为@”application/json”, @”text/json”, @”text/javascript”，若不是这三者之一，就验证失败，返回相应的NSError对象。一般子类不需要重写这个方法，只需要设置好acceptableStatusCodes和acceptableContentTypes就行了。
+
+######2.-responseObjectForResponse:data:error:
+这个方法解析数据，把NSData转成相应的对象，上层AFURLConnectionOperation会调用这个方法获取转换后的对象。
+
+在解析数据之前会先调上述的validateResponse方法检测HTTP响应是否合法，要注意的是即使这里检测返回不合法，也会继续解析数据生成对象，因为有可能错误信息就在返回的数据里。
+
+如果validateResponse返回error，这里的解析数据又出错，这时有两个error对象，怎样返回给上层？这里的处理是把解析数据的NSError对象保存到validateResponse NSError的userInfo里，作为UnderlyingError，NSError专门给了个NSUnderlyingErrorKey作为这种错误包含错误的键值。
+
+剩下的就是NSecureCoding相关方法了，如果子类增加了property，需要加上相应的NSecureCoding方法。
+
+####JSON解析
+AFJSONResponseSerializer使用系统内置的NSJSONSerialization解析json，NSJSON只支持解析UTF8编码的数据（还有UTF-16LE之类的，都不常用），所以要先把返回的数据转成UTF8格式。这里会尝试用HTTP返回的编码类型和自己设置的stringEncoding去把数据解码转成字符串NSString，再把NSString用UTF8编码转成NSData，再用NSJSONSerialization解析成对象返回。
+
+上述过程是NSData->NSString->NSData->NSObject，这里有个问题，如果你能确定服务端返回的是UTF8编码的json数据，那NSData->NSString->NSData这两步就是无意义的，而且这两步进行了两次编解码，很浪费性能，所以如果确定服务端返回utf8编码数据，就建议自己再写个JSONResponseSerializer，跳过这两个步骤。
+
+此外AFJSONResponseSerializer专门写了个方法去除NSNull，直接把对象里值是NSNull的键去掉，还蛮贴心，若不去掉，上层很容易忽略了这个数据类型，判断了数据是否nil没判断是否NSNull，进行了错误的调用导致core。
+
+####图片解压
+当我们调用UIImage的方法imageWithData:方法把数据转成UIImage对象后，其实这时UIImage对象还没准备好需要渲染到屏幕的数据，现在的网络图像PNG和JPG都是压缩格式，需要把它们解压转成bitmap后才能渲染到屏幕上，如果不做任何处理，当你把UIImage赋给UIImageView，在渲染之前底层会判断到UIImage对象未解压，没有bitmap数据，这时会在主线程对图片进行解压操作，再渲染到屏幕上。这个解压操作是比较耗时的，如果任由它在主线程做，可能会导致速度慢UI卡顿的问题。
+
+AFImageResponseSerializer除了把返回数据解析成UIImage外，还会把图像数据解压，这个处理是在子线程（AFNetworking专用的一条线程，详见AFURLConnectionOperation），处理后上层使用返回的UIImage在主线程渲染时就不需要做解压这步操作，主线程减轻了负担，减少了UI卡顿问题。
+
+具体实现上在AFInflatedImageFromResponseWithDataAtScale里，创建一个画布，把UIImage画在画布上，再把这个画布保存成UIImage返回给上层。只有JPG和PNG才会尝试去做解压操作，期间如果解压失败，或者遇到CMKY颜色格式的jpg，或者图像太大(解压后的bitmap太占内存，一个像素3-4字节，搞不好内存就爆掉了)，就直接返回未解压的图像。
+
+另外在代码里看到iOS才需要这样手动解压，MacOS上已经有封装好的对象NSBitmapImageRep可以做这个事。
