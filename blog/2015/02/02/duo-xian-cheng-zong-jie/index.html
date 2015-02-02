@@ -156,8 +156,9 @@
         [runLoop run];
     }
 }
-##二、runloop####1、runloop的基本介绍
 </code></pre>
+
+<h2>二、runloop####1、runloop的基本介绍</h2>
 
 <p>使用 run loop 的目的是让你的线 程在有工作的时候忙于工作,而没工作的时候处于休眠状态（节能）。应用程序不需要显式的创建这些对象(run loop objects)，每个线程,包括程序的主线程都有与之对应的 run loop object。只有辅助线程（子线程）需要显式的运行它的。输入源(input source)和定时源 (timer source)。输入源传递异步事件,通常消息来自于其他线程或程序。定时源 则传递同步事件,发生在特定时间或者重复的时间间隔。两种源都使用程序的某一特 定的处理例程来处理到达的事件。<img src="http://img.blog.csdn.net/20130703215237531?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd3p6dmljdG9yeV90anNk/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="runloop icon" /></p>
 
@@ -242,7 +243,12 @@ performSelector:withObject:afterDelay:inModes:
 
 <p>给runloop设置超时时间</p>
 
+<p>如果可以配置的话,推荐使用第一种方法。指定一个超时时间可以使 run loop 退出前完成所有正常操作,包括发送消息给 run loop 观察者。</p>
+
 <p>通知runloop停止</p>
+
+<p>使用 CFRunLoopStop 来显式的停止 run loop 和使用超时时间产生的结果相似。Run loop 把所有剩余的通知发送出去再退出。与设置超时的不同的是你可以在无条 件启动的 run loop 里面使用该技术。
+尽管移除 run loop 的输入源和定时器也可能导致 run loop 退出,但这并不是可靠的退出 run loop 的方法。一些系统例程会添加输入源到 run loop 里面来处理所需事件。因为你的代码未必会考虑到这些输入源,这样可能导致你无法没从系统例程中移除它们。</p>
 </div>
 
 
