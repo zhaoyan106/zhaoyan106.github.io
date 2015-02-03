@@ -161,13 +161,18 @@
 }
 </code></pre>
 
-<h2>二、runloop####1、runloop的基本介绍</h2>
+<hr />
+
+<h2>二、runloop</h2>
+
+<h4>1、runloop的基本介绍</h4>
 
 <p>使用 run loop 的目的是让你的线 程在有工作的时候忙于工作,而没工作的时候处于休眠状态（节能）。应用程序不需要显式的创建这些对象(run loop objects)，每个线程,包括程序的主线程都有与之对应的 run loop object。只有辅助线程（子线程）需要显式的运行它的。输入源(input source)和定时源 (timer source)。输入源传递异步事件,通常消息来自于其他线程或程序。定时源 则传递同步事件,发生在特定时间或者重复的时间间隔。两种源都使用程序的某一特 定的处理例程来处理到达的事件。<img src="http://img.blog.csdn.net/20130703215237531?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd3p6dmljdG9yeV90anNk/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="runloop icon" /></p>
 
 <h4>2、runloop模式</h4>
 
-<p>run loops 会生成关于 run loop 行为的通知 (notifications)。注册 run loop 观察者(run-loop Observers)可以收到这些通知, 并在线程上面使用它们来做额外的处理。在 run loop 运行过程中,<code>只有和模式相关的源才会被监视并允许他们传递事件消息。</code>(类似的,只有和模式相关的观察者会通知 run loop 的进程)。和其他模式关联的源只有在 run loop 运行在其模式下才会运行,否则处于暂停状态。  ￼NSDefaultRunLoopMode(Cocoa)  // 最常用的一种模式，大多数的时候都使用他
+<p>run loops 会生成关于 run loop 行为的通知 (notifications)。注册 run loop 观察者(run-loop Observers)可以收到这些通知, 并在线程上面使用它们来做额外的处理。在 run loop 运行过程中,<code>只有和模式相关的源才会被监视并允许他们传递事件消息。</code>(类似的,只有和模式相关的观察者会通知 run loop 的进程)。和其他模式关联的源只有在 run loop 运行在其模式下才会运行,否则处于暂停状态。
+    ￼NSDefaultRunLoopMode(Cocoa)  // 最常用的一种模式，大多数的时候都使用他
     ￼￼kCFRunLoopDefaultMode (Core￼￼Foundation)
     ￼NSRunLoopCommonModes(Cocoa) // 一般模式，注意网络请求使用这个，否则主线程刷新UI，网络请求会暂停
     ￼￼kCFRunLoopCommonModes (CoreFoundation)</p>
@@ -339,6 +344,92 @@ Cocoa 和 Core Foundation 都提供了基于端口的对象用于线程或进程
     NSPortMessage* messageObj = [[NSPortMessage alloc] initWithSendPort:outPort receivePort:myPort components:nil];     if (messageObj){            // Finish configuring the message and send it immediately.          [messageObj setMsgId:setMsgid:kCheckinMessage];         [messageObj sendBeforeDate:[NSDate date]];      }￼￼
 }
 </code></pre>
+
+<hr />
+
+<h2>三、线程同步</h2>
+
+<p>火车票卖票案例，使用NSLock,NSCondition</p>
+
+<pre><code>#import &lt;UIKit/UIKit.h&gt;   
+
+@class ViewController;   
+
+@interface AppDelegate : UIResponder &lt;UIApplicationDelegate&gt;   
+{   
+    int tickets;   
+    int count;   
+    NSThread* ticketsThreadone;   
+    NSThread* ticketsThreadtwo;   
+    NSCondition* ticketsCondition;   
+    NSLock *theLock;   
+}   
+@property (strong, nonatomic) UIWindow *window;   
+
+@property (strong, nonatomic) ViewController *viewController;   
+
+@end   
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions   
+{   
+
+    tickets = 100;   
+    count = 0;   
+    theLock = [[NSLock alloc] init];   
+    // 锁对象   
+    ticketsCondition = [[NSCondition alloc] init];   
+    ticketsThreadone = [[NSThread alloc] initWithTarget:self selector:@selector(run) object:nil];   
+    [ticketsThreadone setName:@"Thread-1"];   
+    [ticketsThreadone start];   
+
+
+    ticketsThreadtwo = [[NSThread alloc] initWithTarget:self selector:@selector(run) object:nil];   
+    [ticketsThreadtwo setName:@"Thread-2"];   
+    [ticketsThreadtwo start];   
+
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];   
+    // Override point for customization after application launch.   
+    self.viewController = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];   
+    self.window.rootViewController = self.viewController;   
+    [self.window makeKeyAndVisible];   
+    return YES;   
+}   
+
+- (void)run{   
+    while (TRUE) {   
+        // 上锁   
+//        [ticketsCondition lock];   
+        [theLock lock];   
+        if(tickets &gt;= 0){   
+            [NSThread sleepForTimeInterval:0.09];   
+            count = 100 - tickets;   
+            NSLog(@"当前票数是:%d,售出:%d,线程名:%@",tickets,count,[[NSThread currentThread] name]);   
+            tickets--;   
+        }else{   
+            break;   
+        }   
+        [theLock unlock];   
+//        [ticketsCondition unlock];   
+    }   
+}   
+</code></pre>
+
+<p>如果没有线程同步的lock，卖票数可能是-1.加上lock之后线程同步保证了数据的正确性。</p>
+
+<p>上面例子使用了两种锁，一种NSCondition ，一种是：NSLock。 NSCondition我已经注释了。</p>
+
+<p>其他同步</p>
+
+<p>可以使用指令 @synchronized 来简化 NSLock的使用，这样我们就不必显示编写创建NSLock,加锁并解锁相关代码。</p>
+
+<pre><code>- (void)doSomeThing:(id)anObj 
+{ 
+    @synchronized(anObj) 
+    { 
+        // Everything between the braces is protected by the @synchronized directive. 
+    } 
+}
+</code></pre>
 </div>
   
   
@@ -422,17 +513,17 @@ Cocoa 和 Core Foundation 都提供了基于端口的对象用于线程或进程
 <pre><code>- (void)start;
 </code></pre>
 
-<p>（必须）所有并发操作都必须覆盖这个方法，以自定义的实现替换默认行为。手动执行一个操作时，你会调用start方法。因此你对这个方法的实现是操作的起点，设置一个线程或其它执行环境，来执行你的任务。你的实现在任何时候都绝对不能调用super。</p>
+<p>（<code>必须</code>）所有<code>并发</code>操作都必须覆盖这个方法，以自定义的实现替换默认行为。手动执行一个操作时，你会调用start方法。因此你对这个方法的实现是操作的起点，设置一个线程或其它执行环境，来执行你的任务。你的实现在任何时候都绝对不能调用super。</p>
 
 <pre><code>- (void)main;
 </code></pre>
 
-<p>（可选）这个方法通常用来实现operation对象相关联的任务。尽管你可以在start方法中执行任务，使用main来实现任务可以让你的代码更加清晰地分离设置和任务代码</p>
+<p>（<code>可选</code>）这个方法通常用来实现operation对象相关联的任务。尽管你可以在start方法中执行任务，使用main来实现任务可以让你的代码更加清晰地分离设置和任务代码</p>
 
 <pre><code>isExecuting、isFinished
 </code></pre>
 
-<p>（必须）并发操作负责设置自己的执行环境，并向外部client报告执行环境的状态。因此并发操作必须维护某些状态信息，以知道是否正在执行任务，是否已经完成任务。使用这两个方法报告自己的状态。
+<p>（<code>必须</code>）并发操作负责设置自己的执行环境，并向外部client报告执行环境的状态。因此并发操作必须维护某些状态信息，以知道是否正在执行任务，是否已经完成任务。使用这两个方法报告自己的状态。
 这两个方法的实现必须能够在其它多个线程中同时调用。另外这些方法报告的状态变化时，还需要为相应的key path产生适当的KVO通知。</p>
 
 <pre><code>isConcurrent
