@@ -68,15 +68,25 @@ categories:
 	        [runLoop run];
 	    }
 	}
-	##二、runloop####1、runloop的基本介绍
+	
+***
+
+##二、runloop
+
+####1、runloop的基本介绍
+
 使用 run loop 的目的是让你的线 程在有工作的时候忙于工作,而没工作的时候处于休眠状态（节能）。应用程序不需要显式的创建这些对象(run loop objects)，每个线程,包括程序的主线程都有与之对应的 run loop object。只有辅助线程（子线程）需要显式的运行它的。输入源(input source)和定时源 (timer source)。输入源传递异步事件,通常消息来自于其他线程或程序。定时源 则传递同步事件,发生在特定时间或者重复的时间间隔。两种源都使用程序的某一特 定的处理例程来处理到达的事件。![runloop icon](http://img.blog.csdn.net/20130703215237531?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd3p6dmljdG9yeV90anNk/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
 
 ####2、runloop模式
-run loops 会生成关于 run loop 行为的通知 (notifications)。注册 run loop 观察者(run-loop Observers)可以收到这些通知, 并在线程上面使用它们来做额外的处理。在 run loop 运行过程中,`只有和模式相关的源才会被监视并允许他们传递事件消息。`(类似的,只有和模式相关的观察者会通知 run loop 的进程)。和其他模式关联的源只有在 run loop 运行在其模式下才会运行,否则处于暂停状态。	￼NSDefaultRunLoopMode(Cocoa)  // 最常用的一种模式，大多数的时候都使用他
+
+run loops 会生成关于 run loop 行为的通知 (notifications)。注册 run loop 观察者(run-loop Observers)可以收到这些通知, 并在线程上面使用它们来做额外的处理。在 run loop 运行过程中,`只有和模式相关的源才会被监视并允许他们传递事件消息。`(类似的,只有和模式相关的观察者会通知 run loop 的进程)。和其他模式关联的源只有在 run loop 运行在其模式下才会运行,否则处于暂停状态。
+	￼NSDefaultRunLoopMode(Cocoa)  // 最常用的一种模式，大多数的时候都使用他
 	￼￼kCFRunLoopDefaultMode (Core￼￼Foundation)
 	￼NSRunLoopCommonModes(Cocoa) // 一般模式，注意网络请求使用这个，否则主线程刷新UI，网络请求会暂停
 	￼￼kCFRunLoopCommonModes (CoreFoundation)
-####3、输入源事件来源取决于输入源的种类:基于端口的输入源和自定义输入源。基于端口的输入源监听程序相应的端口。自定义输入源则监 听自定义的事件源。至于 run loop,它不关心输入源的是基于端口的输入源还是自定义的输入源。系统会实现两种输入源供你使用。
+
+####3、输入源
+事件来源取决于输入源的种类:基于端口的输入源和自定义输入源。基于端口的输入源监听程序相应的端口。自定义输入源则监 听自定义的事件源。至于 run loop,它不关心输入源的是基于端口的输入源还是自定义的输入源。系统会实现两种输入源供你使用。
 
 两类输入源的区别在于如何显示: 基于端口的输入源由内核自动发送,而自定义的则需要人工从其他线程发送。
 
@@ -103,6 +113,7 @@ run loops 会生成关于 run loop 行为的通知 (notifications)。注册 run 
 如果定时器被设定在某一特定时间开始并5秒重复一次,那么定时器会在那个特定时间后5秒启动,即使在那个特定的触发时间延迟了。如果定时器被延迟以至于它错过了一个或多个触发时间,那么定时器会在下一个最近的触发事件启动,而后面会按照触发间隔正常执行。
 
 ####4、何时使用runloop
+
 1、仅当在为你的程序创建辅助线程的时候,你才需要显式运行一个 run loop
 
 2、对于辅助线程,你需要判断一个run loop是否是必须的。如果是必须的,那么你要自己配置并启动它。你不需要在任何情况下都去启动一个线程的run loop。比如,你使用线程来处理一个预先定义的长时间运行的任务时,你应该避免启动runloop。
@@ -118,6 +129,7 @@ Cocoa中使用任何performSelector...的方法
 使线程周期性工作
 
 ####5、runloop对象
+
 1、获取runloop对象
 
 为了获得当前线程的 run loop,Cocoa 程序中,使用 NSRunLoop 的 currentRunLoop 类方法来检索一个NSRunLoop 对象。
@@ -129,6 +141,7 @@ Cocoa中使用任何performSelector...的方法
 `（当前长时间运行的线程配置 run loop 的时候,最好添加至少一个输入源到 run loop 以接收消息。虽然你可以使用附属的定时器来进入 run loop,但是一旦定时器 触发后,它通常就变为无效了,这会导致 run loop 退出。虽然附加一个循环的定时 器可以让 run loop 运行一个相对较长的周期,但是这也会导致周期性的唤醒线程, 这实际上是轮询(polling)的另一种形式而已。与之相反,输入源会一直等待某事 件发生,在事情导致前它让线程处于休眠状态。）`
 
 3、启动runloop
+
 有几种方式可以启动runloop,包括以下这些:
 
 无条件的
@@ -147,4 +160,172 @@ Cocoa中使用任何performSelector...的方法
 
 给runloop设置超时时间
 
+如果可以配置的话,推荐使用第一种方法。指定一个超时时间可以使 run loop 退出前完成所有正常操作,包括发送消息给 run loop 观察者。
+
 通知runloop停止
+
+使用 CFRunLoopStop 来显式的停止 run loop 和使用超时时间产生的结果相似。Run loop 把所有剩余的通知发送出去再退出。与设置超时的不同的是你可以在无条 件启动的 run loop 里面使用该技术。
+尽管移除 run loop 的输入源和定时器也可能导致 run loop 退出,但这并不是可靠的退出 run loop 的方法。一些系统例程会添加输入源到 run loop 里面来处理所需事件。因为你的代码未必会考虑到这些输入源,这样可能导致你无法没从系统例程中移除它们。
+####6、定义自定义输入源
+1、创建自定义输入源包括定义一下内容
+输入源要处理的信息
+如何与其他线程进行交互
+处理与其他线程之间的交互
+终止输入源
+2、配置定时源
+为了创建一个定时源,你所需要做只是创建一个定时器对象并把它调度到你的runloop。Cocoa程序中使用NSTimer类来创建一个新的定时器对象,而 Core Foundation 中使用 CFRunLoopTimerRef 不透明类型。本质上,NSTimer 类是 Core Foundation 的简单扩展,它提供了便利的特征,例如能使用相同的方法创建和调配定时器。
+Cocoa 中可以使用以下 NSTimer 类方法来创建并调配一个定时器:
+	scheduledTimerWithTimeInterval:target:selector:userInfo:repeats:	scheduledTimerWithTimeInterval:invocation:repeats:
+上述方法创建了定时器并以默认模式把它们添加到当前线程的run loop。你可以手工的创建 NSTimer对象,并通过NSRunLoop 的addTimer:forMode:把它添加到run loop。两种方法都做了相同的事,区别在于你对定时器配置的控制权。例如,如果你手工创建定时器并把它添加到 run loop,你可以选择要添加的模式而不使用默认模式。
+显示了如何使用这这两种方法创建定时器。第一个定时器在初始化后1秒开始运行,此后每隔0.1秒运行。第二个定时器则在初始化后0.2秒开始运行,此后每隔0.2秒运行。
+
+	NSRunLoop* myRunLoop = [NSRunLoop currentRunLoop];
+	NSDate* futureDate = [NSDate dateWithTimeIntervalSinceNow:1.0];
+	NSTimer* myTimer = [[NSTimer alloc] initWithFireDate:futureDate interval:0.1 target:self selector:@selector(myDoFireTimer1:) userInfo:nil repeats:YES];
+	￼[myRunLoop addTimer:myTimer forMode:NSDefaultRunLoopMode];
+	
+	// Create and schedule the second timer.	[NSTimer scheduledTimerWithTimeInterval:0.2 target:self selector:@selector(myDoFireTimer2:) userInfo:nil repeats:YES];
+	
+3、配置基于端口的输入源
+Cocoa 和 Core Foundation 都提供了基于端口的对象用于线程或进程间的通信。以下部分显示如何使用几种不同类型的端口对象建立端口通信。￼￼
+配置 NSMachPort 对象
+为了和 NSMachPort 对象建立稳定的本地连接,你需要创建端口对象并将之加入 相应的线程的 run loop。当运行辅助线程的时候,你传递端口对象到线程的主体入 口点。辅助线程可以使用相同的端口对象将消息返回给原线程。
+
+a) 实现主线程的代码
+
+	- (void)launchThread{
+	    NSPort *myport = [NSMachPort port];
+	    if (myport) {
+	        [myport setDelegate:self];
+	        [[NSRunLoop currentRunLoop] addPort:myport forMode:NSDefaultRunLoopMode];
+	        [NSThread detachNewThreadSelector:@selector(LaunchThreadWithPort:) toTarget:self withObject:myport];
+	    }
+	}
+	
+为了在你的线程间建立双向的通信,你需要让你的工作线程在签到的消息中发送自己的本地端口到主线程。主线程接收到签到消息后就可以知道辅助线程运行正常, 并且提供了发送消息给辅助线程的方法。
+主要线程的 handlePortMessage:方法。当由数据到达线程的本地端口时,该方法被调用。当签到消息到达时,此方法可以直接从辅助线程里面检索 端口并保存下来以备后续使用。
+	- (void)handlePortMessage:(NSPortMessage *)portMessage{
+	    unsigned int message = [portMessage msgid];
+	    NSPort *distantPort = nil;
+	    if (message == kCheckinMessage) {
+	        // Get the worker thread’s communications port.
+	        distantPort = [portMessage sendMessegae];
+	        // Retain and save the worker port for later use.
+	        [self storeDistantPort];
+	    }else{
+	        // Handle other messages.
+	    }
+	}
+	
+b) 辅助线程的实现代码
+
+对于辅助工作线程,你必须配置线程使用特定的端口以发送消息返回给主要线程。
+创建了线程的自动释放池后,紧接着创建工作对象驱动线程运行。工作对象的 sendCheckinMessage:方法创建了工作线程的本地端口并发送签到消息回主线程。
+	+ (void)LaunchThreadWithPort:(id)inData{	    NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+	    NSPort *distantPort = (NSPort *)inData;
+	    UIViewController* workerObj = [[self alloc] init];
+	    [workerObj sendCheckinMessage:distantPort];
+	    [distantPort release];
+	    // Let the run loop process things.
+	    do{
+	        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
+	        
+	    }while (![workerObj shouldExit]);
+	    [workerObj release];
+	    [pool release];
+	}
+
+当使用 NSMachPort 时候,本地和远程线程可以使用相同的端口对象在线程间进行单边通信。换句话说,一个线程创建的本地端口对象成为另一个线程的远程端口对象。
+
+显示了辅助线程的签到例程,该方法为之后的通信设置自己的本地端口,然后发送签到消息给主线程。它使用 LaunchThreadWithPort:方法中收到的端口对象做为目标消息。
+
+	- (void)sendCheckinMessage:(NSPort*)outPort{	    // Retain and save the remote port for future use.	    [self setRemotePort:outPort];
+	    // Create and configure the worker thread port.	    NSPort* myPort = [NSMachPort port];
+	    [myPort setDelegate:self];	    [[NSRunLoop currentRunLoop] addPort:myPort forMode:NSDefaultRunLoopMode];	    // Create the check-in message.
+	    NSPortMessage* messageObj = [[NSPortMessage alloc] initWithSendPort:outPort receivePort:myPort components:nil];	    if (messageObj){	        // Finish configuring the message and send it immediately.	        [messageObj setMsgId:setMsgid:kCheckinMessage];	        [messageObj sendBeforeDate:[NSDate date]];	    }￼￼
+	}
+
+***
+##三、线程同步
+火车票卖票案例，使用NSLock,NSCondition
+
+	#import <UIKit/UIKit.h>   
+	   
+	@class ViewController;   
+	   
+	@interface AppDelegate : UIResponder <UIApplicationDelegate>   
+	{   
+	    int tickets;   
+	    int count;   
+	    NSThread* ticketsThreadone;   
+	    NSThread* ticketsThreadtwo;   
+	    NSCondition* ticketsCondition;   
+	    NSLock *theLock;   
+	}   
+	@property (strong, nonatomic) UIWindow *window;   
+	   
+	@property (strong, nonatomic) ViewController *viewController;   
+	   
+	@end   
+	  
+	- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions   
+	{   
+	       
+	    tickets = 100;   
+	    count = 0;   
+	    theLock = [[NSLock alloc] init];   
+	    // 锁对象   
+	    ticketsCondition = [[NSCondition alloc] init];   
+	    ticketsThreadone = [[NSThread alloc] initWithTarget:self selector:@selector(run) object:nil];   
+	    [ticketsThreadone setName:@"Thread-1"];   
+	    [ticketsThreadone start];   
+	       
+	       
+	    ticketsThreadtwo = [[NSThread alloc] initWithTarget:self selector:@selector(run) object:nil];   
+	    [ticketsThreadtwo setName:@"Thread-2"];   
+	    [ticketsThreadtwo start];   
+	       
+	    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];   
+	    // Override point for customization after application launch.   
+	    self.viewController = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];   
+	    self.window.rootViewController = self.viewController;   
+	    [self.window makeKeyAndVisible];   
+	    return YES;   
+	}   
+	   
+	- (void)run{   
+	    while (TRUE) {   
+	        // 上锁   
+	//        [ticketsCondition lock];   
+	        [theLock lock];   
+	        if(tickets >= 0){   
+	            [NSThread sleepForTimeInterval:0.09];   
+	            count = 100 - tickets;   
+	            NSLog(@"当前票数是:%d,售出:%d,线程名:%@",tickets,count,[[NSThread currentThread] name]);   
+	            tickets--;   
+	        }else{   
+	            break;   
+	        }   
+	        [theLock unlock];   
+	//        [ticketsCondition unlock];   
+	    }   
+	}   
+
+如果没有线程同步的lock，卖票数可能是-1.加上lock之后线程同步保证了数据的正确性。
+ 
+上面例子使用了两种锁，一种NSCondition ，一种是：NSLock。 NSCondition我已经注释了。
+
+其他同步
+
+可以使用指令 @synchronized 来简化 NSLock的使用，这样我们就不必显示编写创建NSLock,加锁并解锁相关代码。
+
+	- (void)doSomeThing:(id)anObj 
+	{ 
+	    @synchronized(anObj) 
+	    { 
+	        // Everything between the braces is protected by the @synchronized directive. 
+	    } 
+	}
+
+ 
+	
