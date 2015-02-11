@@ -4,7 +4,7 @@
   <title><![CDATA[My iOS Journey]]></title>
   <link href="http://zhaoyan106.github.io/atom.xml" rel="self"/>
   <link href="http://zhaoyan106.github.io/"/>
-  <updated>2015-02-09T14:33:54+08:00</updated>
+  <updated>2015-02-11T14:48:49+08:00</updated>
   <id>http://zhaoyan106.github.io/</id>
   <author>
     <name><![CDATA[zhao yan]]></name>
@@ -12,6 +12,15 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[压缩/截取上传图片,设置圆形UIImageView,App版本更新]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/"/>
+    <updated>2015-02-11T14:47:42+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian</id>
+    <content type="html"><![CDATA[
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[POST请求上传文件]]></title>
