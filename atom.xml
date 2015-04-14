@@ -4,7 +4,7 @@
   <title><![CDATA[My iOS Journey]]></title>
   <link href="http://zhaoyan106.github.io/atom.xml" rel="self"/>
   <link href="http://zhaoyan106.github.io/"/>
-  <updated>2015-02-11T15:12:13+08:00</updated>
+  <updated>2015-04-14T17:28:15+08:00</updated>
   <id>http://zhaoyan106.github.io/</id>
   <author>
     <name><![CDATA[zhao yan]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[压缩、截取上传图片,设置圆形UIImageView,App版本更新]]></title>
+    <title type="html"><![CDATA[压缩、截取上传图片,设置圆形UIImageView,App版本更新，设置tableView随textFiled焦点滑动]]></title>
     <link href="http://zhaoyan106.github.io/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/"/>
     <updated>2015-02-11T14:47:42+08:00</updated>
     <id>http://zhaoyan106.github.io/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian</id>
@@ -173,6 +173,34 @@ self.icon.backgroundColor = [UIColor whiteColor];
     @"itms-apps://itunes.apple.com/app/id%@",APPID];
 
     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:str]];
+</code></pre>
+
+<h4>四、设置tableView随textFiled焦点滑动</h4>
+
+<h6>第一种方法：</h6>
+
+<p>CGPoint origin = textField.frame.origin;</p>
+
+<pre><code>CGPoint point = [textField.superview convertPoint:origin toView:self.tableView];
+
+float navBarHeight = self.navigationController.navigationBar.frame.size.height;
+
+CGPoint offset = self.tableView.contentOffset;
+
+offset.y = (point.y - navBarHeight);
+
+[self.tableView setContentOffset:offset animated:YES];
+</code></pre>
+
+<h6>第二种方法</h6>
+
+<pre><code>CGPoint point = [textField.superview convertPoint:textField.frame.origin toView:self.tableView];
+
+NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:point];
+
+NSLog(@"%zd",indexPath.row);
+
+[self.tableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionTop animated:YES];
 </code></pre>
 ]]></content>
   </entry>
