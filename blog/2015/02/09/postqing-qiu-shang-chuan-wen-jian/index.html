@@ -1,0 +1,293 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>POST请求上传文件 - My iOS Journey</title>
+  <meta name="author" content="zhao yan">
+
+  
+  <meta name="description" content="利用POST请求发送文件数据,需要对数据进行拼接 ----------httppost（\r\n）
+Content-Disposition: form-data; name="img"; filename="t.txt" （\r\n）
+Content-Type: application/octet &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://zhaoyan106.github.io/blog/2015/02/09/postqing-qiu-shang-chuan-wen-jian">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My iOS Journey" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My iOS Journey</a></h1>
+  
+    <h2>Fighting And More</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.baidu.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="zhaoyan106.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">POST请求上传文件</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-02-09T13:56:50+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>9</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>1:56 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h4>利用POST请求发送文件数据,需要对数据进行拼接</h4>
+
+<pre><code>----------httppost（\r\n）
+Content-Disposition: form-data; name="img"; filename="t.txt" （\r\n）
+Content-Type: application/octet-stream （\r\n）
+（\r\n）
+----------httppost（\r\n）
+Content-Disposition: form-data; name="text" （\r\n）
+（\r\n）
+text tttt （\r\n）
+----------httppost（\r\n）
+</code></pre>
+
+<h4>使用NSURLConnection发送POST上传文件</h4>
+
+<pre><code>#define Encode(str) [str dataUsingEncoding:NSUTF8StringEncoding]
+
+- (void)upload:(NSString *)name filename:(NSString *)filename mimeType:(NSString *)mimeType data:(NSData *)data parmas:(NSDictionary *)params
+{
+    // 文件上传
+    NSURL *url = [NSURL URLWithString:@"http://127.0.0.1/upload"];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+    request.HTTPMethod = @"POST";
+
+    // 设置请求体
+    NSMutableData *body = [NSMutableData data];
+
+    /***************文件参数***************/
+    // 参数开始的标志
+    [body appendData:Encode(@"--ZY\r\n")];
+    // name : 指定参数名(必须跟服务器端保持一致)
+    // filename : 文件名
+    NSString *disposition = [NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"%@\"\r\n", name, filename];
+    [body appendData:Encode(disposition)];
+    NSString *type = [NSString stringWithFormat:@"Content-Type: %@\r\n", mimeType];
+    [body appendData:Encode(type)];
+
+    [body appendData:Encode(@"\r\n")];
+    [body appendData:data];
+    [body appendData:Encode(@"\r\n")];
+
+    /***************普通参数***************/
+    [params enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+        // 参数开始的标志
+        [body appendData:Encode(@"--ZY\r\n")];
+        NSString *disposition = [NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n", key];
+        [body appendData:Encode(disposition)];
+
+        [body appendData:Encode(@"\r\n")];
+        [body appendData:Encode(obj)];
+        [body appendData:Encode(@"\r\n")];
+    }];
+
+    /***************参数结束***************/
+    // ZY--\r\n
+    [body appendData:Encode(@"--ZY--\r\n")];
+    request.HTTPBody = body;
+
+    // 设置请求头
+    // 请求体的长度
+    [request setValue:[NSString stringWithFormat:@"%zd", body.length] forHTTPHeaderField:@"Content-Length"];
+    // 声明这个POST请求是个文件上传
+    [request setValue:@"multipart/form-data; boundary=ZY" forHTTPHeaderField:@"Content-Type"];
+
+    // 发送请求
+    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+        if (data) {
+            NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableLeaves error:nil];
+            NSLog(@"%@", dict);
+        } else {
+            NSLog(@"上传失败");
+        }
+    }];
+}
+</code></pre>
+
+<h4>利用AFN框架发送POST上传文件请求</h4>
+
+<pre><code>- (void)modifyUserIcon:(NSData *)data completion:(ResultInfoBlock)completion{
+    // 1.获得请求管理者
+    AFHTTPRequestOperationManager *mgr = [AFHTTPRequestOperationManager manager];
+    // 2.发送请求(做文件上传)
+    mgr.responseSerializer = [AFHTTPResponseSerializer serializer];
+    [mgr POST:@"http://123.56.113.104:8081/upload" parameters:nil
+constructingBodyWithBlock:^(id&lt;AFMultipartFormData&gt; formData) {
+    // 一定要在这个block中添加文件参数
+    // 拼接文件参数
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    // 设置时间格式
+    formatter.dateFormat = @"yyyyMMddHHmmss";
+    NSString *str = [formatter stringFromDate:[NSDate date]];
+    NSString *fileName = [NSString stringWithFormat:@"%@.png", str];
+    [formData appendPartWithFileData:data name:@"imgFile" fileName:fileName mimeType:@"image/png"];
+}
+      success:^(AFHTTPRequestOperation *operation, id responseObject) {
+          NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:responseObject options:NSJSONReadingMutableContainers error:nil];
+          NSLog(@"上传成功----%@", dict);
+          completion(dict,nil);
+      } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+          NSLog(@"上传失败----%@", error);
+          completion(nil,error);
+      }];
+
+}
+</code></pre>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">zhao yan</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2015-02-09T13:56:50+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>9</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>1:56 pm</span></time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2015/02/02/duo-xian-cheng-zong-jie/" title="Previous Post: 多线程总结">&laquo; 多线程总结</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/" title="Next Post: 压缩、截取上传图片,设置圆形UIImageView,App版本更新">压缩、截取上传图片,设置圆形UIImageView,App版本更新 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/">压缩、截取上传图片,设置圆形UIImageView,App版本更新</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/02/09/postqing-qiu-shang-chuan-wen-jian/">POST请求上传文件</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/02/02/duo-xian-cheng-zong-jie/">多线程总结</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/01/26/wang-luo-duo-xian-cheng-ying-yong/">网络多线程应用</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/01/23/shen-kao-bei-yu-qian-kao-bei-fen-xi/">深拷贝与浅拷贝分析</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - zhao yan -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

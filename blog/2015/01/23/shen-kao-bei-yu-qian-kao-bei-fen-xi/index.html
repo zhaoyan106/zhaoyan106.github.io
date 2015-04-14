@@ -1,0 +1,304 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>深拷贝与浅拷贝分析 - My iOS Journey</title>
+  <meta name="author" content="zhao yan">
+
+  
+  <meta name="description" content="深拷贝:开辟新的存储空间,修改copy后的对象,不会影响本身 浅拷贝:只是指针的copy,修改copy后的对象,会影响本身. 对象要具备复制功能，必须实现协议或者协议，常用的可复制对象有： NSNumber、NSString、NSMutableString、NSArray、 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://zhaoyan106.github.io/blog/2015/01/23/shen-kao-bei-yu-qian-kao-bei-fen-xi">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My iOS Journey" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My iOS Journey</a></h1>
+  
+    <h2>Fighting And More</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.baidu.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="zhaoyan106.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">深拷贝与浅拷贝分析</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-01-23T09:37:21+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>23</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>9:37 am</span></time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>深拷贝:开辟新的存储空间,修改copy后的对象,不会影响本身</p>
+
+<p>浅拷贝:只是指针的copy,修改copy后的对象,会影响本身.</p>
+
+<p>对象要具备复制功能，必须实现<NSCopying>协议或者<NSMutableCopying>协议，常用的可复制对象有：</p>
+
+<p>NSNumber、NSString、NSMutableString、NSArray、NSMutableArray、NSDictionary、NSMutableDictionary</p>
+
+<p>对于以上的Foundation都遵循这个规律(arrayI为不可变数组,arrayM为可变数组)</p>
+
+<pre><code>(lldb) po arrayI
+&lt;__NSArrayI 0x7fb620704ba0&gt;(
+
+)
+
+(lldb) po [arrayI copy]
+&lt;__NSArrayI 0x7fb620704ba0&gt;(
+
+)
+
+(lldb) po [arrayI mutableCopy]
+&lt;__NSArrayM 0x7fb62042d050&gt;(
+
+)
+
+(lldb) po arrayM
+&lt;__NSArrayM 0x7fb620605570&gt;(
+
+)
+
+(lldb) po [arrayM copy]
+&lt;__NSArrayI 0x7fb620704ba0&gt;(
+
+)
+
+(lldb) po [arrayM mutableCopy]
+&lt;__NSArrayM 0x7fb620451ce0&gt;(
+
+)
+</code></pre>
+
+<p>容器类对象深浅复制,对于容器而言，其元素对象始终是指针复制。如果需要元素对象也是对象复制，就需要实现深拷贝.</p>
+
+<pre><code>NSArray *array = [NSArray arrayWithObjects:[NSMutableString stringWithString:@"first"],[NSStringstringWithString:@"b"],@"c",nil];
+// 里面的元素浅复制
+NSArray *deepCopyArray=[[NSArray alloc] initWithArray: array copyItems: YES];
+// 里面的元素深复制
+NSArray* trueDeepCopyArray = [NSKeyedUnarchiver unarchiveObjectWithData:
+[NSKeyedArchiver archivedDataWithRootObject: array]];
+</code></pre>
+
+<p>自己实现深拷贝的方法</p>
+
+<p>NSDictionaryMutableDeepCopy.h</p>
+
+<pre><code>#import &lt;foundation /Foundation.h&gt;
+
+@interface NSDictionary(MutableDeepCopy)
+
+- (NSMutableDictionary *)mutableDeepCopy;
+
+@end
+</code></pre>
+
+<p>NSDictionaryMutableDeepCopy.m</p>
+
+<pre><code>#import "NSDictionaryMutableDeepCopy.h"
+
+@implementation NSDictionary(MutableDeepCopy)
+
+- (NSMutableDictionary *)mutableDeepCopy {
+    NSMutableDictionary *ret = [[NSMutableDictionary alloc]
+                                initWithCapacity:[self count]];
+    NSArray *keys = [self allKeys];
+    for (id key in keys) {
+        id oneValue = [self valueForKey:key];
+        id oneCopy = nil;
+
+        if ([oneValue respondsToSelector:@selector(mutableDeepCopy)]) {
+            oneCopy = [oneValue mutableDeepCopy];
+        }
+        else if ([oneValue respondsToSelector:@selector(mutableCopy)]) {
+            oneCopy = [oneValue mutableCopy];
+        }
+        if (oneCopy == nil) {
+            oneCopy = [oneValue copy];
+        }
+        [ret setValue:oneCopy forKey:key];
+    }
+
+    return ret;
+}
+
+@end
+</code></pre>
+
+<p>一般对象的拷贝,需要实现两个方法&lt;NSCopying,NSMutableCopying></p>
+
+<p>浅拷贝</p>
+
+<pre><code>-（id）copyWithZone:(NSZone *)zone{  
+
+           Person *person = [[[self Class]allocWithZone:zone]init];  
+           p.name = _name;  
+           p.age = _age;  
+           return person;  
+       }  
+</code></pre>
+
+<p>深拷贝</p>
+
+<pre><code>-(void)copyWithZone:(NSZone *)zone{  
+            Person *person = [[[self Class]allocWithZone:zone]init];  
+            person.name = [_name copy];  
+            person.age = [_age copy];  
+            return person;                    
+        }  
+</code></pre>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">zhao yan</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2015-01-23T09:37:21+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>23</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>9:37 am</span></time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2015/01/13/li-yong-crashdui-zhan-xin-xi-ding-wei-dian-xing-de-ye-zhi-zhen-cuo-wu/" title="Previous Post: 利用crash堆栈信息定位典型的野指针错误">&laquo; 利用crash堆栈信息定位典型的野指针错误</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2015/01/26/wang-luo-duo-xian-cheng-ying-yong/" title="Next Post: 网络多线程应用">网络多线程应用 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/">压缩、截取上传图片,设置圆形UIImageView,App版本更新</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/02/09/postqing-qiu-shang-chuan-wen-jian/">POST请求上传文件</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/02/02/duo-xian-cheng-zong-jie/">多线程总结</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/01/26/wang-luo-duo-xian-cheng-ying-yong/">网络多线程应用</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/01/23/shen-kao-bei-yu-qian-kao-bei-fen-xi/">深拷贝与浅拷贝分析</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - zhao yan -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

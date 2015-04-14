@@ -1,0 +1,2925 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[My iOS Journey]]></title>
+  <link href="http://zhaoyan106.github.io/atom.xml" rel="self"/>
+  <link href="http://zhaoyan106.github.io/"/>
+  <updated>2015-02-11T15:12:13+08:00</updated>
+  <id>http://zhaoyan106.github.io/</id>
+  <author>
+    <name><![CDATA[zhao yan]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[压缩、截取上传图片,设置圆形UIImageView,App版本更新]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/"/>
+    <updated>2015-02-11T14:47:42+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian</id>
+    <content type="html"><![CDATA[<h4>一、压缩、截取图片</h4>
+
+<pre><code>- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    if (indexPath.row == 0) {
+            UIActionSheet * actionsheet = [[UIActionSheet alloc] initWithTitle:nil delegate:self cancelButtonTitle:@"取消" destructiveButtonTitle:nil otherButtonTitles:@"拍照",@"从相册选择",nil];
+            actionsheet.actionSheetStyle = UIActionSheetStyleAutomatic;
+            [actionsheet showInView:self.view];
+        }
+}
+
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
+
+    if (buttonIndex == 0) { // 拍照
+        [self takePhoto];
+    }else if(buttonIndex == 1){ // 相册
+        [self LocalPhoto];
+    }else if (buttonIndex == 2) { // 取消
+
+    }
+}
+
+//开始拍照
+-(void)takePhoto
+{
+    UIImagePickerControllerSourceType sourceType = UIImagePickerControllerSourceTypeCamera;
+    if ([UIImagePickerController isSourceTypeAvailable: UIImagePickerControllerSourceTypeCamera]){
+        UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+        picker.delegate = self;
+        picker.sourceType = sourceType;
+        picker.allowsEditing = YES;
+        [self presentViewController:picker animated:YES completion:nil];
+    }else{
+        NSLog(@"模拟器中无法打开照相机,请在真机中使用");
+    }
+}
+
+//打开本地相册
+-(void)LocalPhoto
+{
+    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+    picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+    picker.delegate = self;
+    //设置选择后的图片可被编辑
+    picker.allowsEditing = YES;
+    [self presentViewController:picker animated:YES completion:nil];
+
+}
+
+//当选择一张图片后进入这里
+-(void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+{
+    UIImage* image = [info objectForKey:@"UIImagePickerControllerOriginalImage"];
+
+    if (image != nil) {
+       image = [self OriginImage:image scaleToSize:CGSizeMake(120, 120)];
+        NSData *data;
+        if (UIImagePNGRepresentation(image)) {
+            //返回为png图像。
+            data = UIImagePNGRepresentation(image);
+        }else {
+            //返回为JPEG图像。压缩比率设置0.3-0.7之间最好
+            data = UIImageJPEGRepresentation(image, 0.5);
+        }
+        //此处网络请求
+        [picker dismissViewControllerAnimated:YES completion:nil];
+}
+
+
+- (UIImage*)OriginImage:(UIImage *)image scaleToSize:(CGSize)size
+{
+    UIGraphicsBeginImageContext(size);  //size 为CGSize类型，即你所需要的图片尺寸
+
+    [image drawInRect:CGRectMake(0, 0, size.width, size.height)];
+
+    UIImage* scaledImage = UIGraphicsGetImageFromCurrentImageContext();
+
+    UIGraphicsEndImageContext();
+
+    return scaledImage;   //返回的就是已经改变的图片
+}
+</code></pre>
+
+<h4>二、设置UIImageView为圆形</h4>
+
+<pre><code>self.icon.layer.masksToBounds=YES;
+
+self.icon.layer.cornerRadius= 30.0;    //最重要的是这个地方要设成imgview高的一半
+
+self.outimgViewCusActivity.layer.borderWidth=1.0;
+self.icon.backgroundColor = [UIColor whiteColor];
+</code></pre>
+
+<h4>三、APP版本更新</h4>
+
+<pre><code>-(void)onCheckVersion
+{
+    NSDictionary *infoDic = [[NSBundle mainBundle] infoDictionary];
+    //CFShow((__bridge CFTypeRef)(infoDic));
+    NSString *currentVersion = [infoDic objectForKey:@"CFBundleVersion"];
+    // 或者@""https://itunes.apple.com/lookup?bundleId=cn.keyno.$(PRODUCT_NAME:rfc1034identifier)"
+    NSString *URL = @"http://itunes.apple.com/lookup?id=你的应用程序的ID";
+    http://itunes.apple.com/lookup?id=你的应用程序的ID
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
+    [request setURL:[NSURL URLWithString:URL]];
+    [request setHTTPMethod:@"POST"];
+    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+        [MBProgressHUD hideAllHUDsForView:self.view animated:YES];
+        NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
+        NSArray *infoArray = [dic objectForKey:@"results"];
+        if ([infoArray count]) {
+            NSDictionary *releaseInfo = [infoArray objectAtIndex:0];
+            NSString *lastVersion = [releaseInfo objectForKey:@"version"];
+
+            if (![lastVersion isEqualToString:currentVersion]) {
+                //trackViewURL = [releaseInfo objectForKey:@"trackVireUrl"];
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"更新" message:@"有新的版本更新，是否前往更新？" delegate:self cancelButtonTitle:@"关闭" otherButtonTitles:@"更新", nil];
+                alert.tag = 10000;
+                [alert show];
+            }
+            else
+            {
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"更新" message:@"此版本为最新版本" delegate:self cancelButtonTitle:@"确定" otherButtonTitles:nil, nil];
+                alert.tag = 10001;
+                [alert show];
+            }
+        }
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"更新" message:@"有新的版本更新，是否前往更新？" delegate:self cancelButtonTitle:@"关闭" otherButtonTitles:@"更新", nil];
+        alert.tag = 10000;
+        [alert show];
+
+    }];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (alertView.tag==10000) {
+        if (buttonIndex==1) {
+            NSURL *url = [NSURL URLWithString:@"itms-apps://itunes.apple.com/app/id你的应用程序的ID"];
+            [[UIApplication sharedApplication]openURL:url];
+        }
+    }
+}
+
+-(void)goToAppStore{
+    NSString *str = [NSString stringWithFormat:
+    @"itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&amp;id=%d",appID];
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:str]];
+} 
+    iOS7下苹果对app stotr的评分页面链接做了修改，及 
+    NSString *str = [NSString stringWithFormat:
+
+    @"itms-apps://itunes.apple.com/app/id%@",APPID];
+
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:str]];
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[POST请求上传文件]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/02/09/postqing-qiu-shang-chuan-wen-jian/"/>
+    <updated>2015-02-09T13:56:50+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/02/09/postqing-qiu-shang-chuan-wen-jian</id>
+    <content type="html"><![CDATA[<h4>利用POST请求发送文件数据,需要对数据进行拼接</h4>
+
+<pre><code>----------httppost（\r\n）
+Content-Disposition: form-data; name="img"; filename="t.txt" （\r\n）
+Content-Type: application/octet-stream （\r\n）
+（\r\n）
+----------httppost（\r\n）
+Content-Disposition: form-data; name="text" （\r\n）
+（\r\n）
+text tttt （\r\n）
+----------httppost（\r\n）
+</code></pre>
+
+<h4>使用NSURLConnection发送POST上传文件</h4>
+
+<pre><code>#define Encode(str) [str dataUsingEncoding:NSUTF8StringEncoding]
+
+- (void)upload:(NSString *)name filename:(NSString *)filename mimeType:(NSString *)mimeType data:(NSData *)data parmas:(NSDictionary *)params
+{
+    // 文件上传
+    NSURL *url = [NSURL URLWithString:@"http://127.0.0.1/upload"];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+    request.HTTPMethod = @"POST";
+
+    // 设置请求体
+    NSMutableData *body = [NSMutableData data];
+
+    /***************文件参数***************/
+    // 参数开始的标志
+    [body appendData:Encode(@"--ZY\r\n")];
+    // name : 指定参数名(必须跟服务器端保持一致)
+    // filename : 文件名
+    NSString *disposition = [NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"%@\"\r\n", name, filename];
+    [body appendData:Encode(disposition)];
+    NSString *type = [NSString stringWithFormat:@"Content-Type: %@\r\n", mimeType];
+    [body appendData:Encode(type)];
+
+    [body appendData:Encode(@"\r\n")];
+    [body appendData:data];
+    [body appendData:Encode(@"\r\n")];
+
+    /***************普通参数***************/
+    [params enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+        // 参数开始的标志
+        [body appendData:Encode(@"--ZY\r\n")];
+        NSString *disposition = [NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n", key];
+        [body appendData:Encode(disposition)];
+
+        [body appendData:Encode(@"\r\n")];
+        [body appendData:Encode(obj)];
+        [body appendData:Encode(@"\r\n")];
+    }];
+
+    /***************参数结束***************/
+    // ZY--\r\n
+    [body appendData:Encode(@"--ZY--\r\n")];
+    request.HTTPBody = body;
+
+    // 设置请求头
+    // 请求体的长度
+    [request setValue:[NSString stringWithFormat:@"%zd", body.length] forHTTPHeaderField:@"Content-Length"];
+    // 声明这个POST请求是个文件上传
+    [request setValue:@"multipart/form-data; boundary=ZY" forHTTPHeaderField:@"Content-Type"];
+
+    // 发送请求
+    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+        if (data) {
+            NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableLeaves error:nil];
+            NSLog(@"%@", dict);
+        } else {
+            NSLog(@"上传失败");
+        }
+    }];
+}
+</code></pre>
+
+<h4>利用AFN框架发送POST上传文件请求</h4>
+
+<pre><code>- (void)modifyUserIcon:(NSData *)data completion:(ResultInfoBlock)completion{
+    // 1.获得请求管理者
+    AFHTTPRequestOperationManager *mgr = [AFHTTPRequestOperationManager manager];
+    // 2.发送请求(做文件上传)
+    mgr.responseSerializer = [AFHTTPResponseSerializer serializer];
+    [mgr POST:@"http://123.56.113.104:8081/upload" parameters:nil
+constructingBodyWithBlock:^(id&lt;AFMultipartFormData&gt; formData) {
+    // 一定要在这个block中添加文件参数
+    // 拼接文件参数
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    // 设置时间格式
+    formatter.dateFormat = @"yyyyMMddHHmmss";
+    NSString *str = [formatter stringFromDate:[NSDate date]];
+    NSString *fileName = [NSString stringWithFormat:@"%@.png", str];
+    [formData appendPartWithFileData:data name:@"imgFile" fileName:fileName mimeType:@"image/png"];
+}
+      success:^(AFHTTPRequestOperation *operation, id responseObject) {
+          NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:responseObject options:NSJSONReadingMutableContainers error:nil];
+          NSLog(@"上传成功----%@", dict);
+          completion(dict,nil);
+      } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+          NSLog(@"上传失败----%@", error);
+          completion(nil,error);
+      }];
+
+}
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[多线程总结]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/02/02/duo-xian-cheng-zong-jie/"/>
+    <updated>2015-02-02T10:15:38+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/02/02/duo-xian-cheng-zong-jie</id>
+    <content type="html"><![CDATA[<h2>一、线程</h2>
+
+<h4>1、线程中的术语</h4>
+
+<p>线程(线程)用于指代独立执行的代码段。</p>
+
+<p>进程(process)用于指代一个正在运行的可执行程序,它可以包含多个线程。</p>
+
+<p>任务(task)用于指代抽象的概念,表示需要执行工作。</p>
+
+<h4>2、线程的模式</h4>
+
+<p>线程启动之后,线程就进入三个状态中的任何一个:运行(running)、就绪(ready)、阻塞(blocked)</p>
+
+<p><code>(因为底层内核的支持,操作对象(Operation objectis)可能创建线程更快。它们使用内核 里面常驻线程池里面的线程来节省创建的时间,而不是每次都创建新的线程。)</code></p>
+
+<h4>3、线程的使用</h4>
+
+<p>1、隐式的开启一个线程</p>
+
+<pre><code>[NSThread detachNewThreadSelector:@selector(myThreadMainMethod:) toTarget:self withObject:nil];
+//使用 detachNewThreadSelector:toTarget:withObject:类方法来生成一个新的线程。
+</code></pre>
+
+<p>2、显示开启线程</p>
+
+<pre><code>[[NSThread alloc] initWithTarget:self selector:@selector(myThreadMainMethod:) object:nil];
+[myThread start];
+//创建一个新的 NSThread 对象,并调用它的 start 方法。
+</code></pre>
+
+<p>3、子类化NSthread</p>
+
+<pre><code>initWithTarget:selector:object:
+// 并重写run方法，main方法将成为线程入口
+</code></pre>
+
+<p>4、调用NSObject方法使用NSThread对象,它的线程当前真正运行,你可以给该线程发送 消息的唯一方法是在你应用程序里面的任何对象使用</p>
+
+<pre><code>performSelector:onThread:withObject:waitUntilDone:
+</code></pre>
+
+<p><code>（注意：目标线程必须在它的 run loop 里面运行，也就是说目标线程必须受到开启runloop，后面runloop会涉及）</code></p>
+
+<p>5、调用NSObject方法新生成一个脱离的线程,使用指定的方法作为新线程的主体入口点</p>
+
+<pre><code>performSelectorInBackground:withObject:
+</code></pre>
+
+<p><code>（注意：在selectore内部,你必须配置线程就像你在任何线程里面一样。比如,你可能需要设置一个自动 释放池(如果你没有使用垃圾回收机制),在你要使用它的时候配置线程的 run loop）</code></p>
+
+<h4>4、线程的主入口需要的配置</h4>
+
+<p>1、创建一个自动释放池</p>
+
+<p>如果应用程序使用的垃圾回收机制,而不是管理的内存模型,那么创建一个自动 释放池不是绝对必要的。在垃圾回收的应用程序里面,一个自动释放池是无害的,而 且大部分情况是被忽略。允许通过个代码管理必须同时支持垃圾回收和内存管理模 型。在这种情况下,内存管理模型必须支持自动释放池,当应用程序运行垃圾回收的 时候,自动释放池只是被忽略而已。</p>
+
+<p>2、设置异常处理</p>
+
+<p>3、设置一个runloop</p>
+
+<pre><code>+ (void)httpThreadWork{
+    @autoreleasepool {
+        // 线程命名，方便调试
+        [[NSThread currentThread] setName:@"eLongHttpThread"];
+
+        // runloop一直运行
+        NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+        [runLoop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];
+        [runLoop run];
+    }
+}
+</code></pre>
+
+<hr />
+
+<h2>二、runloop</h2>
+
+<h4>1、runloop的基本介绍</h4>
+
+<p>使用 run loop 的目的是让你的线 程在有工作的时候忙于工作,而没工作的时候处于休眠状态（节能）。应用程序不需要显式的创建这些对象(run loop objects)，每个线程,包括程序的主线程都有与之对应的 run loop object。只有辅助线程（子线程）需要显式的运行它的。输入源(input source)和定时源 (timer source)。输入源传递异步事件,通常消息来自于其他线程或程序。定时源 则传递同步事件,发生在特定时间或者重复的时间间隔。两种源都使用程序的某一特 定的处理例程来处理到达的事件。<img src="http://img.blog.csdn.net/20130703215237531?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd3p6dmljdG9yeV90anNk/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="runloop icon" /></p>
+
+<h4>2、runloop模式</h4>
+
+<p>run loops 会生成关于 run loop 行为的通知 (notifications)。注册 run loop 观察者(run-loop Observers)可以收到这些通知, 并在线程上面使用它们来做额外的处理。在 run loop 运行过程中,<code>只有和模式相关的源才会被监视并允许他们传递事件消息。</code>(类似的,只有和模式相关的观察者会通知 run loop 的进程)。和其他模式关联的源只有在 run loop 运行在其模式下才会运行,否则处于暂停状态。
+    ￼NSDefaultRunLoopMode(Cocoa)  // 最常用的一种模式，大多数的时候都使用他
+    ￼￼kCFRunLoopDefaultMode (Core￼￼Foundation)
+    ￼NSRunLoopCommonModes(Cocoa) // 一般模式，注意网络请求使用这个，否则主线程刷新UI，网络请求会暂停
+    ￼￼kCFRunLoopCommonModes (CoreFoundation)</p>
+
+<h4>3、输入源</h4>
+
+<p>事件来源取决于输入源的种类:基于端口的输入源和自定义输入源。基于端口的输入源监听程序相应的端口。自定义输入源则监 听自定义的事件源。至于 run loop,它不关心输入源的是基于端口的输入源还是自定义的输入源。系统会实现两种输入源供你使用。</p>
+
+<p>两类输入源的区别在于如何显示: 基于端口的输入源由内核自动发送,而自定义的则需要人工从其他线程发送。</p>
+
+<p>1、基于端口的输入源Cocoa和CoreFoundation内置支持使用端口相关的对象和函数来创建的基于端口的源。例如,在Cocoa 里面你从来不需要直接创建输入源。你只要简单的创建端口对象,并使用NSPort的方法把该端口添加到runloop。端口对象会自己处理创建和配置输入源。</p>
+
+<p>2、自定义输入源，在Core Foundation,你必须人工创建端口和它的runloop源。在两种情况下，你都可以使用端口相关的函数(CFMachPortRef,CFMessagePortRef,CFSocketRef)来创建合适的对象。</p>
+
+<p>3、Cocoa执行Selector的源</p>
+
+<pre><code>￼performSelectorOnMainThread:withObject:waitUntilDone:
+￼￼performSelectorOnMainThread:withObject:waitUntilDone:modes
+
+performSelector:onThread:withObject:waitUntilDone:
+performSelector:onThread:withObject:waitUntilDone:modes
+
+performSelector:withObject:afterDelay:
+performSelector:withObject:afterDelay:inModes:
+
+￼￼￼￼￼cancelPreviousPerformRequestWithTarget:
+￼￼￼￼￼cancelPreviousPerformRequestWithTarget:selector:object:
+</code></pre>
+
+<p>4、定时源</p>
+
+<p>如果定时器被设定在某一特定时间开始并5秒重复一次,那么定时器会在那个特定时间后5秒启动,即使在那个特定的触发时间延迟了。如果定时器被延迟以至于它错过了一个或多个触发时间,那么定时器会在下一个最近的触发事件启动,而后面会按照触发间隔正常执行。</p>
+
+<h4>4、何时使用runloop</h4>
+
+<p>1、仅当在为你的程序创建辅助线程的时候,你才需要显式运行一个 run loop</p>
+
+<p>2、对于辅助线程,你需要判断一个run loop是否是必须的。如果是必须的,那么你要自己配置并启动它。你不需要在任何情况下都去启动一个线程的run loop。比如,你使用线程来处理一个预先定义的长时间运行的任务时,你应该避免启动runloop。</p>
+
+<p>3、Runloop在你要和线程有更多的交互时才需要,比如以下情况:</p>
+
+<p>使用端口或自定义输入源来和其他线程通信</p>
+
+<p>使用线程的定时器</p>
+
+<p>Cocoa中使用任何performSelector&hellip;的方法</p>
+
+<p>使线程周期性工作</p>
+
+<h4>5、runloop对象</h4>
+
+<p>1、获取runloop对象</p>
+
+<p>为了获得当前线程的 run loop,Cocoa 程序中,使用 NSRunLoop 的 currentRunLoop 类方法来检索一个NSRunLoop 对象。</p>
+
+<p>2、配置runloop对象</p>
+
+<p>在你在辅助线程运行 run loop 之前,你必须至少添加一输入源或定时器给它。 如果 run loop 没有任何源需要监视的话,它会在你启动之际立马退出。</p>
+
+<p><code>（当前长时间运行的线程配置 run loop 的时候,最好添加至少一个输入源到 run loop 以接收消息。虽然你可以使用附属的定时器来进入 run loop,但是一旦定时器 触发后,它通常就变为无效了,这会导致 run loop 退出。虽然附加一个循环的定时 器可以让 run loop 运行一个相对较长的周期,但是这也会导致周期性的唤醒线程, 这实际上是轮询(polling)的另一种形式而已。与之相反,输入源会一直等待某事 件发生,在事情导致前它让线程处于休眠状态。）</code></p>
+
+<p>3、启动runloop</p>
+
+<p>有几种方式可以启动runloop,包括以下这些:</p>
+
+<p>无条件的</p>
+
+<p>无条件的进入 run loop 是最简单的方法,但也最不推荐使用的。因为这样会使你的线程处在一个永久的循环中,这会让你对 run loop本身的控制很少。你可以添加或删除输入源和定时器,但是退出 run loop 的唯一方法是杀死它。没有任何办法 可以让这run loop运行在自定义模式下。</p>
+
+<p>设置超时时间</p>
+
+<p>替代无条件进入 run loop 更好的办法是用预设超时时间来运行 run loop,这样 run loop 运作直到某一事件到达或者规定的时间已经到期。如果是事件到达,消息 会被传递给相应的处理程序来处理,然后 run loop 退出。你可以重新启动 run loop 来等待下一事件。如果是规定时间到期了,你只需简单的重启 run loop 或使用此段 时间来做任何的其他工作。</p>
+
+<p>特定模式</p>
+
+<p>除了超时机制,你也可以使用特定的模式来运行你的 run loop。模式和超时不是 互斥的,他们可以在启动 run loop 的时候同时使用。</p>
+
+<p>4、退出runloop</p>
+
+<p>给runloop设置超时时间</p>
+
+<p>如果可以配置的话,推荐使用第一种方法。指定一个超时时间可以使 run loop 退出前完成所有正常操作,包括发送消息给 run loop 观察者。</p>
+
+<p>通知runloop停止</p>
+
+<p>使用 CFRunLoopStop 来显式的停止 run loop 和使用超时时间产生的结果相似。Run loop 把所有剩余的通知发送出去再退出。与设置超时的不同的是你可以在无条 件启动的 run loop 里面使用该技术。
+尽管移除 run loop 的输入源和定时器也可能导致 run loop 退出,但这并不是可靠的退出 run loop 的方法。一些系统例程会添加输入源到 run loop 里面来处理所需事件。因为你的代码未必会考虑到这些输入源,这样可能导致你无法没从系统例程中移除它们。</p>
+
+<h4>6、定义自定义输入源</h4>
+
+<p>1、创建自定义输入源包括定义一下内容
+输入源要处理的信息
+如何与其他线程进行交互
+处理与其他线程之间的交互
+终止输入源
+2、配置定时源
+为了创建一个定时源,你所需要做只是创建一个定时器对象并把它调度到你的runloop。Cocoa程序中使用NSTimer类来创建一个新的定时器对象,而 Core Foundation 中使用 CFRunLoopTimerRef 不透明类型。本质上,NSTimer 类是 Core Foundation 的简单扩展,它提供了便利的特征,例如能使用相同的方法创建和调配定时器。
+Cocoa 中可以使用以下 NSTimer 类方法来创建并调配一个定时器:
+    scheduledTimerWithTimeInterval:target:selector:userInfo:repeats:    scheduledTimerWithTimeInterval:invocation:repeats:
+上述方法创建了定时器并以默认模式把它们添加到当前线程的run loop。你可以手工的创建 NSTimer对象,并通过NSRunLoop 的addTimer:forMode:把它添加到run loop。两种方法都做了相同的事,区别在于你对定时器配置的控制权。例如,如果你手工创建定时器并把它添加到 run loop,你可以选择要添加的模式而不使用默认模式。
+显示了如何使用这这两种方法创建定时器。第一个定时器在初始化后1秒开始运行,此后每隔0.1秒运行。第二个定时器则在初始化后0.2秒开始运行,此后每隔0.2秒运行。</p>
+
+<pre><code>NSRunLoop* myRunLoop = [NSRunLoop currentRunLoop];
+NSDate* futureDate = [NSDate dateWithTimeIntervalSinceNow:1.0];
+NSTimer* myTimer = [[NSTimer alloc] initWithFireDate:futureDate interval:0.1 target:self selector:@selector(myDoFireTimer1:) userInfo:nil repeats:YES];
+￼[myRunLoop addTimer:myTimer forMode:NSDefaultRunLoopMode];
+
+// Create and schedule the second timer.    [NSTimer scheduledTimerWithTimeInterval:0.2 target:self selector:@selector(myDoFireTimer2:) userInfo:nil repeats:YES];
+</code></pre>
+
+<p>3、配置基于端口的输入源
+Cocoa 和 Core Foundation 都提供了基于端口的对象用于线程或进程间的通信。以下部分显示如何使用几种不同类型的端口对象建立端口通信。￼￼
+配置 NSMachPort 对象
+为了和 NSMachPort 对象建立稳定的本地连接,你需要创建端口对象并将之加入 相应的线程的 run loop。当运行辅助线程的时候,你传递端口对象到线程的主体入 口点。辅助线程可以使用相同的端口对象将消息返回给原线程。</p>
+
+<p>a) 实现主线程的代码</p>
+
+<pre><code>- (void)launchThread{
+    NSPort *myport = [NSMachPort port];
+    if (myport) {
+        [myport setDelegate:self];
+        [[NSRunLoop currentRunLoop] addPort:myport forMode:NSDefaultRunLoopMode];
+        [NSThread detachNewThreadSelector:@selector(LaunchThreadWithPort:) toTarget:self withObject:myport];
+    }
+}
+</code></pre>
+
+<p>为了在你的线程间建立双向的通信,你需要让你的工作线程在签到的消息中发送自己的本地端口到主线程。主线程接收到签到消息后就可以知道辅助线程运行正常, 并且提供了发送消息给辅助线程的方法。
+主要线程的 handlePortMessage:方法。当由数据到达线程的本地端口时,该方法被调用。当签到消息到达时,此方法可以直接从辅助线程里面检索 端口并保存下来以备后续使用。
+    - (void)handlePortMessage:(NSPortMessage <em>)portMessage{
+        unsigned int message = [portMessage msgid];
+        NSPort </em>distantPort = nil;
+        if (message == kCheckinMessage) {
+            // Get the worker thread’s communications port.
+            distantPort = [portMessage sendMessegae];
+            // Retain and save the worker port for later use.
+            [self storeDistantPort];
+        }else{
+            // Handle other messages.
+        }
+    }</p>
+
+<p>b) 辅助线程的实现代码</p>
+
+<p>对于辅助工作线程,你必须配置线程使用特定的端口以发送消息返回给主要线程。
+创建了线程的自动释放池后,紧接着创建工作对象驱动线程运行。工作对象的 sendCheckinMessage:方法创建了工作线程的本地端口并发送签到消息回主线程。
+    + (void)LaunchThreadWithPort:(id)inData{        NSAutoreleasePool<em> pool = [[NSAutoreleasePool alloc] init];
+        NSPort </em>distantPort = (NSPort <em>)inData;
+        UIViewController</em> workerObj = [[self alloc] init];
+        [workerObj sendCheckinMessage:distantPort];
+        [distantPort release];
+        // Let the run loop process things.
+        do{
+            [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];</p>
+
+<pre><code>    }while (![workerObj shouldExit]);
+    [workerObj release];
+    [pool release];
+}
+</code></pre>
+
+<p>当使用 NSMachPort 时候,本地和远程线程可以使用相同的端口对象在线程间进行单边通信。换句话说,一个线程创建的本地端口对象成为另一个线程的远程端口对象。</p>
+
+<p>显示了辅助线程的签到例程,该方法为之后的通信设置自己的本地端口,然后发送签到消息给主线程。它使用 LaunchThreadWithPort:方法中收到的端口对象做为目标消息。</p>
+
+<pre><code>- (void)sendCheckinMessage:(NSPort*)outPort{        // Retain and save the remote port for future use.      [self setRemotePort:outPort];
+    // Create and configure the worker thread port.     NSPort* myPort = [NSMachPort port];
+    [myPort setDelegate:self];      [[NSRunLoop currentRunLoop] addPort:myPort forMode:NSDefaultRunLoopMode];       // Create the check-in message.
+    NSPortMessage* messageObj = [[NSPortMessage alloc] initWithSendPort:outPort receivePort:myPort components:nil];     if (messageObj){            // Finish configuring the message and send it immediately.          [messageObj setMsgId:setMsgid:kCheckinMessage];         [messageObj sendBeforeDate:[NSDate date]];      }￼￼
+}
+</code></pre>
+
+<hr />
+
+<h2>三、线程同步</h2>
+
+<p>火车票卖票案例，使用NSLock,NSCondition</p>
+
+<pre><code>#import &lt;UIKit/UIKit.h&gt;   
+
+@class ViewController;   
+
+@interface AppDelegate : UIResponder &lt;UIApplicationDelegate&gt;   
+{   
+    int tickets;   
+    int count;   
+    NSThread* ticketsThreadone;   
+    NSThread* ticketsThreadtwo;   
+    NSCondition* ticketsCondition;   
+    NSLock *theLock;   
+}   
+@property (strong, nonatomic) UIWindow *window;   
+
+@property (strong, nonatomic) ViewController *viewController;   
+
+@end   
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions   
+{   
+
+    tickets = 100;   
+    count = 0;   
+    theLock = [[NSLock alloc] init];   
+    // 锁对象   
+    ticketsCondition = [[NSCondition alloc] init];   
+    ticketsThreadone = [[NSThread alloc] initWithTarget:self selector:@selector(run) object:nil];   
+    [ticketsThreadone setName:@"Thread-1"];   
+    [ticketsThreadone start];   
+
+
+    ticketsThreadtwo = [[NSThread alloc] initWithTarget:self selector:@selector(run) object:nil];   
+    [ticketsThreadtwo setName:@"Thread-2"];   
+    [ticketsThreadtwo start];   
+
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];   
+    // Override point for customization after application launch.   
+    self.viewController = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];   
+    self.window.rootViewController = self.viewController;   
+    [self.window makeKeyAndVisible];   
+    return YES;   
+}   
+
+- (void)run{   
+    while (TRUE) {   
+        // 上锁   
+//        [ticketsCondition lock];   
+        [theLock lock];   
+        if(tickets &gt;= 0){   
+            [NSThread sleepForTimeInterval:0.09];   
+            count = 100 - tickets;   
+            NSLog(@"当前票数是:%d,售出:%d,线程名:%@",tickets,count,[[NSThread currentThread] name]);   
+            tickets--;   
+        }else{   
+            break;   
+        }   
+        [theLock unlock];   
+//        [ticketsCondition unlock];   
+    }   
+}   
+</code></pre>
+
+<p>如果没有线程同步的lock，卖票数可能是-1.加上lock之后线程同步保证了数据的正确性。</p>
+
+<p>上面例子使用了两种锁，一种NSCondition ，一种是：NSLock。 NSCondition我已经注释了。</p>
+
+<p>其他同步</p>
+
+<p>可以使用指令 @synchronized 来简化 NSLock的使用，这样我们就不必显示编写创建NSLock,加锁并解锁相关代码。</p>
+
+<pre><code>- (void)doSomeThing:(id)anObj 
+{ 
+    @synchronized(anObj) 
+    { 
+        // Everything between the braces is protected by the @synchronized directive. 
+    } 
+}
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[网络多线程应用]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/01/26/wang-luo-duo-xian-cheng-ying-yong/"/>
+    <updated>2015-01-26T16:46:41+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/01/26/wang-luo-duo-xian-cheng-ying-yong</id>
+    <content type="html"><![CDATA[<h2>一、发送网络请求所需</h2>
+
+<p>网络请求中一定会用的类:NSOperation、NSOperationQueue、NSRunLoop、NSURLRequest、NSURLConnection，这些都是发送网络请求必须得，其中NSOperation、NSOperationQueue、NSRunLoop这些是用在多线程发送网络请求中的。</p>
+
+<h4>1、NSOperation</h4>
+
+<h6>NSOperation有三种使用方法：NSInvocationOperation、NSBlockOperation、自定义NSOperation（NSOperation的子类）</h6>
+
+<p>1、NSInvocationOperation：创建operation object。如果你已经有现有的方法来执行需要的任务，就可以使用这个类。</p>
+
+<p>2、NSBlockOperation：可以直接使用的类，用来并发地执行一个或多个block对象。operation object使用“组”的语义来执行多个block对象，所有相关的block都执行完成之后，operation object才算完成。</p>
+
+<p>3、自定义NSOperation：继承NSOperation可以完全控制operation object的实现，包括修改操作执行和状态报告的方式。</p>
+
+<h6>operation objects都支持以下关键特性：</h6>
+
+<p>1、支持建立基于图的operation objects依赖。可以阻止某个operation运行，直到它依赖的所有operation都已经完成。</p>
+
+<p>2、支持可选的completion block，在operation的主任务完成后调用。</p>
+
+<p>3、支持应用使用KVO通知来监控operation的执行状态。</p>
+
+<p>4、支持operation优先级，从而影响相对的执行顺序</p>
+
+<p>5、支持取消，允许你中止正在执行的任务</p>
+
+<h6>自定义NSOperation</h6>
+
+<p>NSOperation 类提供通用的子类继承点，而且实现了许多重要的基础设施来处理依赖和KVO通知。继承所需的工作量主要取决于你要实现非并发还是并发的operation。</p>
+
+<p>定义非并发operation要简单许多，只需要执行主任务，并正确地响应取消事件;NSOperation 处理了其它所有事情。对于并发operation，你必须替换某些现有的基础设施代码。</p>
+
+<p>串行：</p>
+
+<p>1、每个operation对象至少需要实现以下方法：</p>
+
+<p>2、自定义initialization方法：初始化，将operation 对象设置为已知状态</p>
+
+<p>3、自定义main方法：执行你的任务</p>
+
+<p>4、你也可以选择性地实现以下方法：</p>
+
+<p>5、main方法中需要调用的其它自定义方法</p>
+
+<p>6、Accessor方法：设置和访问operation对象的数据</p>
+
+<p>7、dealloc方法：清理operation对象分配的所有内存</p>
+
+<p>8、NSCoding 协议的方法：允许operation对象archive和unarchive</p>
+
+<p>并行：</p>
+
+<pre><code>- (void)start;
+</code></pre>
+
+<p>（<code>必须</code>）所有<code>并发</code>操作都必须覆盖这个方法，以自定义的实现替换默认行为。手动执行一个操作时，你会调用start方法。因此你对这个方法的实现是操作的起点，设置一个线程或其它执行环境，来执行你的任务。你的实现在任何时候都绝对不能调用super。</p>
+
+<pre><code>- (void)main;
+</code></pre>
+
+<p>（<code>可选</code>）这个方法通常用来实现operation对象相关联的任务。尽管你可以在start方法中执行任务，使用main来实现任务可以让你的代码更加清晰地分离设置和任务代码</p>
+
+<pre><code>isExecuting、isFinished
+</code></pre>
+
+<p>（<code>必须</code>）并发操作负责设置自己的执行环境，并向外部client报告执行环境的状态。因此并发操作必须维护某些状态信息，以知道是否正在执行任务，是否已经完成任务。使用这两个方法报告自己的状态。
+这两个方法的实现必须能够在其它多个线程中同时调用。另外这些方法报告的状态变化时，还需要为相应的key path产生适当的KVO通知。</p>
+
+<pre><code>isConcurrent
+</code></pre>
+
+<p>（必须）标识一个操作是否并发operation，覆盖这个方法并返回YES</p>
+
+<h4>2、NSOperationQueue</h4>
+
+<p>Operation Queues是Cocoa版本的并发dispatch queue，由 NSOperationQueue 类实现。dispatch queue总是按先进先出的顺序执行任务，而 Operation Queues 在确定任务执行顺序时，还会考虑其它因素。最主要的一个因素是指定任务是否依赖于另一个任务的完成。你在定义任务时配置依赖性，从而创建复杂的任务执行顺序图。</p>
+
+<p>提交到Operation Queues的任务必须是 NSOperation 对象，operation object封装了你要执行的工作，以及所需的所有数据。由于 NSOperation 是一个抽象基类，通常你需要定义自定义子类来执行任务。不过Foundation framework自带了一些具体子类，你可以创建并执行相关的任务。</p>
+
+<p>Operation objects会产生key-value observing(KVO)通知，对于监控任务的进程非常有用。虽然operation queue总是并发地执行任务，你可以使用依赖，在需要时确保顺序执行</p>
+
+<h2>二、封装NSURLRequest</h2>
+
+<p>通过一个继承自NSObject的类，提供相关的类方法，快速创建网络请求。</p>
+
+<pre><code>NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
+NSMutableString *targetUrl = [[NSMutableString alloc] init];
+[request setValue:self.channelID forHTTPHeaderField:@"channelid"];
+[request setValue:self.version forHTTPHeaderField:@"version"];
+[request setValue:self.deviceID forHTTPHeaderField:@"deviceid"];
+[request setValue:self.authCode forHTTPHeaderField:@"AuthCode"];
+return request;
+</code></pre>
+
+<h2>三、自定义NSOperation</h2>
+
+<p>重写start方法</p>
+
+<pre><code>// 状态机
+typedef enum {
+    eLongOperationPausedState      = -1,   // 暂停
+    eLongOperationReadyState       = 1,    // 准备就绪
+    eLongOperationExecutingState   = 2,    // 正在运行
+    eLongOperationFinishedState    = 3,    // 完成
+}elongOperationState;
+
+@property (nonatomic, assign) elongOperationState state;    // 状态机
+
+@property (nonatomic, strong, readonly) NSMutableURLRequest *currentReq;    // 网络请求
+
+@property (nonatomic,retain) NSRecursiveLock *lock;    // 数据锁
+
+// 创建一个单例线程用来处理所有请求
++ (NSThread *)httpRequest{
+    static NSThread *httpThread = nil;
+    static dispatch_once_t oncePredicate;
+    dispatch_once(&amp;oncePredicate, ^{
+        httpThread = [[NSThread alloc] initWithTarget:self selector:@selector(httpThreadWork) object:nil];
+        [httpThread start];
+    });
+    return httpThread;
+}
+
+// 子线程显式创建runloop 
++ (void)httpThreadWork{
+    @autoreleasepool {
+        // 线程命名，方便调试
+        [[NSThread currentThread] setName:@"eLongHttpThread"];
+        // runloop一直运行
+        NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+        [runLoop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];
+        [runLoop run];
+    }
+}
+
+// 创建网络请求，初始化数据锁，设置状态机为ready状态
+- (id)initWithRequest:(NSMutableURLRequest *)request {
+    if (self = [super init]) {
+        self.currentReq = request;
+        NSRecursiveLock *lock = [[NSRecursiveLock alloc] init];
+        self.lock = lock;
+        self.lock.name = @"elong.httpOperation.lock";
+        _state = eLongOperationReadyState;
+    }
+    return self;
+}
+
+// 重写start方法，当自定义operation加入到队列中自动并发调用
+- (void)start{
+    [self.lock lock];
+    if ([self isCancelled]) {
+        [self performSelector:@selector(cancelConnection) onThread:[[self class] httpRequest] withObject:nil waitUntilDone:NO modes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
+    }else if ([self isReady]) {
+        self.state = eLongOperationExecutingState;
+        [self performSelector:@selector(operationDidStart) onThread:[[self class] httpRequest] withObject:nil waitUntilDone:NO modes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
+    }
+    [self.lock unlock];
+}
+
+// 创建NSURLConnection并开始
+- (void)operationDidStart {
+    [self.lock lock];
+    if (![self isCancelled]) {
+        //  startImmediately:NO 一定要设置为NO否则无法修改runloop
+        NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:self.currentReq delegate:self startImmediately:NO];
+        self.connection = connection;
+        NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+        // 这里需要设置RunLoop模式为NSRunLoopCommonModes，否则会影响主线程刷新UI会暂停网络,将connection加入runloop或者
+        [self.connection scheduleInRunLoop:runLoop forMode:NSRunLoopCommonModes];
+        [self.connection start];
+    }
+    [self.lock unlock];
+}
+</code></pre>
+
+<h2>四、利用NSOperationQueue开启并发网络请求</h2>
+
+<pre><code>- (id)init{
+    self = [super init];
+    if (!self) {
+        return nil;
+    }
+    // 创建网络请求队列
+    static dispatch_once_t oncePredicate;
+    dispatch_once(&amp;oncePredicate, ^{
+        httpQueue = [[NSOperationQueue alloc] init];    // 创建请求队列
+        httpQueue.maxConcurrentOperationCount = 4;      // 最大并发数
+    });
+    self.callBackObjectDict = [[NSMutableDictionary alloc] initWithCapacity:3];
+    NSRecursiveLock *lock = [[NSRecursiveLock alloc] init];
+    self.lock = lock;
+    self.lock.name = @"elong.httpReq.lock";
+    return self;
+}
+
+- (void)startWith:(eLongHTTPRequestOperation *)httpRequestOperation{
+    [httpQueue addOperation:httpRequestOperation];
+}
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[深拷贝与浅拷贝分析]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/01/23/shen-kao-bei-yu-qian-kao-bei-fen-xi/"/>
+    <updated>2015-01-23T09:37:21+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/01/23/shen-kao-bei-yu-qian-kao-bei-fen-xi</id>
+    <content type="html"><![CDATA[<p>深拷贝:开辟新的存储空间,修改copy后的对象,不会影响本身</p>
+
+<p>浅拷贝:只是指针的copy,修改copy后的对象,会影响本身.</p>
+
+<p>对象要具备复制功能，必须实现<NSCopying>协议或者<NSMutableCopying>协议，常用的可复制对象有：</p>
+
+<p>NSNumber、NSString、NSMutableString、NSArray、NSMutableArray、NSDictionary、NSMutableDictionary</p>
+
+<p>对于以上的Foundation都遵循这个规律(arrayI为不可变数组,arrayM为可变数组)</p>
+
+<pre><code>(lldb) po arrayI
+&lt;__NSArrayI 0x7fb620704ba0&gt;(
+
+)
+
+(lldb) po [arrayI copy]
+&lt;__NSArrayI 0x7fb620704ba0&gt;(
+
+)
+
+(lldb) po [arrayI mutableCopy]
+&lt;__NSArrayM 0x7fb62042d050&gt;(
+
+)
+
+(lldb) po arrayM
+&lt;__NSArrayM 0x7fb620605570&gt;(
+
+)
+
+(lldb) po [arrayM copy]
+&lt;__NSArrayI 0x7fb620704ba0&gt;(
+
+)
+
+(lldb) po [arrayM mutableCopy]
+&lt;__NSArrayM 0x7fb620451ce0&gt;(
+
+)
+</code></pre>
+
+<p>容器类对象深浅复制,对于容器而言，其元素对象始终是指针复制。如果需要元素对象也是对象复制，就需要实现深拷贝.</p>
+
+<pre><code>NSArray *array = [NSArray arrayWithObjects:[NSMutableString stringWithString:@"first"],[NSStringstringWithString:@"b"],@"c",nil];
+// 里面的元素浅复制
+NSArray *deepCopyArray=[[NSArray alloc] initWithArray: array copyItems: YES];
+// 里面的元素深复制
+NSArray* trueDeepCopyArray = [NSKeyedUnarchiver unarchiveObjectWithData:
+[NSKeyedArchiver archivedDataWithRootObject: array]];
+</code></pre>
+
+<p>自己实现深拷贝的方法</p>
+
+<p>NSDictionaryMutableDeepCopy.h</p>
+
+<pre><code>#import &lt;foundation /Foundation.h&gt;
+
+@interface NSDictionary(MutableDeepCopy)
+
+- (NSMutableDictionary *)mutableDeepCopy;
+
+@end
+</code></pre>
+
+<p>NSDictionaryMutableDeepCopy.m</p>
+
+<pre><code>#import "NSDictionaryMutableDeepCopy.h"
+
+@implementation NSDictionary(MutableDeepCopy)
+
+- (NSMutableDictionary *)mutableDeepCopy {
+    NSMutableDictionary *ret = [[NSMutableDictionary alloc]
+                                initWithCapacity:[self count]];
+    NSArray *keys = [self allKeys];
+    for (id key in keys) {
+        id oneValue = [self valueForKey:key];
+        id oneCopy = nil;
+
+        if ([oneValue respondsToSelector:@selector(mutableDeepCopy)]) {
+            oneCopy = [oneValue mutableDeepCopy];
+        }
+        else if ([oneValue respondsToSelector:@selector(mutableCopy)]) {
+            oneCopy = [oneValue mutableCopy];
+        }
+        if (oneCopy == nil) {
+            oneCopy = [oneValue copy];
+        }
+        [ret setValue:oneCopy forKey:key];
+    }
+
+    return ret;
+}
+
+@end
+</code></pre>
+
+<p>一般对象的拷贝,需要实现两个方法&lt;NSCopying,NSMutableCopying></p>
+
+<p>浅拷贝</p>
+
+<pre><code>-（id）copyWithZone:(NSZone *)zone{  
+
+           Person *person = [[[self Class]allocWithZone:zone]init];  
+           p.name = _name;  
+           p.age = _age;  
+           return person;  
+       }  
+</code></pre>
+
+<p>深拷贝</p>
+
+<pre><code>-(void)copyWithZone:(NSZone *)zone{  
+            Person *person = [[[self Class]allocWithZone:zone]init];  
+            person.name = [_name copy];  
+            person.age = [_age copy];  
+            return person;                    
+        }  
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[利用crash堆栈信息定位典型的野指针错误]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/01/13/li-yong-crashdui-zhan-xin-xi-ding-wei-dian-xing-de-ye-zhi-zhen-cuo-wu/"/>
+    <updated>2015-01-13T17:13:23+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/01/13/li-yong-crashdui-zhan-xin-xi-ding-wei-dian-xing-de-ye-zhi-zhen-cuo-wu</id>
+    <content type="html"><![CDATA[<p>通过堆栈信息，确定了代码的具体位置</p>
+
+<pre><code>[self.delegate respondsToSelector:@selector(httpConnectionDidFailed:withError:)]
+</code></pre>
+
+<p>通过这个信息，猜测是delegate这个对象在网络请求回来之前已经释放掉，导致野指针错误。
+控制器的具体代码如下：</p>
+
+<pre><code>@interface TrainSearchListVC ()
+// 这个HttpUtil是封装的网络工具类
+@property (nonatomic, strong) HttpUtil *checkOrderUtil;
+@property (nonatomic, strong) HttpUtil *cancelOrderUtil;
+
+@end
+
+
+- (void)dealloc
+{
+    [self unregisterNotification];
+    // 首先要取消请求
+    // 然后设置为nil (MRC需要release)
+    ***因为没有设置为nil 导致野指针为题***
+    [self.checkOrderUtil cancel];
+    [self.cancelOrderUtil cancel];
+    self.checkOrderUtil = nil;
+    self.cancelOrderUtil = nil;
+    [_tableViewList setDataSource:nil];
+    [_tableViewList setDelegate:nil];
+}
+
+[_checkOrderUtil requestWithURLString:url Content:paramJson StartLoading:YES EndLoading:YES Delegate:self]; 设置了网络请求代理，但是当网络数据返回的时候，代理已经销毁了，出现也只真为题。
+</code></pre>
+
+<p>提供一个计算进制的python方法：</p>
+
+<pre><code>EBJ1297:~ zhaoyan$ python
+Python 2.7.6 (default, Sep  9 2014, 15:04:36) 
+[GCC 4.2.1 Compatible Apple LLVM 6.0 (clang-600.0.39)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; hex(0x000f45f5 - 136693)
+'0xd3000'
+&gt;&gt;&gt; hex(0x00604963 - 5712227)
+'0x92000'
+&gt;&gt;&gt; hex(0x0059e963 - 5712227)
+'0x2c000'
+&gt;&gt;&gt; 
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[利用crash堆栈信息定位代码崩溃位置]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/01/12/li-yong-crashdui-zhan-xin-xi-ding-wei-dai-ma-beng-kui-wei-zhi/"/>
+    <updated>2015-01-12T18:32:15+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/01/12/li-yong-crashdui-zhan-xin-xi-ding-wei-dai-ma-beng-kui-wei-zhi</id>
+    <content type="html"><![CDATA[<p>根据程序崩溃的堆栈信息确定代码crash位置,以下是一段crash堆栈信息</p>
+
+<pre><code>........(
+........0...Client.........................0x005c3963.ElongClient. .5712227,
+........0,
+........Client,
+........0x005c3963.Client. .5712227,
+........0x005c3963
+....)
+此crash堆栈信息,需要加入第三方管理,通过后台进行数据统计
+</code></pre>
+
+<p>使用下面的命令符号化,可以准确地定位crash代码的位置</p>
+
+<pre><code>atos -arch armv7 -o .Dsyms路径 -l 0x52000 0x005c3963
+</code></pre>
+
+<p>在终端下输入该指令,结果或显示具体方法,具体文件,具体行数</p>
+
+<pre><code>-[ViewController viewDidLoad] (ViewController.m:156)
+</code></pre>
+
+<p>0x52000是由0x005c3963减去10进制的5712227计算而得,.Dsyms文件是在程序打包的时候一起获得的文件(线上crash版本必须和这个配套)</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[UIWebView修改页面相关]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/01/05/uiwebviewxiu-gai-ye-mian-xiang-guan/"/>
+    <updated>2015-01-05T17:56:03+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/01/05/uiwebviewxiu-gai-ye-mian-xiang-guan</id>
+    <content type="html"><![CDATA[<p>UIWebView打开html后，UIWebView有左右滚动条，要去掉左右滚动效果；</p>
+
+<p>方法：通过js截获UIWebView中的html，然后修改html标签内容；</p>
+
+<p>实例代码： 服务器端html</p>
+
+<pre><code>&lt;html&gt;&lt;head&gt;  
+&lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8"&gt;  
+&lt;meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"&gt;   
+&lt;title&gt;网曝四川省一考场时钟慢半小时 老师称这就是命&lt;/title&gt;&lt;/head&lt;body&gt;网曝四川省一考场时钟慢半小时 老师称这就是命&lt;/body&gt;&lt;/html&gt; 
+</code></pre>
+
+<p>这样显示的结果网页的最小宽度会是device-width；但有时候不需要这个宽度，就需要修改width=device-width为width=myWidth;
+客户端代码</p>
+
+<pre><code>- (void)webViewDidFinishLoad:(UIWebView *)webView  
+{     
+    //修改服务器页面的meta的值  
+    NSString *meta = [NSString stringWithFormat:@"document.getElementsByName(\"viewport\")[0].content = \"width=%f, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no\"", webView.frame.size.width];  
+    [webView stringByEvaluatingJavaScriptFromString:meta];  
+}  
+</code></pre>
+
+<p>给网页增加utf-8编码</p>
+
+<pre><code>[webView stringByEvaluatingJavaScriptFromString:  
+ @"var tagHead =document.documentElement.firstChild;"  
+  "var tagMeta = document.createElement(\"meta\");"   
+  "tagMeta.setAttribute(\"http-equiv\", \"Content-Type\");"   
+  "tagMeta.setAttribute(\"content\", \"text/html; charset=utf-8\");"   
+  "var tagHeadAdd = tagHead.appendChild(tagMeta);"]; 
+</code></pre>
+
+<p>给网页增加css样式</p>
+
+<pre><code>[webView stringByEvaluatingJavaScriptFromString:  
+     @"var tagHead =document.documentElement.firstChild;"  
+     "var tagStyle = document.createElement(\"style\");"   
+     "tagStyle.setAttribute(\"type\", \"text/css\");"   
+     "tagStyle.appendChild(document.createTextNode(\"BODY{padding: 20pt 15pt}\"));"  
+     "var tagHeadAdd = tagHead.appendChild(tagStyle);"];
+</code></pre>
+
+<p>拦截网页图片  并修改图片大小</p>
+
+<pre><code>[webView stringByEvaluatingJavaScriptFromString:  
+ @"var script = document.createElement('script');"   
+ "script.type = 'text/javascript';"   
+ "script.text = \"function ResizeImages() { "   
+     "var myimg,oldwidth;"  
+     "var maxwidth=380;" //缩放系数   
+     "for(i=0;i &lt;document.images.length;i++){"   
+         "myimg = document.images[i];"  
+         "if(myimg.width &gt; maxwidth){"   
+             "oldwidth = myimg.width;"   
+             "myimg.width = maxwidth;"   
+             "myimg.height = myimg.height * (maxwidth/oldwidth);"   
+         "}"   
+     "}"   
+ "}\";"   
+ "document.getElementsByTagName('head')[0].appendChild(script);"];   
+[webView stringByEvaluatingJavaScriptFromString:@"ResizeImages();"]; 
+</code></pre>
+
+<p>参考网址：</p>
+
+<p>stringByEvaluatingJavaScriptFromString的使用方法:</p>
+
+<p><a href="http://www.uml.org.cn/mobiledev/201108181.asp">http://www.uml.org.cn/mobiledev/201108181.asp</a></p>
+
+<p>iphone 获取UIWebView内Html方法</p>
+
+<p><a href="http://blog.csdn.net/diyagoanyhacker/article/details/6564897">http://blog.csdn.net/diyagoanyhacker/article/details/6564897</a></p>
+
+<p>IOS UIWebView引用外部CSS样式</p>
+
+<p><a href="http://hi.baidu.com/jwq359699768/item/780879e5c98bfb3e4ddcaf22">http://hi.baidu.com/jwq359699768/item/780879e5c98bfb3e4ddcaf22</a>
+<a href="http://blog.csdn.net/xdonx/article/details/6973521">http://blog.csdn.net/xdonx/article/details/6973521</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[iOS开发中一些小技巧]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/01/05/ioskai-fa-zhong-%5B%3F%5D-xie-xiao-ji-qiao/"/>
+    <updated>2015-01-05T11:13:29+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/01/05/ioskai-fa-zhong-[?]-xie-xiao-ji-qiao</id>
+    <content type="html"><![CDATA[<p>原文地址：<a href="http://www.cocoachina.com/ios/20141231/10783.html">http://www.cocoachina.com/ios/20141231/10783.html</a>最近cocoachina上很火的一篇文章</p>
+
+<h4>1.TableView不显示没内容的Cell</h4>
+
+<pre><code>self.tableView.tableFooterView = [[UIView alloc] init];
+</code></pre>
+
+<h4>2.自定义了leftBarbuttonItem左滑返回手势失效了</h4>
+
+<pre><code>self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]
+                                     initWithImage:img
+                                     style:UIBarButtonItemStylePlain
+                                     target:self
+                                     action:@selector(onBack:)];
+self.navigationController.interactivePopGestureRecognizer.delegate = (id)self;
+</code></pre>
+
+<p>在iOS7以后系统自动支持了左侧滑动返回功能,但当设置了左侧返回按钮,就会失效,这个方法很好地解决了问题</p>
+
+<h4>3.ScrollView莫名其妙不能在viewController划到顶怎么办?</h4>
+
+<pre><code>self.automaticallyAdjustsScrollViewInsets = NO;
+</code></pre>
+
+<p>这个功能也是iOS7之后系统带的功能</p>
+
+<h4>4.像safari一样滑动的时候隐藏navigationbar?</h4>
+
+<pre><code>navigationController.hidesBarsOnSwipe = Yes
+</code></pre>
+
+<h4>5.导航条返回键带的title太讨厌了,怎么让它消失!</h4>
+
+<pre><code>[[UIBarButtonItem appearance] setBackButtonTitlePositionAdjustment:UIOffsetMake(0, -60) forBarMetrics:UIBarMetricsDefault];
+</code></pre>
+
+<h4>6.怎么把tableview里cell的小对勾的颜色改成别的颜色？</h4>
+
+<pre><code>_mTableView.tintColor = [UIColor redColor];
+</code></pre>
+
+<h4>7.本来我的statusbar是lightcontent的，结果用UIImagePickerController会导致我的statusbar的样式变成黑色，怎么办？</h4>
+
+<pre><code>- (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated
+{
+    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+}
+</code></pre>
+
+<h4>8.怎么把我的navigationbar弄成透明的而不是带模糊的效果？</h4>
+
+<pre><code>[self.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
+self.navigationBar.shadowImage = [UIImage new];
+self.navigationBar.translucent = YES;
+</code></pre>
+
+<h4>9.怎么改变uitextfield placeholder的颜色和位置？</h4>
+
+<pre><code>- (void) drawPlaceholderInRect:(CGRect)rect {
+    [[UIColor blueColor] setFill];
+    [self.placeholder drawInRect:rect withFont:self.font    lineBreakMode:UILineBreakModeTailTruncation alignment:self.textAlignment];
+}
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[常用工具方法总结]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2014/11/24/chang-yong-gong-ju-fang-fa-zong-jie/"/>
+    <updated>2014-11-24T10:02:28+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2014/11/24/chang-yong-gong-ju-fang-fa-zong-jie</id>
+    <content type="html"><![CDATA[<h3>一.文件操作常用方法总结:</h3>
+
+<h4>1.写入文件</h4>
+
+<pre><code>+ (BOOL)writeFileName:(NSString *)fileName data:(id)result{
+   NSString *pathName =  [LSCacheFile filePath:fileName];
+    if ([LSCacheFile isExistsFile:pathName]) {
+        [[NSFileManager defaultManager] removeItemAtPath:pathName error:nil];
+    }
+    return [LSCacheFile writeFile:pathName object:result];
+}
+</code></pre>
+
+<h4>2.读出文件</h4>
+
+<pre><code>+ (id)readFileName:(NSString *)fileName{
+
+    if (!fileName) {
+        return nil;
+    }
+    if(![LSCacheFile isExistsFile:fileName]){
+        return nil;
+    }
+
+    id object = [LSCacheFile readFile:[LSCacheFile filePath:fileName]];
+    if (!object) {
+        return nil;
+    }
+    return object;
+}
+</code></pre>
+
+<h4>3.计算文件大小</h4>
+
+<pre><code>+ (NSString *)folderSizeStringAtPath:(NSString *)folderPath
+{
+    long long folderSize = [LSCacheFile folderSizeAtPath:folderPath];
+    return [self sizeStringFromSizeLong:folderSize];
+}
+
+// 计算文件夹下文件的总大小
++ (long long)folderSizeAtPath:(NSString*)folderPath{
+    NSFileManager* manager = [NSFileManager defaultManager];
+    if (![manager fileExistsAtPath:folderPath]) return 0;
+    NSEnumerator *childFilesEnumerator = [[manager subpathsAtPath:folderPath] objectEnumerator];
+    NSString* fileName;
+    long long folderSize = 0;
+    while ((fileName = [childFilesEnumerator nextObject]) != nil){
+        NSString* fileAbsolutePath = [folderPath stringByAppendingPathComponent:fileName];
+        folderSize += [LSCacheFile fileSizeAtPath:fileAbsolutePath];
+    }
+    return folderSize;
+}
+// 根据文件大小返回对应单位
++(NSString*)sizeStringFromSizeLong:(long long) folderSize{
+    if (folderSize &lt; 1024) {
+        return @"0K";
+    }else if(folderSize/1024.0 &lt; 1024){
+        return [NSString stringWithFormat:@"%.2fK",folderSize/1024.0];
+    }else if(folderSize/1024.0/1024.0 &lt; 1024){
+        return [NSString stringWithFormat:@"%.2fM",folderSize/1024.0/1024.0];
+    }else if(folderSize/1024.0/1024.0/1024.0 &lt; 1024){
+        return [NSString stringWithFormat:@"%.2fG",folderSize/1024.0/1024.0/1024.0];
+    }
+    return @"";
+}
+</code></pre>
+
+<h4>4.格式化size单位</h4>
+
+<pre><code>+ (NSString *)formatFileSize:(int)fileSize {
+    float size = fileSize;
+    if (fileSize &lt; 1023) {
+        return([NSString stringWithFormat:@"%i bytes",fileSize]);
+    }
+
+    size = size / 1024.0f;
+    if (size &lt; 1023) {
+        return([NSString stringWithFormat:@"%1.2f KB",size]);
+    }
+
+    size = size / 1024.0f;
+    if (size &lt; 1023) {
+        return([NSString stringWithFormat:@"%1.2f MB",size]);
+    }
+
+    size = size / 1024.0f;
+    return [NSString stringWithFormat:@"%1.2f GB",size];
+}
+</code></pre>
+
+<h4>5.获取目录下的文件大小(返回字节)</h4>
+
+<pre><code>+ (long long)folderSizeAtPath:(NSString*)folderPath{
+    NSFileManager* manager = [NSFileManager defaultManager];
+    if (![manager fileExistsAtPath:folderPath]) return 0;
+    NSEnumerator *childFilesEnumerator = [[manager subpathsAtPath:folderPath] objectEnumerator];
+    NSString* fileName;
+    long long folderSize = 0;
+    while ((fileName = [childFilesEnumerator nextObject]) != nil){
+        NSString* fileAbsolutePath = [folderPath stringByAppendingPathComponent:fileName];
+        folderSize += [LSCacheFile fileSizeAtPath:fileAbsolutePath];
+    }
+    return folderSize;
+}
+</code></pre>
+
+<h4>6.判断文件是否存在</h4>
+
+<pre><code>+ (BOOL)isExistsFile:(NSString *)filepath{
+    NSFileManager *filemanage = [NSFileManager defaultManager];
+    return [filemanage fileExistsAtPath:[LSCacheFile filePath:filepath]];
+}
+</code></pre>
+
+<h4>7.删除缓存文件</h4>
+
+<pre><code>+(void)deleteCacheFile:(NSString *)filepath
+{
+    if([[NSFileManager defaultManager] fileExistsAtPath:filepath isDirectory:NO])
+    {
+        [[NSFileManager defaultManager] removeItemAtPath:filepath error:nil];
+    }
+}
+</code></pre>
+
+<h4>8.创建文件夹</h4>
+
+<pre><code>+ (BOOL)createFolder:(NSString*)folderPath isDirectory:(BOOL)isDirectory {
+    NSString *path = nil;
+    if(isDirectory) {
+        path = folderPath;
+    } else {
+        path = [folderPath stringByDeletingLastPathComponent];
+    }
+
+    if(folderPath &amp;&amp; [[NSFileManager defaultManager] fileExistsAtPath:path] == NO) {
+        NSError *error = nil;
+        BOOL ret;
+
+        ret = [[NSFileManager defaultManager] createDirectoryAtPath:path
+                                        withIntermediateDirectories:YES
+                                                         attributes:nil
+                                                              error:&amp;error];
+        if(!ret &amp;&amp; error) {
+            NSLog(@"create folder failed at path '%@',error:%@,%@",folderPath,[error localizedDescription],[error localizedFailureReason]);
+            return NO;
+        }
+    }
+
+    return YES;
+}
+</code></pre>
+
+<h4>9.得到用户document中的一个路径</h4>
+
+<pre><code>+ (NSString*)getPathInUserDocument:(NSString*) aPath{
+    NSString *fullPath = nil;
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    if ([paths count] &gt; 0)
+    {
+        fullPath = (NSString *)[paths objectAtIndex:0];
+        if(aPath != nil &amp;&amp; [aPath compare:@""] != NSOrderedSame)
+        {
+            fullPath = [fullPath stringByAppendingPathComponent:aPath];
+        }
+    }
+    return fullPath;
+}
+</code></pre>
+
+<h4>10.文件创建日期</h4>
+
+<pre><code>+ (NSDate*)dateOfFileCreateWithFolderName:(NSString *)folderName cacheName:(NSString *)cacheName
+{
+    NSString *folder = [[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:folderName];
+    NSString *filePath = [folder stringByAppendingPathComponent:cacheName];
+    NSError *error;
+    NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:&amp;error];
+
+    if(!error) {
+        return [attributes objectForKey:NSFileCreationDate];
+    }
+
+    return nil;
+}
+</code></pre>
+
+<h4>11.获取NSBundele中的资源图片</h4>
+
+<pre><code>+ (UIImage *)imageAtApplicationDirectoryWithName:(NSString *)fileName {
+    if(fileName) {
+        NSString *path = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:[fileName stringByDeletingPathExtension]];
+        path = [NSString stringWithFormat:@"%@@2x.%@",path,[fileName pathExtension]];
+        if(![[NSFileManager defaultManager] fileExistsAtPath:path]) {
+            path = nil;
+        }
+
+        if(!path) {
+            path = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:fileName];
+        }
+        return [UIImage imageWithContentsOfFile:path];
+    }
+    return nil;
+}
+</code></pre>
+
+<h4>12.移除某个文件夹下的所有文件(非遍历)并重新创建被删除的文件夹</h4>
+
+<pre><code>+ (void) deleteContentsOfFolder:(NSString *)folderPath {
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    [fileManager removeItemAtPath:folderPath error:nil];
+    BOOL isDir = NO;
+    BOOL existed = [fileManager fileExistsAtPath:folderPath isDirectory:&amp;isDir];
+    if ( !(isDir == YES &amp;&amp; existed == YES) ) {
+        [fileManager createDirectoryAtPath:folderPath withIntermediateDirectories:YES attributes:nil error:nil];
+    }
+}
+</code></pre>
+
+<h3>二.文件操作常用方法总结:</h3>
+
+<h4>1.获取请求sign</h4>
+
+<pre><code>+(NSString *)getSign{
+    NSString *username = @"zhaoyan106";
+    NSString *pwd = @"zhaoyan106";
+    NSString *pwd_md5 = [pwd md5];
+    NSString *time_key_md5 = [[NSString stringWithFormat:@"%@%@",[self getTimeStamp],@"zhaoyan106"] md5];
+    NSString *sign = [[NSString stringWithFormat:@"%@%@%@",username, pwd_md5,time_key_md5] md5];
+    return sign;
+}
+
+- (NSString*)md5 {
+    const char* string = [self UTF8String];
+    unsigned char result[16];
+    CC_MD5(string, strlen(string), result);
+    NSString* hash = [NSString stringWithFormat:@"%@%@@%%@%@@@%@@%@@%@@@@@%@@@@%@@@%@@%@@@%@@%",
+                      result[0], result[1], result[2], result[3], result[4], result[5], result[6], result[7],
+                      result[8], result[9], result[10], result[11], result[12], result[13], result[14], result[15]];
+    return [hash lowercaseString];
+}
+
+// 获取时间戳
++(NSString *)getTimeStamp{
+    NSDate* dat = [NSDate dateWithTimeIntervalSinceNow:0];
+    NSTimeInterval a=[dat timeIntervalSince1970];
+    NSString *timeString = [NSString stringWithFormat:@"%.0f", a];
+    return timeString;
+}
+</code></pre>
+
+<h4>2.获取时间戳</h4>
+
+<pre><code>+(NSString *)getTimeStamp{
+    NSDate* dat = [NSDate dateWithTimeIntervalSinceNow:0];
+    NSTimeInterval a=[dat timeIntervalSince1970];
+    NSString *timeString = [NSString stringWithFormat:@"%.0f", a];
+    return timeString;
+}
+</code></pre>
+
+<h4>3.将对象转化为json字符串</h4>
+
+<pre><code>+ (NSString *)jsonStringFromObject:(id)object{
+    if([NSJSONSerialization isValidJSONObject:object]){
+        NSData *data = [NSJSONSerialization dataWithJSONObject:object options:NSJSONWritingPrettyPrinted error:nil];
+        NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        return jsonString;
+    }
+    return @"";
+}
+</code></pre>
+
+<h4>4.去除字典元素(去除NSNull)</h4>
+
+<pre><code>+ (id)valueForKey:(NSString *)key object:(NSDictionary *)object{
+    if([object isKindOfClass:[NSDictionary class]]){
+        id value = [object objectForKey:key];
+        if([value isKindOfClass:[NSNull class]]){
+            return nil;
+        }
+        return value;
+    }
+    return nil;
+}
+</code></pre>
+
+<h4>5.http request header 访问信息</h4>
+
+<p>关于UDID等标识不清楚的可以参考下这篇文章<a href="http://www.cocoachina.com/industry/20130715/6597.html">http://www.cocoachina.com/industry/20130715/6597.html</a></p>
+
+<pre><code>+ (NSString *)getTraceInfo {
+    //版本号
+    NSString *versionname  = [NSString stringWithFormat:@"%.1f", ((NSString *)[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"]).integerValue-1.0+7.0];
+    //内部版本
+    NSString *versioncode  = ([[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"]);
+    //发布版本
+    NSString *buildversion = ([[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"]);
+    //系统版本
+    NSString *osversion = [[UIDevice currentDevice] systemVersion];
+    //设备型号
+    NSString *model = [self deviceType];
+    //软件名称
+    NSString *appname = @"stem";
+    //软件平台
+    NSString *clientname = @"iphone";
+    //广告唯一标识符
+    NSString *idfa = [self getAdvertisingIdentifier];
+    //UDID
+    NSString *clientid = [LSHelper getCurrentDeviceUDID];
+//    NSString *traceInfo = [NSString stringWithFormat:@"versionname=%@;appname=%@;clientname=%@;",versionname,appname,clientname];
+    NSString *traceInfo = [NSString stringWithFormat:@"versionname=%@;versioncode=%@;buildversion=%@;osversion=%@;model=%@;appname=%@;clientname=%@;idfa=%@;clientid=%@;",versionname,versioncode,buildversion,osversion,model,appname,clientname,idfa,clientid];
+    return traceInfo;
+}
+
+// 获取当前设备类型如ipod，iphone，ipad
++ (NSString *)deviceType {
+    struct utsname systemInfo;
+    uname(&amp;systemInfo);
+    return [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding];
+}
+
+// 获取用户的ADFA
++ (NSString *) getAdvertisingIdentifier{
+    return [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
+}
+
+// 获取当前设备的UDID
++(NSString*) getCurrentDeviceUDID
+{
+    if ([self getCurrentDeviceVersion]&gt;=7.0) {
+    // OpenUDID
+        return [OpenUDID value];
+    }else{
+        return [self UUID];
+    }
+
+}
+
+
+// 获取当前设备的UDID(ios7.0以下系统)
++ (NSString *)UUID {
+    NSInteger mib[6];
+    size_t              len;
+    char                *buf;
+    unsigned char       *ptr;
+    struct if_msghdr    *ifm;
+    struct sockaddr_dl  *sdl;
+
+    mib[0] = CTL_NET;
+    mib[1] = AF_ROUTE;
+    mib[2] = 0;
+    mib[3] = AF_LINK;
+    mib[4] = NET_RT_IFLIST;
+
+    if ((mib[5] = if_nametoindex("en0")) == 0) {
+        printf("Error: if_nametoindex error\n");
+        return NULL;
+    }
+
+    if (sysctl(mib, 6, NULL, &amp;len, NULL, 0) &lt; 0) {
+        printf("Error: sysctl, take 1\n");
+        return NULL;
+    }
+
+    if ((buf = malloc(len)) == NULL) {
+        printf("Could not allocate memory. error!\n");
+        return NULL;
+    }
+
+    if (sysctl(mib, 6, buf, &amp;len, NULL, 0) &lt; 0) {
+        free(buf);
+        printf("Error: sysctl, take 2");
+        return NULL;
+    }
+
+    ifm = (struct if_msghdr *)buf;
+    sdl = (struct sockaddr_dl *)(ifm + 1);
+    ptr = (unsigned char *)LLADDR(sdl);
+    NSString *macaddress = [NSString stringWithFormat:@"%02X:%02X:%02X:%02X:%02X:%02X",
+                            *ptr, *(ptr+1), *(ptr+2), *(ptr+3), *(ptr+4), *(ptr+5)];
+    free(buf);
+
+
+    if (macaddress) {
+        NSString *uniqueIdentifier = [macaddress stringByReplacingOccurrencesOfString:@":" withString:@""];
+        return uniqueIdentifier;
+    } else {
+        NSUserDefaults *handler = [NSUserDefaults standardUserDefaults];
+        NSString *result = (NSString *)[handler objectForKey:kUUID];
+
+        if (NULL == result || 46 &gt; [result length]) {
+            CFUUIDRef uuid = CFUUIDCreate(NULL);
+            CFStringRef uuidStr = CFUUIDCreateString(NULL, uuid);
+
+            result = [NSString stringWithFormat:@"%@", uuidStr];
+            CFRelease(uuidStr);
+            CFRelease(uuid);
+
+            [handler setObject:result forKey:kUUID];
+            [handler synchronize];
+        }
+
+        return result;
+    }
+}
+</code></pre>
+
+<h4>6.(参数 + url)md5加密</h4>
+
+<pre><code>+(NSString *)keyMD5StringWithParamDic:(NSDictionary *)paramDic methodName:(NSString *)methodName
+{
+    NSMutableString *keyMutableString = nil;
+    if (paramDic == nil) {
+        return nil;
+    }
+
+    NSArray *keys = [paramDic allKeys];
+    NSArray *sortedArray = [keys sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        return [obj1 compare:obj2 options:NSNumericSearch];
+    }];
+
+    keyMutableString = [NSMutableString string];
+    for (NSInteger index = 0; index &lt; sortedArray.count; index++) {
+        NSString *key = [sortedArray objectAtIndex:index];
+        NSString *value = [paramDic objectForKey:key];
+        if (index == 0) {
+            [keyMutableString appendFormat:@"%@=%@",key,value];
+        } else {
+            [keyMutableString appendFormat:@"|%@=%@",key,value];
+        }
+    }
+    NSString *url = [NSString stringWithFormat:@"%@%@",kServerAddress,methodName];
+    [keyMutableString appendString:url];
+    return [keyMutableString md5];
+}
+</code></pre>
+
+<h4>7.cookie操作</h4>
+
+<pre><code>// 设置cooike
++ (void)setHttpCookieValue:(NSString *)value{
+    //过期时间一个小时
+    NSDate *date = [NSDate dateWithTimeIntervalSinceNow:60*60];
+    //设置了过期时间，如果过期，则NSURLRequest就不会使用此cookie
+    NSHTTPCookie *cookie = [NSHTTPCookie cookieWithProperties:@{NSHTTPCookiePath:@"/", NSHTTPCookieName:@"JSESSIONID", NSHTTPCookieValue:value, NSHTTPCookieOriginURL:kServerAddress, NSHTTPCookieExpires:date}];
+    [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookie:cookie];
+    [self writeFileName:kSpecialCookieFileName data:@[cookie]];
+}
+// 读取cookie
++ (NSString *)valueFromHttpCookie{
+    NSArray *cookieArr = [self readFileName:kSpecialCookieFileName];
+    NSMutableArray *mutableArr = [NSMutableArray arrayWithArray:cookieArr];
+    NSString *value = nil;
+    for(NSHTTPCookie *cookie in cookieArr){
+        if([cookie.name isEqual:@"JSESSIONID"] &amp;&amp; cookie.value.length &gt; 0){
+            //如果过期了，则删除本地
+            if([cookie.expiresDate compare:[NSDate date]] == NSOrderedAscending){
+                [mutableArr removeObject:cookie];
+            }
+            else{
+                [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookie:cookie];
+                value = cookie.value;
+            }
+        }
+    }
+    [self writeFileName:kSpecialCookieFileName data:mutableArr];
+    return value;
+}
+// 删除cookie
++ (void)removeHttpCookieCache{
+    [self deleteCacheFile:kSpecialCookieFileName];
+}
+</code></pre>
+
+<h3>三.时间常用方法总结:</h3>
+
+<h4>1.获取当前时间</h4>
+
+<pre><code>+ (NSString *)getCurrentTime
+{
+    NSDate *senddate = [NSDate date];
+
+    NSDateFormatter *dateformatter = [[NSDateFormatter alloc] init];
+
+    [dateformatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+
+    NSString *locationString = [dateformatter stringFromDate:senddate];
+
+    return locationString;
+
+}
+</code></pre>
+
+<h4>2.字符时间转date</h4>
+
+<pre><code>+ (NSDate *)dateFromString:(NSString *)dateString {
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"eee, dd MMM yyyy HH:mm:ss ZZZZ"];
+    NSDate *date = [formatter dateFromString:dateString];
+    return date;
+}
+</code></pre>
+
+<h4>3.date转字符串</h4>
+
+<pre><code>+ (NSString *)stringFromDate:(NSDate *)date {
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    //zzz表示时区，zzz可以删除，这样返回的日期字符将不包含时区信息。
+    [dateFormatter setDateFormat:@"yyyy-MM-dd"];
+    NSString *destDateString = [dateFormatter stringFromDate:date];
+    return destDateString;
+}
+</code></pre>
+
+<h4>4.自1970年距离现在时间转换</h4>
+
+<pre><code>+ (NSString *)timeFactorySeconds:(NSNumber *)seconds andFormat:(TimeFormat)type {
+    float second = [seconds doubleValue];
+    if (second == 0) {
+        return nil;
+    }
+    NSString *result = nil;
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:[seconds doubleValue]/1000];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    switch (type) {
+        case YearMonthDayHourMin: {
+            [formatter setDateFormat:@"yyyy-MM-dd HH:mm"];
+            result = [formatter stringFromDate:date];
+        }
+            break;
+        case YearMonthDay: {
+            [formatter setDateFormat:@"yyyy-MM-dd"];
+            result = [formatter stringFromDate:date];
+        }
+            break;
+        case MonthDayHourMin: {
+            [formatter setDateFormat:@"MM-dd HH:mm"];
+            result = [formatter stringFromDate:date];
+        }
+            break;
+        case YearMonthDayHZ: {
+            [formatter setDateFormat:@"yyyy年MM月dd日"];
+            result = [formatter stringFromDate:date];
+        }
+            break;
+        default:
+            break;
+    }
+    return result;
+}
+</code></pre>
+
+<h4>5. 数组按时间排序</h4>
+
+<pre><code>//数组按时间排序
++ (NSArray *)resortHomePageData:(NSArray *)data {
+// NSSortDescriptor可以直接对对象的某个属性进行排列
+    NSArray *sortDescriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"mtime" ascending:YES]];
+    return [data sortedArrayUsingDescriptors:sortDescriptors];
+}
+</code></pre>
+
+<h3>四.图片操作</h3>
+
+<h4>1.去最大的正方形</h4>
+
+<pre><code>+ (UIImage *)cutToRect:(UIImage *)image {
+    double width = ((UIImage *)image).size.width * image.scale;
+    double height = ((UIImage *)image).size.height * image.scale;
+    UIImage *img = nil;
+    if (width &gt; height) {
+        CGImageRef imageRef = CGImageCreateWithImageInRect([image CGImage], CGRectMake((width - height)/2.0f, 0, height, height));
+        img = [UIImage imageWithCGImage:imageRef scale:image.scale orientation:image.imageOrientation];
+        CGImageRelease(imageRef);
+    }
+    else {
+        CGImageRef imageRef = CGImageCreateWithImageInRect([image CGImage], CGRectMake(0, (height - width)/2.0f, width, width));
+        img = [UIImage imageWithCGImage:imageRef scale:image.scale orientation:image.imageOrientation];
+        CGImageRelease(imageRef);
+    }
+    return img;
+}
+</code></pre>
+
+<h4>2.按比例取最大图片</h4>
+
+<pre><code>+ (UIImage *)cutToBigRect:(UIImage *)image size:(CGSize)size {
+    UIImage *imageRemove = [self imageResize:image size:image.size];//去掉拍照 图片带的方向信息
+    double width = imageRemove.size.width * imageRemove.scale;
+    double height = imageRemove.size.height * imageRemove.scale;
+    UIImage *img = nil;
+    CGImageRef imageRef;
+    if (height / width &lt;= size.height / size.width) {//height小
+        imageRef = CGImageCreateWithImageInRect([imageRemove CGImage], CGRectMake((width - height * (size.width / size.height))/2.0f, 0, height * (size.width / size.height), height));
+    }
+    else {
+        imageRef = CGImageCreateWithImageInRect([imageRemove CGImage], CGRectMake(0, (height - width * (size.height / size.width))/2.0f, width, width * (size.height / size.width)));
+
+    }
+    img = [UIImage imageWithCGImage:imageRef scale:imageRemove.scale orientation:imageRemove.imageOrientation];
+    CGImageRelease(imageRef);
+    return img;
+}
+</code></pre>
+
+<h4>3.将图片放缩到指定大小</h4>
+
+<pre><code>+ (UIImage*)imageResize:(UIImage*)image size:(CGSize)size {
+    UIGraphicsBeginImageContext(size);
+    [image drawInRect:CGRectMake(0,0,size.width, size.height)];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+}
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[瀑布流（模仿TableView）]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2014/11/21/pu-bu-liu-(mo-fang-tableview)/"/>
+    <updated>2014-11-21T16:22:24+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2014/11/21/pu-bu-liu-(mo-fang-tableview)</id>
+    <content type="html"><![CDATA[<p>在一些应用中也许会用到一瀑布流来展示信息。以下是用的模仿TableView的写法，之后会写一篇iOS6之后能使用的collcetionView。</p>
+
+<p>首先模仿tableView的数据源方法（用来控制有多少数据，多少列，返回的具体cell）：</p>
+
+<pre><code>/**
+ *  数据源方法
+*/
+@protocol HMWaterflowViewDataSource &lt;NSObject&gt;
+@required
+/**
+ *  一共有多少个数据
+*/
+- (NSUInteger)numberOfCellsInWaterflowView:(HMWaterflowView *)waterflowView;
+/**
+ *  返回index位置对应的cell
+ */
+- (HMWaterflowViewCell *)waterflowView:(HMWaterflowView *)waterflowView cellAtIndex:(NSUInteger)index;
+
+@optional
+/**
+*  一共有多少列
+*/
+- (NSUInteger)numberOfColumnsInWaterflowView:(HMWaterflowView *)waterflowView;
+@end
+代理方法(用来控制每个cell的高度，间距和监听cell的点击):
+
+/**
+ *  代理方法
+*/
+@protocol HMWaterflowViewDelegate &lt;UIScrollViewDelegate&gt;
+@optional
+/**
+ *  第index位置cell对应的高度
+*/
+- (CGFloat)waterflowView:(HMWaterflowView *)waterflowView heightAtIndex:(NSUInteger)index;
+/**
+ *  选中第index位置的cell
+ */
+- (void)waterflowView:(HMWaterflowView *)waterflowView didSelectAtIndex:(NSUInteger)index;
+/**
+ *  返回间距
+ */
+- (CGFloat)waterflowView:(HMWaterflowView *)waterflowView marginForType:(HMWaterflowViewMarginType)type;
+
+@end
+</code></pre>
+
+<p>首选写瀑布流有一点是必须清楚的，那就是每个cell的宽度是相同的，每个cell的高度是服务器返回的数据（因此有些图片需要根据宽高比进行缩放），由于需要考虑到每个cell的复用，还需要提供具体对应的dequeueReusableCellWithIdentifier和reloadData方法。</p>
+
+<p>说到复用就必须要有一个缓存池，还有一个展示池（正在显示的cell），因为展示池需要判断cell的位置，这个池使用字典：</p>
+
+<pre><code>/**
+*  正在展示的cell
+*/
+@property (nonatomic, strong) NSMutableDictionary *displayingCells;
+缓存池只负责存放因为不需要顺序，使用集合
+
+/**
+ *  缓存池（用Set，存放离开屏幕的cell）
+*/
+@property (nonatomic, strong) NSMutableSet *reusableCells;
+另外还需要一个存放所有cell的Frame的数组
+
+/**
+*  所有cell的frame数据
+*/
+@property (nonatomic, strong) NSMutableArray *cellFrames;
+</code></pre>
+
+<p>通过reloadData方法计算出每个cell的Frame，并且计算出需要展示的contentSize</p>
+
+<pre><code>- (void)reloadData
+{
+    // 清空之前的所有数据
+    // 移除正在正在显示cell
+    [self.displayingCells.allValues makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    [self.displayingCells removeAllObjects];
+    [self.cellFrames removeAllObjects];
+    [self.reusableCells removeAllObjects];
+
+    // cell的总数
+    int numberOfCells = [self.dataSource numberOfCellsInWaterflowView:self];
+
+    // 总列数
+    int numberOfColumns = [self numberOfColumns];
+
+    // 间距
+    CGFloat topM = [self marginForType:HMWaterflowViewMarginTypeTop];
+    CGFloat bottomM = [self marginForType:HMWaterflowViewMarginTypeBottom];
+    CGFloat leftM = [self marginForType:HMWaterflowViewMarginTypeLeft];
+    CGFloat columnM = [self marginForType:HMWaterflowViewMarginTypeColumn];
+    CGFloat rowM = [self marginForType:HMWaterflowViewMarginTypeRow];
+
+    // cell的宽度
+    CGFloat cellW = [self cellWidth];
+
+    // 用一个C语言数组存放所有列的最大Y值
+    CGFloat maxYOfColumns[numberOfColumns];
+    for (int i = 0; i&lt;numberOfColumns; i++) {
+        maxYOfColumns[i] = 0.0;
+    }
+
+    // 计算所有cell的frame
+    for (int i = 0; i&lt;numberOfCells; i++) {
+        // cell处在第几列(最短的一列)
+        NSUInteger cellColumn = 0;
+        // cell所处那列的最大Y值(最短那一列的最大Y值)
+        CGFloat maxYOfCellColumn = maxYOfColumns[cellColumn];
+        // 求出最短的一列
+        for (int j = 1; j&lt;numberOfColumns; j++) {
+            if (maxYOfColumns[j] &lt; maxYOfCellColumn) {
+                cellColumn = j;
+                maxYOfCellColumn = maxYOfColumns[j];
+            }
+        }
+
+        // 询问代理i位置的高度
+        CGFloat cellH = [self heightAtIndex:i];
+
+        // cell的位置
+        CGFloat cellX = leftM + cellColumn * (cellW + columnM);
+        CGFloat cellY = 0;
+        if (maxYOfCellColumn == 0.0) { // 首行
+            cellY = topM;
+        } else {
+            cellY = maxYOfCellColumn + rowM;
+        }
+
+        // 添加frame到数组中
+        CGRect cellFrame = CGRectMake(cellX, cellY, cellW, cellH);
+        [self.cellFrames addObject:[NSValue valueWithCGRect:cellFrame]];
+
+        // 更新最短那一列的最大Y值
+        maxYOfColumns[cellColumn] = CGRectGetMaxY(cellFrame);
+    }
+
+    // 设置contentSize
+    CGFloat contentH = maxYOfColumns[0];
+    for (int j = 1; j&lt;numberOfColumns; j++) {
+        if (maxYOfColumns[j] &gt; contentH) {
+            contentH = maxYOfColumns[j];
+        }
+    }
+    contentH += bottomM;
+    self.contentSize = CGSizeMake(0, contentH);
+}
+</code></pre>
+
+<p>当屏幕滚动的时候会调用layoutSubviews方法，在这里我们根据cell是否显示对缓存池和展示池进行相关操作：</p>
+
+<pre><code>- (void)layoutSubviews
+{
+    [super layoutSubviews];
+    // 向数据源索要对应位置的cell
+    NSUInteger numberOfCells = self.cellFrames.count;
+    for (int i = 0; i&lt;numberOfCells; i++) {
+        // 取出i位置的frame
+        CGRect cellFrame = [self.cellFrames[i] CGRectValue];
+
+        // 优先从字典中取出i位置的cell
+        HMWaterflowViewCell *cell = self.displayingCells[@(i)];
+
+        // 判断i位置对应的frame在不在屏幕上（能否看见）
+        if ([self isInScreen:cellFrame]) { // 在屏幕上
+            if (cell == nil) {
+                cell = [self.dataSource waterflowView:self cellAtIndex:i];
+                cell.frame = cellFrame;
+                [self addSubview:cell];
+
+                // 存放到字典中
+                self.displayingCells[@(i)] = cell;
+            }
+        } else {  // 不在屏幕上
+            if (cell) {
+                // 从scrollView和字典中移除
+                [cell removeFromSuperview];
+                [self.displayingCells removeObjectForKey:@(i)];
+
+                // 存放进缓存池
+                [self.reusableCells addObject:cell];
+            }
+        }
+    }
+}
+</code></pre>
+
+<p>下面方法判断cell的frame是否在屏幕上：</p>
+
+<pre><code>- (BOOL)isInScreen:(CGRect)frame
+{
+    return (CGRectGetMaxY(frame) &gt; self.contentOffset.y) &amp;&amp;
+    (CGRectGetMinY(frame) &lt; self.contentOffset.y + self.bounds.size.height);
+}
+下面方法根据标记取出缓存池中的cell
+
+- (id)dequeueReusableCellWithIdentifier:(NSString *)identifier
+{
+    __block HMWaterflowViewCell *reusableCell = nil;
+
+    [self.reusableCells enumerateObjectsUsingBlock:^(HMWaterflowViewCell *cell, BOOL *stop) {
+        if ([cell.identifier isEqualToString:identifier]) {
+            reusableCell = cell;
+            *stop = YES;
+        }
+    }];
+
+    if (reusableCell) { // 从缓存池中移除
+        [self.reusableCells removeObject:reusableCell];
+    }
+    return reusableCell;
+}
+</code></pre>
+
+<p>下面方法处理cell的点击</p>
+
+<pre><code>- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    if (![self.delegate respondsToSelector:@selector(waterflowView:didSelectAtIndex:)]) return;
+
+    // 获得触摸点
+    UITouch *touch = [touches anyObject];
+    //    CGPoint point = [touch locationInView:touch.view];
+    CGPoint point = [touch locationInView:self];
+
+    __block NSNumber *selectIndex = nil;
+    [self.displayingCells enumerateKeysAndObjectsUsingBlock:^(id key, HMWaterflowViewCell *cell, BOOL *stop) {
+        if (CGRectContainsPoint(cell.frame, point)) {
+            selectIndex = key;
+            *stop = YES;
+        }
+    }];
+
+    if (selectIndex) {
+        [self.delegate waterflowView:self didSelectAtIndex:selectIndex.unsignedIntegerValue];
+    }
+}
+</code></pre>
+
+<p>这样一个模仿tableView的瀑布流就写好了，下篇博客会介绍利用collectionView写瀑布流的方法。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[瀑布流（collectionView自定义布局）]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2014/11/19/pu-bu-liu-(collectionviewzi-ding-yi-bu-ju-)/"/>
+    <updated>2014-11-19T14:47:19+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2014/11/19/pu-bu-liu-(collectionviewzi-ding-yi-bu-ju-)</id>
+    <content type="html"><![CDATA[
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[AFNetworking源码解析(四)]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2014/11/01/afnetworkingyuan-ma-jie-xi-si/"/>
+    <updated>2014-11-01T15:02:47+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2014/11/01/afnetworkingyuan-ma-jie-xi-si</id>
+    <content type="html"><![CDATA[<p>原文地址：<a href="http://www.cocoachina.com/ios/20141120/10265.html">http://www.cocoachina.com/ios/20141120/10265.html</a>
+本篇主要讲解AFURLResponseSerialization。</p>
+
+<h4>结构</h4>
+
+<p>AFURLResponseSerialization负责解析网络返回数据，检查数据是否合法，把NSData数据转成相应的对象，内置的转换器有json,xml,plist,image，用户可以很方便地继承基类AFHTTPResponseSerializer去解析更多的数据格式，AFNetworking这一套响应解析机制结构很简单，主要就是两个方法：</p>
+
+<h6>1.-validateResponse:data:error:</h6>
+
+<p>基类AFHTTPResponseSerializer的这个方法检测返回的HTTP状态码和数据类型是否合法，属性acceptableStatusCodes和acceptableContentTypes规定了合法的状态码和数据类型，例如JSONSerialization就把acceptableContentTypes设为@”application/json”, @”text/json”, @”text/javascript”，若不是这三者之一，就验证失败，返回相应的NSError对象。一般子类不需要重写这个方法，只需要设置好acceptableStatusCodes和acceptableContentTypes就行了。</p>
+
+<h6>2.-responseObjectForResponse:data:error:</h6>
+
+<p>这个方法解析数据，把NSData转成相应的对象，上层AFURLConnectionOperation会调用这个方法获取转换后的对象。</p>
+
+<p>在解析数据之前会先调上述的validateResponse方法检测HTTP响应是否合法，要注意的是即使这里检测返回不合法，也会继续解析数据生成对象，因为有可能错误信息就在返回的数据里。</p>
+
+<p>如果validateResponse返回error，这里的解析数据又出错，这时有两个error对象，怎样返回给上层？这里的处理是把解析数据的NSError对象保存到validateResponse NSError的userInfo里，作为UnderlyingError，NSError专门给了个NSUnderlyingErrorKey作为这种错误包含错误的键值。</p>
+
+<p>剩下的就是NSecureCoding相关方法了，如果子类增加了property，需要加上相应的NSecureCoding方法。</p>
+
+<h4>JSON解析</h4>
+
+<p>AFJSONResponseSerializer使用系统内置的NSJSONSerialization解析json，NSJSON只支持解析UTF8编码的数据（还有UTF-16LE之类的，都不常用），所以要先把返回的数据转成UTF8格式。这里会尝试用HTTP返回的编码类型和自己设置的stringEncoding去把数据解码转成字符串NSString，再把NSString用UTF8编码转成NSData，再用NSJSONSerialization解析成对象返回。</p>
+
+<p>上述过程是NSData->NSString->NSData->NSObject，这里有个问题，如果你能确定服务端返回的是UTF8编码的json数据，那NSData->NSString->NSData这两步就是无意义的，而且这两步进行了两次编解码，很浪费性能，所以如果确定服务端返回utf8编码数据，就建议自己再写个JSONResponseSerializer，跳过这两个步骤。</p>
+
+<p>此外AFJSONResponseSerializer专门写了个方法去除NSNull，直接把对象里值是NSNull的键去掉，还蛮贴心，若不去掉，上层很容易忽略了这个数据类型，判断了数据是否nil没判断是否NSNull，进行了错误的调用导致core。</p>
+
+<h4>图片解压</h4>
+
+<p>当我们调用UIImage的方法imageWithData:方法把数据转成UIImage对象后，其实这时UIImage对象还没准备好需要渲染到屏幕的数据，现在的网络图像PNG和JPG都是压缩格式，需要把它们解压转成bitmap后才能渲染到屏幕上，如果不做任何处理，当你把UIImage赋给UIImageView，在渲染之前底层会判断到UIImage对象未解压，没有bitmap数据，这时会在主线程对图片进行解压操作，再渲染到屏幕上。这个解压操作是比较耗时的，如果任由它在主线程做，可能会导致速度慢UI卡顿的问题。</p>
+
+<p>AFImageResponseSerializer除了把返回数据解析成UIImage外，还会把图像数据解压，这个处理是在子线程（AFNetworking专用的一条线程，详见AFURLConnectionOperation），处理后上层使用返回的UIImage在主线程渲染时就不需要做解压这步操作，主线程减轻了负担，减少了UI卡顿问题。</p>
+
+<p>具体实现上在AFInflatedImageFromResponseWithDataAtScale里，创建一个画布，把UIImage画在画布上，再把这个画布保存成UIImage返回给上层。只有JPG和PNG才会尝试去做解压操作，期间如果解压失败，或者遇到CMKY颜色格式的jpg，或者图像太大(解压后的bitmap太占内存，一个像素3-4字节，搞不好内存就爆掉了)，就直接返回未解压的图像。</p>
+
+<p>另外在代码里看到iOS才需要这样手动解压，MacOS上已经有封装好的对象NSBitmapImageRep可以做这个事。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[AFNetworking源码解析(三)]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2014/10/30/afnetworkingyuan-ma-jie-xi-san/"/>
+    <updated>2014-10-30T15:02:47+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2014/10/30/afnetworkingyuan-ma-jie-xi-san</id>
+    <content type="html"><![CDATA[<p>原文地址：<a href="http://www.cocoachina.com/ios/20140916/9632.html">http://www.cocoachina.com/ios/20140916/9632.html</a></p>
+
+<p>安全相关的AFSecurityPolicy模块，AFSecurityPolicy用于验证HTTPS请求的证书，先来看看HTTPS的原理和证书相关的几个问题。</p>
+
+<p>HTTPS
+HTTPS连接建立过程大致是，客户端和服务端建立一个连接，服务端返回一个证书，客户端里存有各个受信任的证书机构根证书，用这些根证书对服务端 返回的证书进行验证，经验证如果证书是可信任的，就生成一个pre-master  secret，用这个证书的公钥加密后发送给服务端，服务端用私钥解密后得到pre-master secret，再根据某种算法生成master  secret，客户端也同样根据这种算法从pre-master secret生成master secret，随后双方的通信都用这个master  secret对传输数据进行加密解密。</p>
+
+<p>这里说下一开始我比较费解的两个问题：</p>
+
+<h4>1.证书是怎样验证的？怎样保证中间人不能伪造证书？</h4>
+
+<p>首先要知道非对称加密算法的特点，非对称加密有一对公钥私钥，用公钥加密的数据只能通过对应的私钥解密，用私钥加密的数据只能通过对应的公钥解密。</p>
+
+<p>我们来看最简单的情况：一个证书颁发机构(CA)，颁发了一个证书A，服务器用这个证书建立https连接。客户端在信任列表里有这个CA机构的根证书。</p>
+
+<p>首先CA机构颁发的证书A里包含有证书内容F，以及证书加密内容F1，加密内容F1就是用这个证书机构的私钥对内容F加密的结果。（这中间还有一次hash算法，略过。）</p>
+
+<p>建立https连接时，服务端返回证书A给客户端，客户端的系统里的CA机构根证书有这个CA机构的公钥，用这个公钥对证书A的加密内容F1解密得 到F2，跟证书A里内容F对比，若相等就通过验证。整个流程大致是：F->CA私钥加密->F1->客户端CA公钥解密->F。 因为中间人不会有CA机构的私钥，客户端无法通过CA公钥解密，所以伪造的证书肯定无法通过验证。</p>
+
+<h4>2.什么是SSL Pinning？</h4>
+
+<p>可以理解为证书绑定，是指客户端直接保存服务端的证书，建立https连接时直接对比服务端返回的和客户端保存的两个证书是否一样，一样就表明证书 是真的，不再去系统的信任证书机构里寻找验证。这适用于非浏览器应用，因为浏览器跟很多未知服务端打交道，无法把每个服务端的证书都保存到本地，但CS架 构的像手机APP事先已经知道要进行通信的服务端，可以直接在客户端保存这个服务端的证书用于校验。</p>
+
+<p>为什么直接对比就能保证证书没问题？如果中间人从客户端取出证书，再伪装成服务端跟其他客户端通信，它发送给客户端的这个证书不就能通过验证吗？确 实可以通过验证，但后续的流程走不下去，因为下一步客户端会用证书里的公钥加密，中间人没有这个证书的私钥就解不出内容，也就截获不到数据，这个证书的私 钥只有真正的服务端有，中间人伪造证书主要伪造的是公钥。</p>
+
+<p>为什么要用SSL  Pinning？正常的验证方式不够吗？如果服务端的证书是从受信任的的CA机构颁发的，验证是没问题的，但CA机构颁发证书比较昂贵，小企业或个人用户 可能会选择自己颁发证书，这样就无法通过系统受信任的CA机构列表验证这个证书的真伪了，所以需要SSL Pinning这样的方式去验证。</p>
+
+<p>AFSecurityPolicy
+NSURLConnection已经封装了https连接的建立、数据的加密解密功能，我们直接使用NSURLConnection是可以访问 https网站的，但NSURLConnection并没有验证证书是否合法，无法避免中间人攻击。要做到真正安全通讯，需要我们手动去验证服务端返回的 证书，AFSecurityPolicy封装了证书验证的过程，让用户可以轻易使用，除了去系统信任CA机构列表验证，还支持SSL  Pinning方式的验证。使用方法：</p>
+
+<pre><code>//把服务端证书(需要转换成cer格式)放到APP项目资源里，AFSecurityPolicy会自动寻找根目录下所有cer文件
+AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModePublicKey];
+securityPolicy.allowInvalidCertificates = YES;
+[AFHTTPRequestOperationManager manager].securityPolicy = securityPolicy;
+[manager GET:@"https://example.com/" parameters:nil success:^(AFHTTPRequestOperation *operation, id     responseObject) {
+} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+}];
+</code></pre>
+
+<p>AFSecurityPolicy分三种验证模式：</p>
+
+<p>AFSSLPinningModeNone</p>
+
+<p>这个模式表示不做SSL pinning，只跟浏览器一样在系统的信任机构列表里验证服务端返回的证书。若证书是信任机构签发的就会通过，若是自己服务器生成的证书，这里是不会通过的。</p>
+
+<p>AFSSLPinningModeCertificate</p>
+
+<p>这个模式表示用证书绑定方式验证证书，需要客户端保存有服务端的证书拷贝，这里验证分两步，第一步验证证书的域名/有效期等信息，第二步是对比服务端返回的证书跟客户端返回的是否一致。</p>
+
+<p>这里还没弄明白第一步的验证是怎么进行的，代码上跟去系统信任机构列表里验证一样调用了SecTrustEvaluate，只是这里的列表换成了客户端保存的那些证书列表。若要验证这个，是否应该把服务端证书的颁发机构根证书也放到客户端里？</p>
+
+<p>AFSSLPinningModePublicKey</p>
+
+<p>这个模式同样是用证书绑定方式验证，客户端要有服务端的证书拷贝，只是验证时只验证证书里的公钥，不验证证书的有效期等信息。只要公钥是正确的，就能保证通信不会被窃听，因为中间人没有私钥，无法解开通过公钥加密的数据。</p>
+
+<p>整个AFSecurityPolicy就是实现这这几种验证方式，剩下的就是实现细节了，详见源码。</p>
+
+<h4>3.源码注释</h4>
+
+<p>AFSecurityPolicy</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[AFNNetworking源码解析（二）]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2014/10/29/afnnetworkingyuan-ma-jie-xi-(er-)/"/>
+    <updated>2014-10-29T13:26:44+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2014/10/29/afnnetworkingyuan-ma-jie-xi-(er-)</id>
+    <content type="html"><![CDATA[<p>原文地址：<a href="http://www.cocoachina.com/ios/20140904/9523.html">http://www.cocoachina.com/ios/20140904/9523.html</a></p>
+
+<p>AFURLRequestSerialization用于帮助构建NSURLRequest，主要做了两个事情：</p>
+
+<p>1.构建普通请求：格式化请求参数，生成HTTP Header。
+2.构建multipart请求。</p>
+
+<p>分别看看它在这两点具体做了什么，怎么做的。</p>
+
+<h4>1.构建普通请求</h4>
+
+<p>A.格式化请求参数
+一般我们请求都会按key=value的方式带上各种参数，GET方法参数直接加在URL上，POST方法放在body上，NSURLRequest没有封装好这个参数的解析，只能我们自己拼好字符串。AFNetworking提供了接口，让参数可以是NSDictionary, NSArray, NSSet这些类型，再由内部解析成字符串后赋给NSURLRequest。</p>
+
+<p>转化过程大致是这样的：</p>
+
+<pre><code>@{ 
+    @"name" : @"bang", 
+    @"phone": @{@"mobile": @"xx", @"home": @"xx"}, 
+    @"families": @[@"father", @"mother"], 
+    @"nums": [NSSet setWithObjects:@"1", @"2", nil] 
+} 
+-&gt; 
+@[ 
+    field: @"name", value: @"bang", 
+    field: @"phone[mobile]", value: @"xx", 
+    field: @"phone[home]", value: @"xx", 
+    field: @"families[]", value: @"father", 
+    field: @"families[]", value: @"mother", 
+    field: @"nums", value: @"1", 
+    field: @"nums", value: @"2", 
+] 
+-&gt; 
+name=bang&amp;phone[mobile]=xx&amp;phone[home]=xx&amp;families[]=father&amp;families[]=mother&amp;nums=1&amp;num=2
+</code></pre>
+
+<p>第一部分是用户传进来的数据，支持包含NSArray,NSDictionary,NSSet这三种数据结构。</p>
+
+<p>第二部分是转换成AFNetworking内自己的数据结构，每一个key-value对都用一个对象AFQueryStringPair表示，作用是最后可以根据不同的字符串编码生成各自的key=value字符串。主要函数是AFQueryStringPairsFromKeyAndValue，详见源码注释。</p>
+
+<p>第三部分是最后生成NSURLRequest可用的字符串数据，并且对参数进行url编码，在AFQueryStringFromParametersWithEncoding这个函数里。</p>
+
+<p>最后在把数据赋给NSURLRequest时根据不同的HTTP方法分别处理，对于GET/HEAD/DELETE方法，把参数加到URL后面，对于其他如POST/PUT方法，把数据加到body上，并设好HTTP头，告诉服务端字符串的编码。</p>
+
+<p>B.HTTP Header
+AFNetworking帮你组装好了一些HTTP请求头，包括语言Accept-Language，根据 [NSLocale preferredLanguages] 方法读取本地语言，告诉服务端自己能接受的语言。还有构建 User-Agent，以及提供Basic Auth 认证接口，帮你把用户名密码做 base64 编码后放入 HTTP 请求头。详见源码注释。</p>
+
+<p>C.其他格式化方式
+HTTP请求参数不一定是要key=value形式，可以是任何形式的数据，可以是json格式，苹果的plist格式，二进制protobuf格式等，AFNetworking提供了方法可以很容易扩展支持这些格式，默认就实现了json和plist格式。详见源码的类AFJSONRequestSerializer和AFPropertyListRequestSerializer。</p>
+
+<h4>2.构建multipart请求</h4>
+
+<p>构建Multipart请求是占篇幅很大的一个功能，AFURLRequestSerialization里2/3的代码都是在做这个事。</p>
+
+<p>A.Multipart协议介绍
+Multipart是HTTP协议为web表单新增的上传文件的协议，协议文档是rfc1867，它基于HTTP的POST方法，数据同样是放在body上，跟普通POST方法的区别是数据不是key=value形式，key=value形式难以表示文件实体，为此Multipart协议添加了分隔符，有自己的格式结构，大致如下：
+—AaB03x
+content-disposition: form-data; name=“name&#8221;
+bang
+&ndash;AaB03x
+content-disposition: form-data; name=&ldquo;pic&rdquo;; filename=“content.txt&#8221;
+Content-Type: text/plain
+&hellip; contents of bang.txt &hellip;
+&ndash;AaB03x&ndash;</p>
+
+<p>以上表示数据name=bang以及一个文件，content.txt是文件名，… contents of bang.txt …是文件实体内容。分隔符—AaB03x是可以自定义的，写在HTTP头部里：</p>
+
+<p>Content-type: multipart/form-data, boundary=AaB03x</p>
+
+<p>每一个部分都有自己的头部，表明这部分的数据类型以及其他一些参数，例如文件名，普通字段的key。最后一个分隔符会多加两横，表示数据已经结束：—AaB03x—。</p>
+
+<p>B.实现
+接下来说说怎样构造Multipart里的数据，最简单的方式就是直接拼数据，要发送一个文件，就直接把文件所有内容读取出来，再按上述协议加上头部和分隔符，拼接好数据后扔给NSURLRequest的body就可以发送了，很简单。但这样做是不可用的，因为文件可能很大，这样拼数据把整个文件读进内存，很可能把内存撑爆了。</p>
+
+<p>如下实例：</p>
+
+<pre><code>NSArray *allKeys = [_parametersDic allKeys];
+NSString *keyStr = @"";
+NSData *data = nil;
+if (allKeys.count == 1) {
+    keyStr = allKeys[0];
+    data = _parametersDic[keyStr];
+}
+LSAFHTTPClient *httpClient = [LSAFHTTPClient shareClient];
+NSMutableURLRequest* request = [httpClient requestWithMethod:@"POST" path:_methodName parameters:nil];
+request.timeoutInterval = 120;
+//分界线的标识符
+NSString *TWITTERFON_FORM_BOUNDARY = @"AaB03x";
+//分界线 --AaB03x
+NSString *MPboundary=[[NSString alloc]initWithFormat:@"--%@",TWITTERFON_FORM_BOUNDARY];
+//结束符 AaB03x--
+NSString *endMPboundary=[[NSString alloc]initWithFormat:@"%@--",MPboundary];
+//http body的字符串
+NSMutableString *body=[[NSMutableString alloc] init];
+////添加分界线，换行
+[body appendFormat:@"%@\r\n",MPboundary];
+//声明pic字段，文件名为boris.png
+[body appendFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"uploadImg.png\"\r\n", keyStr];
+//声明上传文件的格式
+[body appendFormat:@"Content-Type: image/png\r\n\r\n"];
+
+//声明结束符：--AaB03x--
+NSString *end=[[NSString alloc]initWithFormat:@"\r\n%@",endMPboundary];
+//声明myRequestData，用来放入http body
+NSMutableData *myRequestData=[NSMutableData data];
+//将body字符串转化为UTF8格式的二进制
+[myRequestData appendData:[body dataUsingEncoding:NSUTF8StringEncoding]];
+//将image的data加入
+[myRequestData appendData:data];
+//加入结束符--AaB03x--
+[myRequestData appendData:[end dataUsingEncoding:NSUTF8StringEncoding]];
+//set header
+NSString *content=[[NSString alloc]initWithFormat:@"multipart/form-data; boundary=%@",TWITTERFON_FORM_BOUNDARY];
+//设置HTTPHeader
+[request setValue:content forHTTPHeaderField:@"Content-Type"];
+[request setValue:kUserInformationValue forHTTPHeaderField:kServerInformationKey];
+[request setValue:@"ios" forHTTPHeaderField:@"client-type"];
+[request setValue:[NSString stringWithFormat:@"%d", [myRequestData length]] forHTTPHeaderField:@"Content-Length"];
+NSLog(@"%@", [request allHTTPHeaderFields]);
+//设置http body
+[request setHTTPBody:myRequestData];
+
+AFHTTPRequestOperation *operation = [httpClient HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    //concurrent deal block
+    RequestLog(@"concurrent deal block Success");
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        [self hanleSuccessResponseWithOperation:operation response:responseObject];
+    });
+} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+    RequestLog(@"concurrent deal block Fail");
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        [self handlerErrorResponse:error];
+    });
+}];
+
+[httpClient enqueueHTTPRequestOperation:operation];
+</code></pre>
+
+<p>第二种方法是不把文件读出来，不在内存拼，而是新建一个临时文件，在这个文件上拼接数据，再把文件地址扔给NSURLRequest的bodyStream，这样上传的时候是分片读取这个文件，不会撑爆内存，但这样每次上传都需要新建个临时文件，对这个临时文件的管理也挺麻烦的。</p>
+
+<p>第三种方法是构建自己的数据结构，只保存要上传的文件地址，边上传边拼数据，上传是分片的，拼数据也是分片的，拼到文件实体部分时直接从原来的文件分片读取。这方法没上述两种的问题，只是实现起来也没上述两种简单，AFNetworking就是实现这第三种方法，而且还更进一步，除了文件，还可以添加多个其他不同类型的数据，包括NSData，和InputStream。</p>
+
+<p>AFNetworking 里 multipart 请求的使用方式是这样：</p>
+
+<pre><code>AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager]; 
+NSDictionary *parameters = @{@"foo": @"bar"}; 
+NSURL *filePath = [NSURL fileURLWithPath:@"file://path/to/image.png"]; 
+[manager POST:@"http://example.com/resources.json" parameters:parameters    constructingBodyWithBlock:^(id formData) { 
+    [formData appendPartWithFileURL:filePath name:@"image" error:nil]; 
+} success:^(AFHTTPRequestOperation *operation, id responseObject) { 
+    NSLog(@"Success: %@", responseObject); 
+} failure:^(AFHTTPRequestOperation *operation, NSError *error) { 
+    NSLog(@"Error: %@", error); 
+}]; 
+</code></pre>
+
+<p>这里通过constructingBodyWithBlock向使用者提供了一个AFStreamingMultipartFormData对象，调这个对象的几种append方法就可以添加不同类型的数据，包括FileURL/NSData/NSInputStream，AFStreamingMultipartFormData内部把这些append的数据转成不同类型的 AFHTTPBodyPart，添加到自定义的 AFMultipartBodyStream 里。最后把 AFMultipartBodyStream 赋给原来 NSMutableURLRequest的bodyStream。NSURLConnection 发送请求时会读取这个 bodyStream，在读取数据时会调用这个 bodyStream 的 -read:maxLength: 方法，AFMultipartBodyStream 重写了这个方法，不断读取之前 append进来的 AFHTTPBodyPart 数据直到读完。</p>
+
+<p>AFHTTPBodyPart 封装了各部分数据的组装和读取，一个 AFHTTPBodyPart 就是一个数据块。实际上三种类型 (FileURL/NSData/NSInputStream) 的数据在 AFHTTPBodyPart 都转成 NSInputStream，读取数据时只需读这个 inputStream。inputStream 只保存了数据的实体，没有包括分隔符和头部，AFHTTPBodyPart 是边读取变拼接数据，用一个状态机确定现在数据读取到哪一部份，以及保存这个状态下已被读取的字节数，以此定位要读的数据位置，详见 AFHTTPBodyPart 的-read:maxLength:方法。</p>
+
+<p>AFMultipartBodyStream封装了整个multipart数据的读取，主要是根据读取的位置确定现在要读哪一个AFHTTPBodyPart。AFStreamingMultipartFormData对外提供友好的append接口，并把构造好的AFMultipartBodyStream赋回给NSMutableURLRequest，关系大致如下图：
+<img src="http://www.cocoachina.com/cms/uploads/allimg/140904/4196_140904100547_1.png" alt="Resize icon" /></p>
+
+<p>C.NSInputStream子类
+NSURLRequest 的 setHTTPBodyStream 接受的是一个 NSInputStream* 参数，那我们要自定义inputStream的话，创建一个 NSInputStream 的子类传给它是不是就可以了？实际上不行，这样做后用NSURLRequest 发出请求会导致 crash，提示 [xx _scheduleInCFRunLoop:forMode:]: unrecognized selector。</p>
+
+<p>这是因为NSURLRequest实际上接受的不是 NSInputStream 对象，而是 CoreFoundation 的 CFReadStreamRef 对象，因为 CFReadStreamRef 和 NSInputStream 是 toll-free bridged，可以自由转换，但CFReadStreamRef 会用到 CFStreamScheduleWithRunLoop 这个方法，当它调用到这个方法时，object-c 的 toll-free bridging 机制会调用 object-c 对象 NSInputStream 的相应函数，这里就调用到了_scheduleInCFRunLoop:forMode:，若不实现这个方法就会crash。</p>
+
+<h4>3.源码注释</h4>
+
+<p>AFURLRequestSerialization.m</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[AFNetworking源码解析(一)]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2014/10/28/afnetworkingyuan-ma-jie-xi-%5B%3F%5D/"/>
+    <updated>2014-10-28T15:02:47+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2014/10/28/afnetworkingyuan-ma-jie-xi-[?]</id>
+    <content type="html"><![CDATA[<p>原文地址：<a href="http://www.cocoachina.com/ios/20140829/9480.html">http://www.cocoachina.com/ios/20140829/9480.html</a></p>
+
+<h4>0、AFNetworking代码中有一些常用技巧：</h4>
+
+<p>A.为保证线程安全，所有单例都用dispatch_once生成，保证只执行一次。例如：</p>
+
+<pre><code>static dispatch_queue_t url_request_operation_completion_queue() { 
+    static dispatch_queue_t af_url_request_operation_completion_queue; 
+    static dispatch_once_t onceToken; 
+    dispatch_once(&amp;onceToken, ^{ 
+        af_url_request_operation_completion_queue = dispatch_queue_create("com.alamofire.networking.operation.queue",DISPATCH_QUEUE_CONCURRENT ); 
+    }); 
+    return af_url_request_operation_completion_queue; 
+    } 
+</code></pre>
+
+<p>B.常看到一个 block 要使用 self，会处理成在外部声明一个 weak 变量指向 self，在 block 里又声明一个 strong 变量指向 weakSelf：</p>
+
+<pre><code> __weak __typeof(self)weakSelf = self; 
+self.backgroundTaskIdentifier = [application beginBackgroundTaskWithExpirationHandler:^{ 
+    __strong __typeof(weakSelf)strongSelf = weakSelf; 
+}]; 
+</code></pre>
+
+<p>weakSelf是为了block不持有self，避免循环引用，而再声明一个strongSelf是因为一旦进入block执行，就不允许self在这个执行过程中释放。block执行完后这个strongSelf会自动释放，没有循环引用问题。</p>
+
+<h4>1、线程</h4>
+
+<p>先来看看 NSURLConnection 发送请求时的线程情况，NSURLConnection 是被设计成异步发送的，调用了start方法后，NSURLConnection 会新建一些线程用底层的 CFSocket 去发送和接收请求，在发送和接收的一些事件发生后通知原来线程的Runloop去回调事件。</p>
+
+<p>NSURLConnection 的同步方法 sendSynchronousRequest 方法也是基于异步的，同样要在其他线程去处理请求的发送和接收，只是同步方法会手动block住线程，发送状态的通知也不是通过 RunLoop 进行。</p>
+
+<p>使用NSURLConnection有几种选择：</p>
+
+<p>A.在主线程调异步接口
+若直接在主线程调用异步接口，会有个Runloop相关的问题：</p>
+
+<p>当在主线程调用 [[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:YES] 时，请求发出，侦听任务会加入到主线程的 Runloop 下，RunloopMode 会默认为 NSDefaultRunLoopMode。这表明只有当前线程的Runloop 处于 NSDefaultRunLoopMode 时，这个任务才会被执行。但当用户滚动 tableview 或 scrollview 时，主线程的 Runloop 是处于 NSEventTrackingRunLoopMode 模式下的，不会执行 NSDefaultRunLoopMode 的任务，所以会出现一个问题，请求发出后，如果用户一直在操作UI上下滑动屏幕，那在滑动结束前是不会执行回调函数的，只有在滑动结束，RunloopMode 切回 NSDefaultRunLoopMode，才会执行回调函数。苹果一直把动画效果性能放在第一位，估计这也是苹果提升UI动画性能的手段之一。</p>
+
+<p>所以若要在主线程使用 NSURLConnection 异步接口，需要手动把 RunloopMode 设为 NSRunLoopCommonModes。这个 mode 意思是无论当前 Runloop 处于什么状态，都执行这个任务。</p>
+
+<pre><code>NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:NO]; 
+[connection scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes]; 
+[connection start];
+</code></pre>
+
+<p>B.在子线程调同步接口
+若在子线程调用同步接口，一条线程只能处理一个请求，因为请求一发出去线程就阻塞住等待回调，需要给每个请求新建一个线程，这是很浪费的，这种方式唯一的好处应该是易于控制请求并发的数量。</p>
+
+<p>C.在子线程调异步接口
+子线程调用异步接口，子线程需要有 Runloop 去接收异步回调事件，这里也可以每个请求都新建一条带有 Runloop 的线程去侦听回调，但这一点好处都没有，既然是异步回调，除了处理回调内容，其他时间线程都是空闲可利用的，所有请求共用一个响应的线程就够了。</p>
+
+<p>AFNetworking 用的就是第三种方式，创建了一条常驻线程专门处理所有请求的回调事件，这个模型跟 nodejs 有点类似。网络请求回调处理完，组装好数据后再给上层调用者回调，这时候回调是抛回主线程的，因为主线程是最安全的，使用者可能会在回调中更新UI，在子线程更新UI会导致各种问题，一般使用者也可以不需要关心线程问题。</p>
+
+<p>以下是相关线程大致的关系，实际上多个 NSURLConnection 会共用一个 NSURLConnectionLoader 线程，这里就不细化了，除了处理 socket 的 CFSocket 线程，还有一些 Javascript:Core 的线程，目前不清楚作用，归为 NSURLConnection里的其他线程。因为 NSURLConnection 是系统控件，每个iOS版本可能都有不一样，可以先把 NSURLConnection 当成一个黑盒，只管它的 start 和 callback 就行了。如果使用 AFHttpRequestOperationManager 的接口发送请求，这些请求会统一在一个 NSOperationQueue 里去发，所以多了上面 NSOperationQueue 的一个线程。</p>
+
+<p><img src="http://www.cocoachina.com/cms/uploads/allimg/140829/4196_140829094446_1.png" alt="Resize icon" /></p>
+
+<p>相关代码：-networkRequestThread:, -start:, -operationDidStart:</p>
+
+<h4>2.状态机</h4>
+
+<p>继承 NSOperation 有个很麻烦的东西要处理，就是改变状态时需要发 KVO 通知，否则这个类加入 NSOperationQueue 不可用了。 NSOperationQueue 是用 KVO 方式侦听 NSOperation 状态的改变，以判断这个任务当前是否已完成，完成的任务需要在队列中除去并释放。</p>
+
+<p>AFURLConnectionOperation 对此做了个状态机，统一搞定状态切换以及发 KVO 通知的问题，内部要改变状态时，就只需要类似 self.state = AFOperationReadyState 的调用而不需要做其他了，状态改变的 KVO 通知在 setState 里发出。
+总的来说状态管理相关代码就三部分，一是限制一个状态可以切换到其他哪些状态，避免状态切换混乱，二是状态 Enum值 与 NSOperation 四个状态方法的对应，三是在 setState 时统一发 KVO 通知。详见代码注释。</p>
+
+<p>相关代码：AFKeyPathFromOperationState, AFStateTransitionIsValid, -setState:, -isPaused:, -isReady:, -isExecuting:, -isFinished:.</p>
+
+<h4>3.NSURLConnectionDelegate</h4>
+
+<p>处理 NSURLConnection Delegate 的内容不多，代码也是按请求回调的顺序排列下去，十分易读，主要流程就是接收到响应的时候打开 outputStream，接着有数据过来就往 outputStream 写，在上传/接收数据过程中会回调上层传进来的相应的callback，在请求完成回调到 connectionDidFinishLoading 时，关闭 outputStream，用 outputStream 组装 responseData 作为接收到的数据，把 NSOperation 状态设为 finished，表示任务完成，NSOperation 会自动调用 completeBlock，再回调到上层。</p>
+
+<h4>4.setCompleteBlock</h4>
+
+<p>NSOperation 在 iOS4.0 以后提供了个接口 setCompletionBlock，可以传入一个 block 作为任务执行完成时（state状态机变为finished时）的回调，AFNetworking直接用了这个接口，并通过重写加了几个功能：</p>
+
+<p>A.消除循环引用
+在 NSOperation 的实现里，completionBlock 是 NSOperation 对象的一个成员，NSOperation 对象持有着 completionBlock，若传进来的 block 用到了 NSOperation 对象，或者 block 用到的对象持有了这个 NSOperation 对象，就会造成循环引用。这里执行完 block 后调用 [strongSelf setCompletionBlock:nil] 把 completionBlock 设成 nil，手动释放 self(NSOperation对象) 持有的 completionBlock 对象，打破循环引用。</p>
+
+<p>可以理解成对外保证传进来的block一定会被释放，解决外部使用使很容易出现的因对象关系复杂导致循环引用的问题，让使用者不知道循环引用这个概念都能正确使用。</p>
+
+<p>B.dispatch_group
+这里允许用户让所有 operation 的 completionBlock 在一个 group 里执行，但我没看出这样做的作用，若想组装一组请求（见下面的batchOfRequestOperations）也不需要再让completionBlock在group里执行，求解。</p>
+
+<p>C.”The Deallocation Problem”
+作者在注释里说这里重写的setCompletionBlock方法解决了”The Deallocation Problem”，实际上并没有。<a href="https://developer.apple.com/library/ios/technotes/tn2109/_index.html">”The Deallocation Problem”</a>简单来说就是不要让UIKit的东西在子线程释放。</p>
+
+<p>这里如果传进来的block持有了外部的UIViewController或其他UIKit对象（下面暂时称为A对象），并且在请求完成之前其他所有对这个A对象的引用都已经释放了，那么这个completionBlock就是最后一个持有这个A对象的，这个block释放时A对象也会释放。这个block在什么线程释放，A对象就会在什么线程释放。我们看到block释放的地方是url_request_operation_completion_queue()，这是AFNetworking特意生成的子线程，所以按理说A对象是会在子线程释放的，会导致UIKit对象在子线程释放，会有问题。</p>
+
+<p>但AFNetworking实际用起来却没问题，想了很久不得其解，后来做了实验，发现iOS5以后苹果对UIKit对象的释放做了特殊处理，只要发现在子线程释放这些对象，就自动转到主线程去释放，断点出来是由一个叫_objc_deallocOnMainThreadHelper 的方法做的。如果不是UIKit对象就不会跳到主线程释放。AFNetworking2.0只支持iOS6+，所以没问题。</p>
+
+<p><img src="http://www.cocoachina.com/cms/uploads/allimg/140829/4196_140829094950_1.jpg" alt="Resize icon" /></p>
+
+<h4>5.batchOfRequestOperations</h4>
+
+<p>这里额外提供了一个便捷接口，可以传入一组请求，在所有请求完成后回调 complionBlock，在每一个请求完成时回调 progressBlock 通知外面有多少个请求已完成。详情参见代码注释，这里需要说明下 dispatch_group_enter 和dispatch_group_leave 的使用，这两个方法用于把一个异步任务加入 group 里。</p>
+
+<p>一般我们要把一个任务加入一个group里是这样：</p>
+
+<pre><code>dispatch_group_async(group, queue, ^{ 
+    block(); 
+}); 
+</code></pre>
+
+<p>这个写法等价于</p>
+
+<pre><code>dispatch_async(queue, ^{ 
+    dispatch_group_enter(group); 
+    block() 
+    dispatch_group_leave(group); 
+});
+</code></pre>
+
+<p>如果要把一个异步任务加入group，这样就行不通了：</p>
+
+<pre><code>dispatch_group_async(group, queue, ^{ 
+    [self performBlock:^(){ 
+        block(); 
+    }]; 
+    //未执行到block() group任务就已经完成了 
+}); 
+</code></pre>
+
+<p>这时需要这样写：</p>
+
+<pre><code>dispatch_group_enter(group); 
+[self performBlock:^(){ 
+    block(); 
+    dispatch_group_leave(group); 
+}]; 
+</code></pre>
+
+<p>异步任务回调后才算这个group任务完成。对batchOfRequest的实现来说就是请求完成并回调后，才算这个任务完成。</p>
+
+<p>其实这跟retain/release差不多，都是计数，dispatch_group_enter时任务数+1，dispatch_group_leave时任务数-1，任务数为0时执行dispatch_group_notify的内容。</p>
+
+<p>相关代码：-batchOfRequestOperations:progressBlock:completionBlock:</p>
+
+<h4>6.其他</h4>
+
+<p>A.锁
+AFURLConnectionOperation 有一把递归锁，在所有会访问/修改成员变量的对外接口都加了锁，因为这些对外的接口用户是可以在任意线程调用的，对于访问和修改成员变量的接口，必须用锁保证线程安全。</p>
+
+<p>B.序列化
+AFNetworking 的多数类都支持序列化，但实现的是 NSSecureCoding 的接口，而不是 NSCoding，区别在于解数据时要指定 Class，用 -decodeObjectOfClass:forKey: 方法代替了 -decodeObjectForKey: 。这样做更安全，因为序列化后的数据有可能被篡改，若不指定 Class，-decode 出来的对象可能不是原来的对象，有潜在风险。另外，NSSecureCoding 是 iOS 6 以上才有的。详见这里。</p>
+
+<p>这里在序列化时保存了当前任务状态，接收的数据等，但回调block是保存不了的，需要在取出来发送时重新设置。可以像下面这样持久化保存和取出任务：</p>
+
+<pre><code>AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request]; 
+NSData *data = [NSKeyedArchiver archivedDataWithRootObject:operation]; 
+
+AFHTTPRequestOperation *operationFromDB = [NSKeyedUnarchiver unarchiveObjectWithData:data]; 
+[operationFromDB start];    
+</code></pre>
+
+<p>C.backgroundTask
+这里提供了setShouldExecuteAsBackgroundTaskWithExpirationHandler 接口，决定APP进入后台后是否继续发送接收请求，并在后台执行时间超时后取消所有请求。在 dealloc 里需要调用 [application endBackgroundTask:] ，告诉系统这个后台任务已经完成，不然系统会一直让你的APP运行在后台，直到超时。</p>
+
+<p>相关代码：-setShouldExecuteAsBackgroundTaskWithExpirationHandler:, -dealloc:</p>
+
+<h4>7.AFHTTPRequestOperation</h4>
+
+<p>AFHTTPRequestOperation 继承了 AFURLConnectionOperation，把它放一起说是因为它没做多少事情，主要多了responseSerializer，暂停下载断点续传，以及提供接口请求成功失败的回调接口 -setCompletionBlockWithSuccess:failure:。详见源码注释。</p>
+
+<h4>8.源码注释</h4>
+
+<p>AFURLConnectionOperation.m</p>
+
+<p>AFHTTPRequestOperation.m</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[tableViewCell拖动]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2014/10/14/at-tableviewcelltuo-dong/"/>
+    <updated>2014-10-14T17:54:15+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2014/10/14/at-tableviewcelltuo-dong</id>
+    <content type="html"><![CDATA[<ol>
+<li><p>为tableView添加长按手势</p>
+
+<pre><code> UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPressGestureRecognized:)];
+ [self.tableView addGestureRecognizer:longPress];
+</code></pre></li>
+<li><p>监听方法,根据手势状态进行Cell的复制，移动</p>
+
+<pre><code> - (IBAction)longPressGestureRecognized:(id)sender {
+     UILongPressGestureRecognizer *longPress = (UILongPressGestureRecognizer *)sender;
+     UIGestureRecognizerState state = longPress.state;
+     CGPoint location = [longPress locationInView:self.tableView];
+     NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:location];
+     static UIView       *snapshot = nil;        ///&lt; A snapshot of the row user is moving.
+     static NSIndexPath  *sourceIndexPath = nil; ///&lt; Initial index path, where gesture begins.
+     switch (state) {
+         case UIGestureRecognizerStateBegan: {
+             if (indexPath) {
+             sourceIndexPath = indexPath;
+             UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:indexPath];
+             // Take a snapshot of the selected row using helper method.
+              snapshot = [self customSnapshoFromView:cell]; 
+               // Add the snapshot as subview, centered at cell's center...
+              __block CGPoint center = cell.center;
+              snapshot.center = center;
+              snapshot.alpha = 0.0;
+              [self.tableView addSubview:snapshot];
+              [UIView animateWithDuration:0.25 animations:^{
+                  // Offset for gesture location.
+                     center.y = location.y;
+                     snapshot.center = center;
+                     snapshot.transform = CGAffineTransformMakeScale(1.05, 1.05);
+                     snapshot.alpha = 0.98;
+                     cell.alpha = 0.0;  
+             } completion:^(BOOL finished) {
+                     cell.hidden = YES；
+             }];
+         }
+                  break;
+     }
+         case UIGestureRecognizerStateChanged: {
+             CGPoint center = snapshot.center;
+             center.y = location.y;
+             snapshot.center = center;
+             // Is destination valid and is it different from source?
+             if (indexPath &amp;&amp; ![indexPath isEqual:sourceIndexPath]) {
+             // ... update data source.
+             [self.objects exchangeObjectAtIndex:indexPath.row withObjectAtIndex:sourceIndexPath.row];        
+             // ... move the rows.
+             [self.tableView moveRowAtIndexPath:sourceIndexPath toIndexPath:indexPath];
+             // ... and update source so it is in sync with UI changes.
+             sourceIndexPath = indexPath;
+     }
+                 break;
+     }
+         default: {
+         // Clean up.
+                 UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:sourceIndexPath];
+                 cell.hidden = NO;
+                 cell.alpha = 0.0;
+                 [UIView animateWithDuration:0.25 animations:^{
+                         snapshot.center = cell.center;
+                         snapshot.transform = CGAffineTransformIdentity;
+                         snapshot.alpha = 0.0;
+                         cell.alpha = 1.0;
+                 } completion:^(BOOL finished) {
+                     sourceIndexPath = nil;
+                     [snapshot removeFromSuperview];
+                     snapshot = nil;
+                 }];
+                 break;
+         }
+     }
+ }
+</code></pre></li>
+<li><p>生产镜像Cell</p>
+
+<pre><code> - (UIView *)customSnapshoFromView:(UIView *)inputView {
+     UIView *snapshot = [inputView snapshotViewAfterScreenUpdates:YES];
+     snapshot.layer.masksToBounds = NO;
+     snapshot.layer.cornerRadius = 0.0;
+     snapshot.layer.shadowOffset = CGSizeMake(-5.0, 0.0);
+     snapshot.layer.shadowRadius = 5.0;
+     snapshot.layer.shadowOpacity = 0.4;
+     return snapshot;
+ }
+</code></pre></li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[定位及地理编码]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2014/10/13/ding-wei-ji-di-li-bian-ma/"/>
+    <updated>2014-10-13T10:04:55+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2014/10/13/ding-wei-ji-di-li-bian-ma</id>
+    <content type="html"><![CDATA[<h4>定位</h4>
+
+<p>在iOS8中,取消了之前的定位调用方式,需要对设备版本进行判断</p>
+
+<pre><code>// 定位管理者
+_locManager = [[CLLocationManager alloc] init];
+[_locManager setDelegate:self];
+[_locManager setDesiredAccuracy:kCLLocationAccuracyBest];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED &gt; __IPHONE_7_1 
+if ([_locManager respondsToSelector:@selector(requestWhenInUseAuthorization)]) {
+    [_locManager requestWhenInUseAuthorization];
+    [_locManager requestAlwaysAuthorization];
+}
+#endif
+CLAuthorizationStatus status = [CLLocationManager authorizationStatus];
+if (kCLAuthorizationStatusDenied == status || kCLAuthorizationStatusRestricted == status) {
+    [LSHelper alertWithTitle:@"定位失败" message:@"您的本次拜访将无法记录位置信息，请在设置中打开您的位置服务，并重新进入该页面！"];
+}
+else {
+    [_locManager startUpdatingLocation];
+    [self showProgressViewWithTitle:@"定位中..."];
+}
+</code></pre>
+
+<h4>地理编码</h4>
+
+<p>以下是代理方法:</p>
+
+<pre><code>- (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation {
+    [_locManager stopUpdatingLocation];
+    [self hideProgressView];
+    CLLocationCoordinate2D loc = [newLocation coordinate];
+    _locLatitude = [[NSString stringWithFormat:@"%f",loc.latitude] floatValue] + 0.00130;
+    _locLongitude = [[NSString stringWithFormat:@"%f",loc.longitude] floatValue] + 0.00625;
+
+    CLLocation *location = [[CLLocation alloc] initWithLatitude:_locLatitude longitude:_locLongitude];
+    [self.geoCoder reverseGeocodeLocation:location completionHandler:^(NSArray *placemarks, NSError *error) {
+        if (error || placemarks.count == 0) {
+            [self.view makeToast:@"定位失败，请稍后重试！"];
+            [self.locBtn setBackgroundImage:[UIImage imageNamed:@"MapPinGray"] forState:UIControlStateNormal];
+            [self.locBtn addTarget:self action:@selector(locationIconBtnClick) forControlEvents:UIControlEventTouchUpInside];
+            self.locLab.textColor = [UIColor redColor];
+            self.locLab.text = @"未定位成功";
+        } else {
+            [self.view makeToast:@"定位成功！"];
+            self.locBtn.enabled = NO;
+            [self.locBtn setBackgroundImage:[UIImage imageNamed:@"MapPin@2x"] forState:UIControlStateNormal];
+            self.locLab.textColor = [UIColor blackColor];
+            CLPlacemark *firstPlacemark = [placemarks firstObject];
+            self.locLab.text = firstPlacemark.name;
+        }
+    }];
+}
+
+- (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error {
+    [_locManager stopUpdatingLocation];
+    [self hideProgressView];
+    [LSHelper alertWithTitle:@"定位失败，请稍后重试！" message:nil];
+
+    [self.locBtn setBackgroundImage:[UIImage imageNamed:@"MapPinGray"] forState:UIControlStateNormal];
+    [self.locBtn addTarget:self action:@selector(locationIconBtnClick) forControlEvents:UIControlEventTouchUpInside];
+    self.locLab.textColor = [UIColor redColor];
+    self.locLab.text = @"未定位成功";
+}
+</code></pre>
+
+<p>高德地图的火星坐标需要进行处理,在此代理方法中对坐标进行地理编码操作,注意: 定位可以在没有网络的情况下进行,但是地理编码需要依靠网络.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Git分支模型]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2014/10/13/gitfen-zhi-mo-xing/"/>
+    <updated>2014-10-13T09:39:03+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2014/10/13/gitfen-zhi-mo-xing</id>
+    <content type="html"><![CDATA[<h3>主分支(main branches)</h3>
+
+<p>&#160; &#160;&#160; &#160;本质上，该开发模型是从现有的模型中获得灵感而产生的。中心仓库中维护着两个永生不灭的主分支：</p>
+
+<p>*master</p>
+
+<p>*develop</p>
+
+<p>&#160; &#160;&#160; &#160; 每一个Git用户应该都熟悉origin中的master分支。与master平行，还存在另一个被称为develop的分支。
+&#160; &#160;&#160; &#160;我们将origin/master考虑成这样的一个主分支，其源码的HEAD始终代表了产品就绪的状态。
+&#160; &#160;&#160; &#160;我们将origin/develop考虑成这样的一个主分支，其源码的HEAD总是代表已经并入了最新的开发变更的状态，这些变更将用于下次的发布。有人喜欢将其称之为“集成分支(integration branch)”。这也是自动的nightly build的源码来源。
+&#160; &#160;&#160; &#160;当develop分支中的源码达到一个稳定点且准备发布时，所有的变更应当被合并回master分支，然后将打上版本号标签。至于具体是怎么实现的，接下来将进一步讨论。</p>
+
+<p>&#160; &#160;&#160; &#160;因此，按(我们的)定义，每当变更被合并回master，都将导致一个新产品发布。我们倾向于采用非常严格的策略，因此理论上，我们可以使用一个Git的脚本钩子，当master上有一个提交(commit)时，可以自动构建并将软件转到产品服务器。</p>
+
+<h3>辅助分支(Supporting branches)</h3>
+
+<p>&#160; &#160;&#160; &#160;除了主分支master和develop，我们的开发模型使用了各种各样的辅助分支来——帮助团队成员间的并行开发，减轻特性的追踪的痛苦，准备产品的发布以及快速修复发布产品中的缺陷。不同于主分支，这些分支的生存周期总是有限的，因为它们最终会被移除。</p>
+
+<p>我们可能用到的不同的分支类型：</p>
+
+<p>&#160; &#160;&#160; &#160;特性分支(Feature branches)</p>
+
+<p>&#160; &#160;&#160; &#160;发布分支(Release branches)</p>
+
+<p>&#160; &#160;&#160; &#160;快速修复分支(Hotfix branches)</p>
+
+<p>&#160; &#160;&#160; &#160;这些分支中的每一个都有着特定的目的，也必须遵守严格的规则：哪些它们所起源于的分支，也是它们必须要合并到的目标分支。我们将很快将介绍一遍它们。</p>
+
+<p>&#160; &#160;&#160; &#160;从技术角度看，这些分支绝没有任何“特殊性”。分支类型是依据我们的使用方式划分的。毫无疑问，它们仍是普通的Git分支。</p>
+
+<p>特性分支(Feature branches)</p>
+
+<p>可能起源于分支：develop</p>
+
+<p>必须合并回分支：develop</p>
+
+<p>分支命名惯例：除 master、develop、release-<em> 或 hotfix-</em> 外的任何名字</p>
+
+<p>&#160; &#160;&#160; &#160;Feature分支(有时被称为topic分支)，用于为即将到来的或远期的版本开发新功能。当开始开发一个新的功能时，此时包含该功能的目标可能尚未很好定义。Feature分支的本质是，在新功能开发期间始终存在；但是它最终要合并回develop分支(将添加到下次发布的版本中)或者废弃(在实验让人沮丧的情况下)。</p>
+
+<p>典型情况下，feature分支只存在于开发者的仓库中，而不在origin中出现。</p>
+
+<h4>创建feature分支</h4>
+
+<p>&#160; &#160;&#160; &#160;当开始工作于一个新功能时，从develop分支创建新的分支：</p>
+
+<pre><code>$ git checkout -b myfeature developSwitched to a new branch "myfeature"
+</code></pre>
+
+<p>将完成的feature并入develop</p>
+
+<p>完成的特性将会合并回develop分支，并终会被加入将到来的release中：</p>
+
+<pre><code>$ git checkout developSwitched to branch 'develop'$ git merge --no-ff myfeatureUpdating ea1b82a..05e9557(Summary of changes)$ git branch -d myfeatureDeleted branch myfeature (was 05e9557).$ git push origin develop
+</code></pre>
+
+<p>标记&ndash;no-ff使得，即使在可以fast-forward的条件下，合并操作也总是生成一个commit对象。这可以避免feature分支中历史信息的丢失，并可使feature分支中的所有commit保持仍在一块。比较：</p>
+
+<p>&#160; &#160;&#160; &#160;在后一种情况下，从Git的历史中是不可能看出，哪些commit对象共同实现了一个特性——你必须手动阅读所有的日志信息。而要移除整个特性(即，一组commit)，在后一种情况下真真切切地让人头痛；而若使用了&ndash;no-ff标记，则很容易做到。</p>
+
+<p>&#160; &#160;&#160; &#160;当然，这会创建一些空的commit对象，但收益比这点浪费要大得多。</p>
+
+<p>&#160; &#160;&#160; &#160;不幸的是，我尚未找到使得git merge中默认行为启用&ndash;no-ff的方法，但它真的很需要如此。</p>
+
+<h4>发布分支(Release branches)</h4>
+
+<p>可能起源于分支：develop</p>
+
+<p>必须合并回分支：develop 和 master</p>
+
+<p>分支命名惯例：release-*</p>
+
+<p>&#160; &#160;&#160; &#160;Release分支用于做新产品发布前的准备。它使得在最后一刻可以进行细枝末节的完善。更进一步讲，它允许小bug的修复以及发布所需元数据(版本号，构建日期等)的准备。通过在release分支做这些工作，develop分支可以干净地接收为下一个大发行版准备的功能。</p>
+
+<p>&#160; &#160;&#160; &#160;从develop创建release分支的关键时机是，develop分支(几乎)可以反映新版本就绪状态的时刻。至少是将要建构的发行版所有的feature分支都已经被合并到了develop分支的时刻。所有的针对未来版本开发的feature可能不会被并入——它们必须等到该release分支创建以后。</p>
+
+<p>&#160; &#160;&#160; &#160;正是在release分支开始时，即将发布的产品才被分配一个版本号——而不是先前。直到这一刻，develop分支才开始反映“下一版”的变化，但是在下一个release分支开始前，下一版最终将变成0.3还是1.0都是不明确的。这种决定是在release分支开始时，通过项目的版本号规则实施的。</p>
+
+<h4>创建发布分支</h4>
+
+<p>&#160; &#160;&#160; &#160;Release分支是从develop分支中创建而来。例如，假定1.1.5是当前产品的版本，而我们即将有一个大的发行版。Develop分支对于“下一版”已经就绪，而且我们已经确定这将是版本1.2(而不是1.1.6或2.0)。因此，我们创建release分支并赋予它一个反映新版本号的名字：</p>
+
+<pre><code>$ git checkout -b release-1.2 developSwitched to a new branch "release-1.2"$ ./bump-version.sh 1.2Files modified successfully, version bumped to 1.2.$ git commit -a -m "Bumped version number to 1.2"[release-1.2 74d9424] Bumped version number to 1.21 files changed, 1 insertions(+), 1 deletions(-)
+</code></pre>
+
+<p>&#160; &#160;&#160; &#160;创建一个新的分支并切换进来以后，我们修改版本号。这儿的 bump-version.sh 是一个虚构的脚本，被用来修改工作区中的一些文件以反映出新版本。(当然，这也可以是手动修改的)。而后，修改后的版本号被提交。</p>
+
+<p>&#160; &#160;&#160; &#160;在发布最终完成之前，这个新的分支可能一直存在。在这期间，修复的bug会应用到该分支(而不是develop分支)。在这儿添加大的新特性是严格被禁止的。它们必须被合并到develop，并去等待下一个大的发行版本。</p>
+
+<h4>完成发布分支</h4>
+
+<p>&#160; &#160;&#160; &#160;当release分支的状态已经符合正式发行的要求时，一些动作需要被实施。首先，release分支被合并进master(回想一下，按定义，master上的每一个提交都导致一个新的版本)。其次，master上的该次提交必须被打上标签，以方便以后引用这个历史版本。最后，release分支中的所有变更都需要合并回develop，使得未来版本也包含这些bug补丁。</p>
+
+<p>在Git中，前两步操作：</p>
+
+<pre><code>$ git checkout masterSwitched to branch 'master'$ git merge --no-ff release-1.2Merge made by recursive.(Summary of changes)$ git tag -a 1.2
+</code></pre>
+
+<p>release现在已经完成，且打上标签以备未来引用。</p>
+
+<p>注: 你可能也想使用 -s 或 -u <key> 标记来私密签名。</p>
+
+<p>&#160; &#160;&#160; &#160;要保持我们在release分支所做的变更，我们需要将其合并会develop。在Git中：</p>
+
+<pre><code>$ git checkout developSwitched to branch 'develop'$ git merge --no-ff release-1.2Merge made by recursive.(Summary of changes)
+</code></pre>
+
+<p>这步操作可能引起合并冲突(很可能，因为我们已经改变了版本号)。如果是这样，修复并提交。</p>
+
+<p>&#160; &#160;&#160; &#160;现在，我们真的完成了，且该release分支将被移除，因为我们不再需要它了：</p>
+
+<pre><code>$ git branch -d release-1.2Deleted branch release-1.2 (was ff452fe).
+</code></pre>
+
+<p>快速修复分支(Hotfix branches)
+可能起源于分支：master</p>
+
+<p>必须合并回分支：develop 和 master</p>
+
+<p>分支命名惯例：hotfix-*</p>
+
+<p>&#160; &#160;&#160; &#160;Hotfix分支非常像release分支，因为它也是为新产品(虽然是计划外的)发布做准备的。它们起源于对当前已发布产品中不理想状态的立即响应的需求。当产品中出现一个紧急bug需要被立即解决时，一个hotfix分支可以从master分支中标记该产品版本的标签开始创建。</p>
+
+<p>&#160; &#160;&#160; &#160;其实质是，当一个人在准备产品的快速修复时，团队其他成员在develop分支的工作能够继续进行。</p>
+
+<h3>创建hotfix分支</h3>
+
+<p>&#160; &#160;&#160; &#160;Hotfix分支从master分支中创建。例如，假定1.2是当前已经发布的产品，却由于严重的bug导致了问题。但是develop分支中的变更尚不稳定。我们可能选择创建hotfix分支并开始修复这个问题：</p>
+
+<pre><code>$ git checkout -b hotfix-1.2.1 masterSwitched to a new branch "hotfix-1.2.1"$ ./bump-version.sh 1.2.1Files modified successfully, version bumped to 1.2.1.$ git commit -a -m "Bumped version number to 1.2.1"[hotfix-1.2.1 41e61bb] Bumped version number to 1.2.11 files changed, 1 insertions(+), 1 deletions(-)
+</code></pre>
+
+<p>创建分支以后不用忘记修改版本号！</p>
+
+<p>然后，修复bug并将代码以一个或多个commit的形式提交。</p>
+
+<pre><code>$ git commit -m "Fixed severe production problem"[hotfix-1.2.1 abbe5d6] Fixed severe production problem5 files changed, 32 insertions(+), 17 deletions(-)
+</code></pre>
+
+<p>结束hotfix分支</p>
+
+<p>&#160; &#160;&#160; &#160;当完成时，对bug的修复需要合并进master分支，也需要合并回develop分支，以确保补丁代码也被包含在下一个版本中。这与release分支结束时的情况是完全类似的。</p>
+
+<p>首先，更新master并对该次发布打上标签。</p>
+
+<pre><code>$ git checkout masterSwitched to branch 'master'$ git merge --no-ff hotfix-1.2.1Merge made by recursive.(Summary of changes)$ git tag -a 1.2.1
+</code></pre>
+
+<p>注: 你可能也想使用 -s 或 -u <key> 标记来私密签名。</p>
+
+<p>接着，使develop中也包含该修复代码：</p>
+
+<pre><code>$ git checkout developSwitched to branch 'develop'$ git merge --no-ff hotfix-1.2.1Merge made by recursive.(Summary of changes)
+</code></pre>
+
+<p>&#160; &#160;&#160; &#160;此处规则的一个例外是，当release分支已经存在，hotfix的变更需要合并进这个release分支，而不是develop。合并进release分支的补丁代码最终也会在release分支完成时被合并进develop。(如果develop中的工作急需这个补丁且等不及release最终完成，你也可以安全地将补丁合并进develop。)</p>
+
+<p>最后，移除这个临时分支：</p>
+
+<pre><code>$ git branch -d hotfix-1.2.1Deleted branch hotfix-1.2.1 (was abbe5d6)
+</code></pre>
+
+<h3>git 常用指令</h3>
+
+<pre><code>git checkout -b develop master  基于master创建develop(如果当前在master可省略不写)
+# 切换到Master分支 
+git checkout master
+# 对Develop分支进行合并
+git merge --no-ff develop (使用--no-ff参数后，会执行正常合并，在Master分支上生成一个新节点。为了保证版本演进的清晰，我们希望采用这种做法)
+git checkout 查看本地分支
+git checkout -a 查看远程分支
+</code></pre>
+]]></content>
+  </entry>
+  
+</feed>
