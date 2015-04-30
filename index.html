@@ -9,7 +9,8 @@
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="一、程序的内存分配 1、栈区（stack）— 由编译器自动分配释放 ，存放函数的参数值，局部变量的值等。其操作方式类似于数据结构中的栈。 2、堆区（heap） — 一般由程序员分配释放， 若程序员不释放，程序结束时可能由OS回收 。注意它与数据结构中的堆是两回事，分配方式倒是类似于链表。 3、 &hellip;">
+  <meta name="description" content="Preferred: if (!error) { return success;
+} Not preferred: if (!error) return success; or if (!error) return success; Preferred: if ([myValue isEqual &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -65,6 +66,264 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/04/30/best-practices/">Best Practices</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-04-30T16:11:22+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>30</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>4:11 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Preferred:</p>
+
+<pre><code>if (!error) {
+    return success;
+}
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>if (!error)
+    return success;
+
+or
+
+if (!error) return success;
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>if ([myValue isEqual:@42]) { ...
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>if ([@42 isEqual:myValue]) { ...
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>if (nil == myValue) { ...
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>if (myValue == nil) { ...
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>if (someObject) { ...
+if (![someObject boolValue]) { ...
+if (!someObject) { ...
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>if (someObject == YES) { ... // Wrong
+if (myRawValue == YES) { ... // Never do this.
+if ([someObject boolValue] == NO) { ...
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>- (void)someMethod {
+  if (![someOther boolValue]) {
+      return;
+  }
+
+  //Do something important
+}
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>- (void)someMethod {
+  if ([someOther boolValue]) {
+    //Do something important
+  }
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>BOOL nameContainsSwift  = [sessionName containsString:@"Swift"];
+BOOL isCurrentYear      = [sessionDateCompontents year] == 2014;
+BOOL isSwiftSession     = nameContainsSwift &amp;&amp; isCurrentYear;
+
+if (isSwiftSession) {
+    // Do something very cool
+}
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>// 不建议写在一起，可读性差，容易出错
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>result = object ? : [self createObject];
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>result = object ? object : [self createObject];
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>NSError *error = nil;
+if (![self trySomethingWithError:&amp;error]) {
+    // Handle Error
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>switch (menuType) {
+    case ZOCEnumNone:
+        // ...
+        break;
+    case ZOCEnumValue1:
+        // ...
+        break;
+    case ZOCEnumValue2:
+        // ...
+        break;
+}
+// 如果有枚举没处理，会提示
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>switch (condition) {
+    case 1:
+        // ...
+        break;
+    case 2: {
+        // ...
+        // Multi-line example using braces
+        break;
+       }
+    case 3:
+        // ...
+        break;
+    default: 
+        // ...
+        break;
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>typedef NS_ENUM(NSUInteger, ZOCMachineState) {
+    ZOCMachineStateNone,
+    ZOCMachineStateIdle,
+    ZOCMachineStateRunning,
+    ZOCMachineStatePaused
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>static NSString * const ZOCCacheControllerDidClearCacheNotification = @"ZOCCacheControllerDidClearCacheNotification";
+static const CGFloat ZOCImageThumbnailHeight = 50.0f;
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>#define CompanyName @"Apple Inc."
+#define magicNumber 42
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>NSArray *names = @[@"Brian", @"Matt", @"Chris", @"Alex", @"Steve", @"Paul"];
+NSDictionary *productManagers = @{@"iPhone" : @"Kate", @"iPad" : @"Kamal", @"Mobile Web" : @"Bill"};
+NSNumber *shouldUseLiterals = @YES;
+NSNumber *buildingZIPCode = @10018;
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>NSArray *names = [NSArray arrayWithObjects:@"Brian", @"Matt", @"Chris", @"Alex", @"Steve", @"Paul", nil];
+NSDictionary *productManagers = [NSDictionary dictionaryWithObjectsAndKeys: @"Kate", @"iPhone", @"Kamal", @"iPad", @"Bill", @"Mobile Web", nil];
+NSNumber *shouldUseLiterals = [NSNumber numberWithBool:YES];
+NSNumber *buildingZIPCode = [NSNumber numberWithInteger:10018];
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>+ (instancetype)sharedInstance
+{
+   static id sharedInstance = nil;
+   static dispatch_once_t onceToken = 0;
+   dispatch_once(&amp;onceToken, ^{
+      sharedInstance = [[self alloc] init];
+   });
+   return sharedInstance;
+}
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>+ (instancetype)sharedInstance
+{
+    static id sharedInstance;
+    @synchronized(self) {
+        if (sharedInstance == nil) {
+            sharedInstance = [[MyClass alloc] init];
+        }
+    }
+    return sharedInstance;
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>view.backgroundColor = [UIColor orangeColor];
+[UIApplication sharedApplication].delegate;
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>[view setBackgroundColor:[UIColor orangeColor]];
+UIApplication.sharedApplication.delegate;
+</code></pre>
+
+<p>Lazy Loading</p>
+
+<pre><code>- (NSDateFormatter *)dateFormatter {
+  if (!_dateFormatter) {
+    _dateFormatter = [[NSDateFormatter alloc] init];
+        NSLocale *enUSPOSIXLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
+        [dateFormatter setLocale:enUSPOSIXLocale];
+        [dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSSS"];
+  }
+  return _dateFormatter;
+}
+</code></pre>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -193,6 +452,14 @@ return 0;
 <h6>3、本地持久化层的设计方案都有哪些？优劣势都是什么？不同方案间要注意的问题分别都是什么？</h6>
 
 <h6>4、要实现动态部署，都有哪些方案？不同方案之间的优劣点，他们的侧重点？</h6>
+
+<h6>5、如何让业务开发工程师方便安全地调用网络API？然后尽可能保证用户在各种网络环境下都能有良好的体验？</h6>
+
+<h6>6、页面如何组织，才能尽可能降低业务方代码的耦合度？尽可能降低业务方开发界面的复杂度，提高他们的效率？</h6>
+
+<h6>7、当数据有在本地存取的需求的时候，如何能够保证数据在本地的合理安排？如何尽可能地减小性能消耗？</h6>
+
+<h6>8、iOS应用有审核周期，如何能够通过不发版本的方式展示新的内容给用户？如何修复紧急bug？</h6>
 </div>
   
   
@@ -1415,112 +1682,6 @@ Type "help", "copyright", "credits" or "license" for more information.
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/01/05/uiwebviewxiu-gai-ye-mian-xiang-guan/">UIWebView修改页面相关</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-01-05T17:56:03+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>5</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>5:56 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>UIWebView打开html后，UIWebView有左右滚动条，要去掉左右滚动效果；</p>
-
-<p>方法：通过js截获UIWebView中的html，然后修改html标签内容；</p>
-
-<p>实例代码： 服务器端html</p>
-
-<pre><code>&lt;html&gt;&lt;head&gt;  
-&lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8"&gt;  
-&lt;meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"&gt;   
-&lt;title&gt;网曝四川省一考场时钟慢半小时 老师称这就是命&lt;/title&gt;&lt;/head&lt;body&gt;网曝四川省一考场时钟慢半小时 老师称这就是命&lt;/body&gt;&lt;/html&gt; 
-</code></pre>
-
-<p>这样显示的结果网页的最小宽度会是device-width；但有时候不需要这个宽度，就需要修改width=device-width为width=myWidth;
-客户端代码</p>
-
-<pre><code>- (void)webViewDidFinishLoad:(UIWebView *)webView  
-{     
-    //修改服务器页面的meta的值  
-    NSString *meta = [NSString stringWithFormat:@"document.getElementsByName(\"viewport\")[0].content = \"width=%f, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no\"", webView.frame.size.width];  
-    [webView stringByEvaluatingJavaScriptFromString:meta];  
-}  
-</code></pre>
-
-<p>给网页增加utf-8编码</p>
-
-<pre><code>[webView stringByEvaluatingJavaScriptFromString:  
- @"var tagHead =document.documentElement.firstChild;"  
-  "var tagMeta = document.createElement(\"meta\");"   
-  "tagMeta.setAttribute(\"http-equiv\", \"Content-Type\");"   
-  "tagMeta.setAttribute(\"content\", \"text/html; charset=utf-8\");"   
-  "var tagHeadAdd = tagHead.appendChild(tagMeta);"]; 
-</code></pre>
-
-<p>给网页增加css样式</p>
-
-<pre><code>[webView stringByEvaluatingJavaScriptFromString:  
-     @"var tagHead =document.documentElement.firstChild;"  
-     "var tagStyle = document.createElement(\"style\");"   
-     "tagStyle.setAttribute(\"type\", \"text/css\");"   
-     "tagStyle.appendChild(document.createTextNode(\"BODY{padding: 20pt 15pt}\"));"  
-     "var tagHeadAdd = tagHead.appendChild(tagStyle);"];
-</code></pre>
-
-<p>拦截网页图片  并修改图片大小</p>
-
-<pre><code>[webView stringByEvaluatingJavaScriptFromString:  
- @"var script = document.createElement('script');"   
- "script.type = 'text/javascript';"   
- "script.text = \"function ResizeImages() { "   
-     "var myimg,oldwidth;"  
-     "var maxwidth=380;" //缩放系数   
-     "for(i=0;i &lt;document.images.length;i++){"   
-         "myimg = document.images[i];"  
-         "if(myimg.width &gt; maxwidth){"   
-             "oldwidth = myimg.width;"   
-             "myimg.width = maxwidth;"   
-             "myimg.height = myimg.height * (maxwidth/oldwidth);"   
-         "}"   
-     "}"   
- "}\";"   
- "document.getElementsByTagName('head')[0].appendChild(script);"];   
-[webView stringByEvaluatingJavaScriptFromString:@"ResizeImages();"]; 
-</code></pre>
-
-<p>参考网址：</p>
-
-<p>stringByEvaluatingJavaScriptFromString的使用方法:</p>
-
-<p><a href="http://www.uml.org.cn/mobiledev/201108181.asp">http://www.uml.org.cn/mobiledev/201108181.asp</a></p>
-
-<p>iphone 获取UIWebView内Html方法</p>
-
-<p><a href="http://blog.csdn.net/diyagoanyhacker/article/details/6564897">http://blog.csdn.net/diyagoanyhacker/article/details/6564897</a></p>
-
-<p>IOS UIWebView引用外部CSS样式</p>
-
-<p><a href="http://hi.baidu.com/jwq359699768/item/780879e5c98bfb3e4ddcaf22">http://hi.baidu.com/jwq359699768/item/780879e5c98bfb3e4ddcaf22</a>
-<a href="http://blog.csdn.net/xdonx/article/details/6973521">http://blog.csdn.net/xdonx/article/details/6973521</a></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/2">&larr; Older</a>
@@ -1536,6 +1697,10 @@ Type "help", "copyright", "credits" or "license" for more information.
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/04/30/best-practices/">Best Practices</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/04/21/nei-cun-cun-chu-xiang-guan-zhi-shi/">内存存储相关知识及static和extern关键字的使用</a>
       </li>
     
@@ -1549,10 +1714,6 @@ Type "help", "copyright", "credits" or "license" for more information.
     
       <li class="post">
         <a href="/blog/2015/02/09/postqing-qiu-shang-chuan-wen-jian/">POST请求上传文件</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/02/02/duo-xian-cheng-zong-jie/">多线程总结</a>
       </li>
     
   </ul>
