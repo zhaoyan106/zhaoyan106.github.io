@@ -9,7 +9,10 @@
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="UIWebView打开html后，UIWebView有左右滚动条，要去掉左右滚动效果； 方法：通过js截获UIWebView中的html，然后修改html标签内容； 实例代码： 服务器端html &lt;html&gt;&lt;head&gt; &lt;meta http-equiv=" &hellip;">
+  <meta name="description" content="根据程序崩溃的堆栈信息确定代码crash位置,以下是一段crash堆栈信息 ........(
+........0...Client.........................0x005c3963.ElongClient. .5712227,
+........0,
+........ &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -65,6 +68,57 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/01/12/li-yong-crashdui-zhan-xin-xi-ding-wei-dai-ma-beng-kui-wei-zhi/">利用crash堆栈信息定位代码崩溃位置</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-01-12T18:32:15+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>12</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>6:32 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>根据程序崩溃的堆栈信息确定代码crash位置,以下是一段crash堆栈信息</p>
+
+<pre><code>........(
+........0...Client.........................0x005c3963.ElongClient. .5712227,
+........0,
+........Client,
+........0x005c3963.Client. .5712227,
+........0x005c3963
+....)
+此crash堆栈信息,需要加入第三方管理,通过后台进行数据统计
+</code></pre>
+
+<p>使用下面的命令符号化,可以准确地定位crash代码的位置</p>
+
+<pre><code>atos -arch armv7 -o .Dsyms路径 -l 0x52000 0x005c3963
+</code></pre>
+
+<p>在终端下输入该指令,结果或显示具体方法,具体文件,具体行数</p>
+
+<pre><code>-[ViewController viewDidLoad] (ViewController.m:156)
+</code></pre>
+
+<p>0x52000是由0x005c3963减去10进制的5712227计算而得,.Dsyms文件是在程序打包的时候一起获得的文件(线上crash版本必须和这个配套)</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1755,123 +1809,6 @@ AFHTTPRequestOperation *operationFromDB = [NSKeyedUnarchiver unarchiveObjectWith
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/10/14/at-tableviewcelltuo-dong/">tableViewCell拖动</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-10-14T17:54:15+08:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>14</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>5:54 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><ol>
-<li><p>为tableView添加长按手势</p>
-
-<pre><code> UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPressGestureRecognized:)];
- [self.tableView addGestureRecognizer:longPress];
-</code></pre></li>
-<li><p>监听方法,根据手势状态进行Cell的复制，移动</p>
-
-<pre><code> - (IBAction)longPressGestureRecognized:(id)sender {
-     UILongPressGestureRecognizer *longPress = (UILongPressGestureRecognizer *)sender;
-     UIGestureRecognizerState state = longPress.state;
-     CGPoint location = [longPress locationInView:self.tableView];
-     NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:location];
-     static UIView       *snapshot = nil;        ///&lt; A snapshot of the row user is moving.
-     static NSIndexPath  *sourceIndexPath = nil; ///&lt; Initial index path, where gesture begins.
-     switch (state) {
-         case UIGestureRecognizerStateBegan: {
-             if (indexPath) {
-             sourceIndexPath = indexPath;
-             UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:indexPath];
-             // Take a snapshot of the selected row using helper method.
-              snapshot = [self customSnapshoFromView:cell]; 
-               // Add the snapshot as subview, centered at cell's center...
-              __block CGPoint center = cell.center;
-              snapshot.center = center;
-              snapshot.alpha = 0.0;
-              [self.tableView addSubview:snapshot];
-              [UIView animateWithDuration:0.25 animations:^{
-                  // Offset for gesture location.
-                     center.y = location.y;
-                     snapshot.center = center;
-                     snapshot.transform = CGAffineTransformMakeScale(1.05, 1.05);
-                     snapshot.alpha = 0.98;
-                     cell.alpha = 0.0;  
-             } completion:^(BOOL finished) {
-                     cell.hidden = YES；
-             }];
-         }
-                  break;
-     }
-         case UIGestureRecognizerStateChanged: {
-             CGPoint center = snapshot.center;
-             center.y = location.y;
-             snapshot.center = center;
-             // Is destination valid and is it different from source?
-             if (indexPath &amp;&amp; ![indexPath isEqual:sourceIndexPath]) {
-             // ... update data source.
-             [self.objects exchangeObjectAtIndex:indexPath.row withObjectAtIndex:sourceIndexPath.row];        
-             // ... move the rows.
-             [self.tableView moveRowAtIndexPath:sourceIndexPath toIndexPath:indexPath];
-             // ... and update source so it is in sync with UI changes.
-             sourceIndexPath = indexPath;
-     }
-                 break;
-     }
-         default: {
-         // Clean up.
-                 UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:sourceIndexPath];
-                 cell.hidden = NO;
-                 cell.alpha = 0.0;
-                 [UIView animateWithDuration:0.25 animations:^{
-                         snapshot.center = cell.center;
-                         snapshot.transform = CGAffineTransformIdentity;
-                         snapshot.alpha = 0.0;
-                         cell.alpha = 1.0;
-                 } completion:^(BOOL finished) {
-                     sourceIndexPath = nil;
-                     [snapshot removeFromSuperview];
-                     snapshot = nil;
-                 }];
-                 break;
-         }
-     }
- }
-</code></pre></li>
-<li><p>生产镜像Cell</p>
-
-<pre><code> - (UIView *)customSnapshoFromView:(UIView *)inputView {
-     UIView *snapshot = [inputView snapshotViewAfterScreenUpdates:YES];
-     snapshot.layer.masksToBounds = NO;
-     snapshot.layer.cornerRadius = 0.0;
-     snapshot.layer.shadowOffset = CGSizeMake(-5.0, 0.0);
-     snapshot.layer.shadowRadius = 5.0;
-     snapshot.layer.shadowOpacity = 0.4;
-     return snapshot;
- }
-</code></pre></li>
-</ol>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/3">&larr; Older</a>
@@ -1889,6 +1826,10 @@ AFHTTPRequestOperation *operationFromDB = [NSKeyedUnarchiver unarchiveObjectWith
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/05/13/effective-objective-c-2-dot-0zong-jie/">Effective Objective-C 2.0总结</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/04/30/best-practices/">Best Practices</a>
       </li>
     
@@ -1902,10 +1843,6 @@ AFHTTPRequestOperation *operationFromDB = [NSKeyedUnarchiver unarchiveObjectWith
     
       <li class="post">
         <a href="/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/">压缩、截取上传图片,设置圆形UIImageView,App版本更新，设置tableView随textFiled焦点滑动</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/02/09/postqing-qiu-shang-chuan-wen-jian/">POST请求上传文件</a>
       </li>
     
   </ul>

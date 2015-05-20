@@ -5,14 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>利用crash堆栈信息定位代码崩溃位置 - My iOS Journey</title>
+  <title>Effective Objective-C 2.0总结 - My iOS Journey</title>
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="根据程序崩溃的堆栈信息确定代码crash位置,以下是一段crash堆栈信息 ........(
-........0...Client.........................0x005c3963.ElongClient. .5712227,
-........0,
-........ &hellip;">
+  <meta name="description" content="第三条：多用字面量语法，少用预制等价的方法。 需要注意 NSMutableArray *arrayM = [@[@"1",@"2",@"3"] mutableCopy]; 第四条：多用类型常量，少用#define预处理指令 #define ANIMATION_DURATION 0.3
+Static &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -21,7 +19,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://zhaoyan106.github.io/blog/2015/01/12/li-yong-crashdui-zhan-xin-xi-ding-wei-dai-ma-beng-kui-wei-zhi">
+  <link rel="canonical" href="http://zhaoyan106.github.io/blog/2015/05/13/effective-objective-c-2-dot-0zong-jie">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="My iOS Journey" type="application/atom+xml">
@@ -71,7 +69,7 @@
   
   <header>
     
-      <h1 class="entry-title">利用crash堆栈信息定位代码崩溃位置</h1>
+      <h1 class="entry-title">Effective Objective-C 2.0总结</h1>
     
     
       <p class="meta">
@@ -80,36 +78,66 @@
 
 
 
-<time class='entry-date' datetime='2015-01-12T18:32:15+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>12</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>6:32 pm</span></time>
+<time class='entry-date' datetime='2015-05-13T15:32:57+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>3:32 pm</span></time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><p>根据程序崩溃的堆栈信息确定代码crash位置,以下是一段crash堆栈信息</p>
+<div class="entry-content"><h6>第三条：多用字面量语法，少用预制等价的方法。</h6>
 
-<pre><code>........(
-........0...Client.........................0x005c3963.ElongClient. .5712227,
-........0,
-........Client,
-........0x005c3963.Client. .5712227,
-........0x005c3963
-....)
-此crash堆栈信息,需要加入第三方管理,通过后台进行数据统计
+<p><code>需要注意 NSMutableArray *arrayM = [@[@"1",@"2",@"3"] mutableCopy];</code></p>
+
+<h6>第四条：多用类型常量，少用#define预处理指令</h6>
+
+<pre><code>#define ANIMATION_DURATION 0.3
+Static const NSTimeInterval KAnimationDuration = 0.3;
 </code></pre>
 
-<p>使用下面的命令符号化,可以准确地定位crash代码的位置</p>
+<h6>第七条：在对象内部尽量直接访问实例变量</h6>
 
-<pre><code>atos -arch armv7 -o .Dsyms路径 -l 0x52000 0x005c3963
+<p><code>在对象内部读取时直接访问实例变量,设置时使用self.（懒加载除外）</code></p>
+
+<p>  1、如果不使用self.可能会造成copy属性不能实现。</p>
+
+<p>  2、KVO不触发</p>
+
+<p>  3、直接读取效率较高</p>
+
+<p>  4、子类可能重写get方法，使用_更安全</p>
+
+<h6>第12条：理解消息转发机制 (✨✨✨✨✨✨)</h6>
+
+<p><code>unrecongiezed selector send to instance 0x87,当找不到对应方法时会实现消息转发机制</code></p>
+
+<p>对象在收到无法解读的消息后，首先会调用</p>
+
+<pre><code>+ （BOOL)resolveInstanceMehtod:(SEL)selector
 </code></pre>
 
-<p>在终端下输入该指令,结果或显示具体方法,具体文件,具体行数</p>
+<h6>第13条：用“方法调配技术” 调试 “黑盒方法”(✨✨✨✨✨✨)</h6>
 
-<pre><code>-[ViewController viewDidLoad] (ViewController.m:156)
+<pre><code>// 交换方法实现
+void method_exchangeImplementations(&lt;#Method m1#&gt;, &lt;#Method m2#&gt;)
+// 获取对象方法
+Method class_getInstanceMethod(&lt;#__unsafe_unretained Class cls#&gt;, &lt;#SEL name#&gt;)
 </code></pre>
 
-<p>0x52000是由0x005c3963减去10进制的5712227计算而得,.Dsyms文件是在程序打包的时候一起获得的文件(线上crash版本必须和这个配套)</p>
+<h6>第14条：理解“类对象”的用意</h6>
+
+<pre><code>typedef struct objc_object{
+    Class isa;
+} *id;
+</code></pre>
+
+<h6>第15条：多用派发队列，少用同步锁</h6>
+
+<p>同步锁效率较低</p>
+
+<h6>第16条：多用GCD,少用performSelector系列方法</h6>
+
+<p>在使用performSelector方法时容易引起ARC不自动使用，造成内存泄露。</p>
 </div>
 
 
@@ -125,7 +153,7 @@
 
 
 
-<time class='entry-date' datetime='2015-01-12T18:32:15+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>12</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>6:32 pm</span></time>
+<time class='entry-date' datetime='2015-05-13T15:32:57+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>3:32 pm</span></time>
       
 
 
@@ -140,10 +168,8 @@
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2015/01/05/uiwebviewxiu-gai-ye-mian-xiang-guan/" title="Previous Post: UIWebView修改页面相关">&laquo; UIWebView修改页面相关</a>
+        <a class="basic-alignment left" href="/blog/2015/04/30/best-practices/" title="Previous Post: Best Practices">&laquo; Best Practices</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2015/01/13/li-yong-crashdui-zhan-xin-xi-ding-wei-dian-xing-de-ye-zhi-zhen-cuo-wu/" title="Next Post: 利用crash堆栈信息定位典型的野指针错误">利用crash堆栈信息定位典型的野指针错误 &raquo;</a>
       
     </p>
   </footer>
