@@ -5,11 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>利用crash堆栈信息定位典型的野指针错误 - My iOS Journey</title>
+  <title>Effective Objective-C 2.0总结 - My iOS Journey</title>
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="通过堆栈信息，确定了代码的具体位置 [self.delegate respondsToSelector:@selector(httpConnectionDidFailed:withError:)] 通过这个信息，猜测是delegate这个对象在网络请求回来之前已经释放掉，导致野指针错误。 &hellip;">
+  <meta name="description" content="第三条：多用字面量语法，少用预制等价的方法。 需要注意 NSMutableArray *arrayM = [@[@"1",@"2",@"3"] mutableCopy]; 第四条：多用类型常量，少用#define预处理指令 #define ANIMATION_DURATION 0.3
+Static &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +19,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://zhaoyan106.github.io/blog/2015/01/13/li-yong-crashdui-zhan-xin-xi-ding-wei-dian-xing-de-ye-zhi-zhen-cuo-wu">
+  <link rel="canonical" href="http://zhaoyan106.github.io/blog/2015/05/13/effective-objective-c-2-dot-0zong-jie">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="My iOS Journey" type="application/atom+xml">
@@ -68,7 +69,7 @@
   
   <header>
     
-      <h1 class="entry-title">利用crash堆栈信息定位典型的野指针错误</h1>
+      <h1 class="entry-title">Effective Objective-C 2.0总结</h1>
     
     
       <p class="meta">
@@ -77,60 +78,66 @@
 
 
 
-<time class='entry-date' datetime='2015-01-13T17:13:23+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>5:13 pm</span></time>
+<time class='entry-date' datetime='2015-05-13T15:32:57+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>3:32 pm</span></time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><p>通过堆栈信息，确定了代码的具体位置</p>
+<div class="entry-content"><h6>第三条：多用字面量语法，少用预制等价的方法。</h6>
 
-<pre><code>[self.delegate respondsToSelector:@selector(httpConnectionDidFailed:withError:)]
+<p><code>需要注意 NSMutableArray *arrayM = [@[@"1",@"2",@"3"] mutableCopy];</code></p>
+
+<h6>第四条：多用类型常量，少用#define预处理指令</h6>
+
+<pre><code>#define ANIMATION_DURATION 0.3
+Static const NSTimeInterval KAnimationDuration = 0.3;
 </code></pre>
 
-<p>通过这个信息，猜测是delegate这个对象在网络请求回来之前已经释放掉，导致野指针错误。
-控制器的具体代码如下：</p>
+<h6>第七条：在对象内部尽量直接访问实例变量</h6>
 
-<pre><code>@interface TrainSearchListVC ()
-// 这个HttpUtil是封装的网络工具类
-@property (nonatomic, strong) HttpUtil *checkOrderUtil;
-@property (nonatomic, strong) HttpUtil *cancelOrderUtil;
+<p><code>在对象内部读取时直接访问实例变量,设置时使用self.（懒加载除外）</code></p>
 
-@end
+<p>  1、如果不使用self.可能会造成copy属性不能实现。</p>
 
+<p>  2、KVO不触发</p>
 
-- (void)dealloc
-{
-    [self unregisterNotification];
-    // 首先要取消请求
-    // 然后设置为nil (MRC需要release)
-    ***因为没有设置为nil 导致野指针为题***
-    [self.checkOrderUtil cancel];
-    [self.cancelOrderUtil cancel];
-    self.checkOrderUtil = nil;
-    self.cancelOrderUtil = nil;
-    [_tableViewList setDataSource:nil];
-    [_tableViewList setDelegate:nil];
-}
+<p>  3、直接读取效率较高</p>
 
-[_checkOrderUtil requestWithURLString:url Content:paramJson StartLoading:YES EndLoading:YES Delegate:self]; 设置了网络请求代理，但是当网络数据返回的时候，代理已经销毁了，出现也只真为题。
+<p>  4、子类可能重写get方法，使用_更安全</p>
+
+<h6>第12条：理解消息转发机制 (✨✨✨✨✨✨)</h6>
+
+<p><code>unrecongiezed selector send to instance 0x87,当找不到对应方法时会实现消息转发机制</code></p>
+
+<p>对象在收到无法解读的消息后，首先会调用</p>
+
+<pre><code>+ （BOOL)resolveInstanceMehtod:(SEL)selector
 </code></pre>
 
-<p>提供一个计算进制的python方法：</p>
+<h6>第13条：用“方法调配技术” 调试 “黑盒方法”(✨✨✨✨✨✨)</h6>
 
-<pre><code>EBJ1297:~ zhaoyan$ python
-Python 2.7.6 (default, Sep  9 2014, 15:04:36) 
-[GCC 4.2.1 Compatible Apple LLVM 6.0 (clang-600.0.39)] on darwin
-Type "help", "copyright", "credits" or "license" for more information.
-&gt;&gt;&gt; hex(0x000f45f5 - 136693)
-'0xd3000'
-&gt;&gt;&gt; hex(0x00604963 - 5712227)
-'0x92000'
-&gt;&gt;&gt; hex(0x0059e963 - 5712227)
-'0x2c000'
-&gt;&gt;&gt; 
+<pre><code>// 交换方法实现
+void method_exchangeImplementations(&lt;#Method m1#&gt;, &lt;#Method m2#&gt;)
+// 获取对象方法
+Method class_getInstanceMethod(&lt;#__unsafe_unretained Class cls#&gt;, &lt;#SEL name#&gt;)
 </code></pre>
+
+<h6>第14条：理解“类对象”的用意</h6>
+
+<pre><code>typedef struct objc_object{
+    Class isa;
+} *id;
+</code></pre>
+
+<h6>第15条：多用派发队列，少用同步锁</h6>
+
+<p>同步锁效率较低</p>
+
+<h6>第16条：多用GCD,少用performSelector系列方法</h6>
+
+<p>在使用performSelector方法时容易引起ARC不自动使用，造成内存泄露。</p>
 </div>
 
 
@@ -146,7 +153,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 
 
-<time class='entry-date' datetime='2015-01-13T17:13:23+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>5:13 pm</span></time>
+<time class='entry-date' datetime='2015-05-13T15:32:57+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>3:32 pm</span></time>
       
 
 
@@ -161,10 +168,10 @@ Type "help", "copyright", "credits" or "license" for more information.
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2015/01/12/li-yong-crashdui-zhan-xin-xi-ding-wei-dai-ma-beng-kui-wei-zhi/" title="Previous Post: 利用crash堆栈信息定位代码崩溃位置">&laquo; 利用crash堆栈信息定位代码崩溃位置</a>
+        <a class="basic-alignment left" href="/blog/2015/04/30/best-practices/" title="Previous Post: Best Practices">&laquo; Best Practices</a>
       
       
-        <a class="basic-alignment right" href="/blog/2015/01/23/shen-kao-bei-yu-qian-kao-bei-fen-xi/" title="Next Post: 深拷贝与浅拷贝分析">深拷贝与浅拷贝分析 &raquo;</a>
+        <a class="basic-alignment right" href="/blog/2015/07/03/xiang-mu-cha-jian-hua-cocoapodsde-shi-yong/" title="Next Post: 项目插件化-CocoaPods的使用">项目插件化-CocoaPods的使用 &raquo;</a>
       
     </p>
   </footer>

@@ -1,6 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://zhaoyan106.github.io/blog/2015/07/03/xiang-mu-cha-jian-hua-cocoapodsde-shi-yong/</loc>
+    <lastmod>2015-07-03T10:52:05+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2015/05/13/effective-objective-c-2-dot-0zong-jie/</loc>
+    <lastmod>2015-05-13T15:32:57+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2015/04/30/best-practices/</loc>
+    <lastmod>2015-04-30T16:11:22+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2015/04/21/nei-cun-cun-chu-xiang-guan-zhi-shi/</loc>
+    <lastmod>2015-04-21T17:10:27+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://zhaoyan106.github.io/blog/2015/04/16/iosying-yong-jia-gou/</loc>
+    <lastmod>2015-04-16T10:19:48+08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>http://zhaoyan106.github.io/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/</loc>
     <lastmod>2015-02-11T14:47:42+08:00</lastmod>
     <priority>0.8</priority>
@@ -97,13 +122,13 @@
   </url>
   <url>
     <loc>http://zhaoyan106.github.io/blog/archives/</loc>
-    <lastmod>2015-02-11T15:12:13+08:00</lastmod>
+    <lastmod>2015-07-03T13:53:46+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>http://zhaoyan106.github.io/</loc>
-    <lastmod>2015-02-11T15:12:13+08:00</lastmod>
+    <lastmod>2015-07-03T13:53:46+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>

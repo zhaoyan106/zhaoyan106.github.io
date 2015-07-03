@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>压缩、截取上传图片,设置圆形UIImageView,App版本更新 - My iOS Journey</title>
+  <title>压缩、截取上传图片,设置圆形UIImageView,App版本更新，设置tableView随textFiled焦点滑动 - My iOS Journey</title>
   <meta name="author" content="zhao yan">
 
   
@@ -68,7 +68,7 @@
   
   <header>
     
-      <h1 class="entry-title">压缩、截取上传图片,设置圆形UIImageView,App版本更新</h1>
+      <h1 class="entry-title">压缩、截取上传图片,设置圆形UIImageView,App版本更新，设置tableView随textFiled焦点滑动</h1>
     
     
       <p class="meta">
@@ -240,6 +240,34 @@ self.icon.backgroundColor = [UIColor whiteColor];
 
     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:str]];
 </code></pre>
+
+<h4>四、设置tableView随textFiled焦点滑动</h4>
+
+<h6>第一种方法：</h6>
+
+<p>CGPoint origin = textField.frame.origin;</p>
+
+<pre><code>CGPoint point = [textField.superview convertPoint:origin toView:self.tableView];
+
+float navBarHeight = self.navigationController.navigationBar.frame.size.height;
+
+CGPoint offset = self.tableView.contentOffset;
+
+offset.y = (point.y - navBarHeight);
+
+[self.tableView setContentOffset:offset animated:YES];
+</code></pre>
+
+<h6>第二种方法</h6>
+
+<pre><code>CGPoint point = [textField.superview convertPoint:textField.frame.origin toView:self.tableView];
+
+NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:point];
+
+NSLog(@"%zd",indexPath.row);
+
+[self.tableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionTop animated:YES];
+</code></pre>
 </div>
 
 
@@ -273,6 +301,8 @@ self.icon.backgroundColor = [UIColor whiteColor];
         <a class="basic-alignment left" href="/blog/2015/02/09/postqing-qiu-shang-chuan-wen-jian/" title="Previous Post: POST请求上传文件">&laquo; POST请求上传文件</a>
       
       
+        <a class="basic-alignment right" href="/blog/2015/04/16/iosying-yong-jia-gou/" title="Next Post: iOS应用架构">iOS应用架构 &raquo;</a>
+      
     </p>
   </footer>
 </article>
@@ -286,23 +316,23 @@ self.icon.backgroundColor = [UIColor whiteColor];
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/">压缩、截取上传图片,设置圆形UIImageView,App版本更新</a>
+        <a href="/blog/2015/07/03/xiang-mu-cha-jian-hua-cocoapodsde-shi-yong/">项目插件化-CocoaPods的使用</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2015/02/09/postqing-qiu-shang-chuan-wen-jian/">POST请求上传文件</a>
+        <a href="/blog/2015/05/13/effective-objective-c-2-dot-0zong-jie/">Effective Objective-C 2.0总结</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2015/02/02/duo-xian-cheng-zong-jie/">多线程总结</a>
+        <a href="/blog/2015/04/30/best-practices/">Best Practices</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2015/01/26/wang-luo-duo-xian-cheng-ying-yong/">网络多线程应用</a>
+        <a href="/blog/2015/04/21/nei-cun-cun-chu-xiang-guan-zhi-shi/">内存存储相关知识及static和extern关键字的使用</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2015/01/23/shen-kao-bei-yu-qian-kao-bei-fen-xi/">深拷贝与浅拷贝分析</a>
+        <a href="/blog/2015/04/16/iosying-yong-jia-gou/">iOS应用架构</a>
       </li>
     
   </ul>

@@ -9,7 +9,9 @@
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="一、压缩、截取图片 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{ if (indexPath.row == 0) { UIActionSheet * &hellip;">
+  <meta name="description" content="一、CocoaPods的安装 1、安装ruby环境,添加淘宝ruby镜像 $ gem sources --remove https://rubygems.org/
+//等有反应之后再敲入以下命令
+$ gem sources -a http://ruby.taobao.org/ 2、查看是否设置成功 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -71,7 +73,688 @@
       
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/">压缩、截取上传图片,设置圆形UIImageView,App版本更新</a></h1>
+      <h1 class="entry-title"><a href="/blog/2015/07/03/xiang-mu-cha-jian-hua-cocoapodsde-shi-yong/">项目插件化-CocoaPods的使用</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-07-03T10:52:05+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>3</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>10:52 am</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h4>一、CocoaPods的安装</h4>
+
+<h6>1、安装ruby环境,添加淘宝ruby镜像</h6>
+
+<pre><code>$ gem sources --remove https://rubygems.org/
+//等有反应之后再敲入以下命令
+$ gem sources -a http://ruby.taobao.org/
+</code></pre>
+
+<h6>2、查看是否设置成功:</h6>
+
+<pre><code>$ gem sources -l
+</code></pre>
+
+<h6>3、然后安装cocoapods:</h6>
+
+<pre><code>$ sudo gem install cocoapods
+</code></pre>
+
+<h6>4、查看cocoapods是否支持某个类库</h6>
+
+<pre><code>$ pod search 类库名,支持模糊查询(如:AFNetworking)
+</code></pre>
+
+<h4>二、CocoaPods的使用</h4>
+
+<h6>1、在项目根目录下新建一个“Podfile”的文件</h6>
+
+<p><code>注:Podfile也可以放在任何位置,但是需要在Podfile顶部使用”xcodeproj”关键字指定工程的路径,如下:</code></p>
+
+<pre><code>xcodeproj"/User/Desktop/CocoaPodsDemo/CocoaPodsDemo.xcworkspace"
+platform:ios
+pod 'JSONKit',        '~&gt;1.4'
+pod 'Reachability',  '~&gt;3.0.0'
+pod 'AFNetworking',   '~&gt;2.2.4'
+</code></pre>
+
+<h6>2、在项目podfile所在目录下运行(会在你当前项目中导入podfile所配置的库,所以要在项目目录下运行)</h6>
+
+<p><code>执行pod install命令后,生成的文件将在Podfile所在的目录</code></p>
+
+<pre><code>$ pod install
+</code></pre>
+
+<p>注意上述命令运行完毕后终端输出的最后一段话,意思就是以后打开项目就用CocoaPodsDemo.xcworkspace 打开，而不是之前的.xcodeproj文件</p>
+
+<h4>三、使用过程中遇到的一些问题</h4>
+
+<h6>1、引入第三方库后找不到头文件</h6>
+
+<p>在项目的Targe- Build Settings - Search Paths - User Header Searcj Paths中添加 ${SRCROOT} 值为 recursive</p>
+
+<h6>2、如何删除cocopods</h6>
+
+<p>1、删除工程文件夹下的Podfile、Podfile.lock及Pods文件夹</p>
+
+<p>2、删除xcworkspace文件</p>
+
+<p>3、使用xcodeproj文件打开工程，删除Frameworks组下的Pods.xcconfig及libPods.a引用</p>
+
+<p>4、在工程设置中的Build Phases下删除Check Pods Manifest.lock及Copy Pods Resources</p>
+
+<h4>四、Podfile.lock文件的作用</h4>
+
+<p>在使用CocoaPods，执行完pod install之后，会生成一个Podfile.lock文件。这个文件看起来跟我们关系不大，实际上绝对不应该忽略它。该文件用于保存已经安装的Pods依赖库的版本</p>
+
+<p>Podfile.lock文件最大得用处在于多人开发。当团队中的某个人执行完pod install命令后，生成Podfile.lock文件就记录下了当时最新Pods依赖库的版本，这时团队中的其它人check下来这份包含Podfile.lock文件的工程以后，再去执行pod install命令时，获取下来的Pods依赖库的版本就和最开始用户获取到的版本一致。</p>
+
+<p><code>如果没有Podfile.lock文件，后续所有用户执行pod install命令都会获取最新版本的SBJson，这就有可能造成同一个团队使用的依赖库版本不一致，这对团队协作来说绝对是个灾难！</code></p>
+
+<p>在这种情况下，如果团队想使用当前最新版本的SBJson依赖库，有两种方案：</p>
+
+<p>1、更改Podfile，使其指向最新版本的SBJson依赖库；</p>
+
+<p>2、执行pod update命令；</p>
+
+<p>鉴于Podfile.lock文件对团队协作如此重要，我们需要将它添加到版本管理中。</p>
+
+<h4>五、制作自己的Cocopods库</h4>
+
+<h6>1、在github上新建一个工程</h6>
+
+<p>license类型</p>
+
+<p>正规的仓库都应该有一个license文件，Pods依赖库对这个文件的要求更严，是必须要有的。因此最好在这里让github创建一个，也可以自己后续再创建。我使用的license类型是MIT。</p>
+
+<h5>2、podspec创建</h5>
+
+<p>把项目clone到本地然后在根目录下新建MyPodDemo.podspec或者</p>
+
+<pre><code>$ pod spec create MyPodDemo
+</code></pre>
+
+<p>podsepc的编写</p>
+
+<pre><code>Pod::Spec.new do |s| 
+s.name = "MyPodDemo" 
+s.version = "0.0.1" 
+s.summary = "A short description of MyPodDemo." 
+s.description = &lt;&lt;-DESC A longer description of MyPodDemo in Markdown format. * Think: Why did you write this? What is the focus? What does it do? * CocoaPods will be using this to generate tags, and improve search results. * Try to keep it short, snappy and to the point. * Finally, don't worry about the indent, CocoaPods strips it! 
+DESC 
+s.homepage = "https://github.com/goingta/MyPodDemo" 
+s.license = "MIT" s.author = { "goingta" =&gt; "tangle1128@gmail.com" } 
+s.source = { :git =&gt; "https://github.com/goingta/MyPodDemo.git", :tag =&gt; "0.0.1" } s.source_files = "MyPodDemo/Src", "MyPodDemo/Src/**/*.{h,m}" 
+s.requires_arc = true # s.framework = "SomeFramework" # 
+s.frameworks = "SomeFramework", "AnotherFramework" 
+# s.library = "iconv" 
+# s.libraries = "iconv", "xml2" 
+# s.dependency "JSONKit", "~&gt; 1.4" 
+# s.dependency "AFNetworking", "~&gt; 2.2.4" end
+</code></pre>
+
+<p>属性解析</p>
+
+<pre><code>name: 导入pod后的目录名 
+version: 当前版本号 
+deployment_target: 配置的target 
+prefix_header_file: 预编译头文件路径，将该文件的内容插入到Pod的pch文件内 
+source: 来源的具体路径，是http链接还是本地路径 
+requires_arc: 是否需要arc 
+source_files: 指定该目录下包含哪些文件 
+其他可选参数还包括：
+dependency: 指定依赖，如果依赖的库不存在或者依赖库的版本不符合要求将会报错 
+libraries: 指定导入的库，比如sqlite3 
+frameworks: 指定导入的framework 
+weak_frameworks: 弱链接，比如说一个项目同时兼容iOS6和iOS7，但某一个framework只在iOS7上有，这时候如果用强链接，那么在iOS7上运行就会crash，使用weak_frameworks可以避免这种情况。
+</code></pre>
+
+<p>整个podspec语法是一个嵌套结构从Pod::Spec.new do |s|到最后一个end是最大的循环，表示整个podspec导入的文件。中间每一个subspec到end结束是一个子目录，Pods会为每个subspec创建一个逻辑目录，相当于Xcode的group概念。|**|中间是subspec的名字，可以随便命名，但后面使用的名称必须一致。</p>
+
+<p>通配符说明</p>
+
+<pre><code>a{bb,bc}def.{h,m}表示四个文件abbdef.h abbdef.m abcdef.h abcdef.m
+
+*.{h,m,mm}表示所有的.h .m .mm文件
+Class/**/*.{h,m}表示Class目录下的所有.h .m文件
+</code></pre>
+
+<p>写完podspec文件后使用pod spec lint验证spec是否合格,有error则需要修改</p>
+
+<p>配置非ARC文件
+一个私有的pods库中某几个文件是在非ARC时代写的,如果要进行修改工程量浩大,于是乎要对这几个文件单独处理,这几个文件不使用arc其他文件使用arc,网上查了一些资料,只需要对source_file进行修改并排除那几个不使用ARC的文件就可以了,大致修改如下：
+Pod::Spec.new do |s|
+s.name = &ldquo;MyPodDemo&rdquo; s.version = &ldquo;0.0.1&rdquo;
+s.summary = &ldquo;A short description of MyPodDemo.
+s.homepage = &#8221;<a href="https://github.com/goingta/MyPodDemo">https://github.com/goingta/MyPodDemo</a>&rdquo;
+s.license = &ldquo;MIT&rdquo;
+s.author = { &ldquo;goingta&rdquo; => &ldquo;<a href="&#109;&#97;&#x69;&#x6c;&#x74;&#111;&#x3a;&#x74;&#97;&#x6e;&#103;&#x6c;&#x65;&#x31;&#x31;&#x32;&#x38;&#x40;&#x67;&#109;&#x61;&#105;&#x6c;&#46;&#99;&#111;&#x6d;">&#116;&#x61;&#110;&#103;&#x6c;&#x65;&#x31;&#x31;&#50;&#x38;&#64;&#x67;&#x6d;&#x61;&#x69;&#x6c;&#x2e;&#99;&#111;&#109;</a>&rdquo; }
+s.source = { :git => &ldquo;<a href="https://github.com/goingta/MyPodDemo.git">https://github.com/goingta/MyPodDemo.git</a>&rdquo;, :tag => &ldquo;0.0.1&rdquo; } s.source_files = &ldquo;MyPodDemo&rdquo;
+non_arc_files = &lsquo;MyPodDemo/NoArcFile1.{h,m}&rsquo;,&lsquo;MyPodDemo/NoArcFile2.{h,m}&rsquo;
+s.requires_arc = true</p>
+
+<p>s.exclude_files = non_arc_files
+s.subspec &lsquo;no-arc&rsquo; do |sna|
+sna.requires_arc = false
+sna.source_files = non_arc_files
+end</p>
+
+<h5>3、上传代码至github</h5>
+
+<h5>4、私有库实现,编写podfile</h5>
+
+<p>如果由于某些原因我们编写的库不能公开,但是又想使用pods来进行管理,要怎么办呢?</p>
+
+<p>首先我们要将我们刚刚在github上建的仓库改为Private(不然还用Public搞毛啊)</p>
+
+<p>然后修改我们项目的podfile,与已加入Cocopods仓库的公有库相比我们只需要指明私有库低git地址,如下:</p>
+
+<pre><code>platform :ios, '6.0' 
+pod 'MyPodDemo', :git =&gt; 'https://github.com/goingta/MyPodDemo.git' //私有库 
+pod 'CocoaLumberjack'//公有库
+</code></pre>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/05/13/effective-objective-c-2-dot-0zong-jie/">Effective Objective-C 2.0总结</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-05-13T15:32:57+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>3:32 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h6>第三条：多用字面量语法，少用预制等价的方法。</h6>
+
+<p><code>需要注意 NSMutableArray *arrayM = [@[@"1",@"2",@"3"] mutableCopy];</code></p>
+
+<h6>第四条：多用类型常量，少用#define预处理指令</h6>
+
+<pre><code>#define ANIMATION_DURATION 0.3
+Static const NSTimeInterval KAnimationDuration = 0.3;
+</code></pre>
+
+<h6>第七条：在对象内部尽量直接访问实例变量</h6>
+
+<p><code>在对象内部读取时直接访问实例变量,设置时使用self.（懒加载除外）</code></p>
+
+<p>  1、如果不使用self.可能会造成copy属性不能实现。</p>
+
+<p>  2、KVO不触发</p>
+
+<p>  3、直接读取效率较高</p>
+
+<p>  4、子类可能重写get方法，使用_更安全</p>
+
+<h6>第12条：理解消息转发机制 (✨✨✨✨✨✨)</h6>
+
+<p><code>unrecongiezed selector send to instance 0x87,当找不到对应方法时会实现消息转发机制</code></p>
+
+<p>对象在收到无法解读的消息后，首先会调用</p>
+
+<pre><code>+ （BOOL)resolveInstanceMehtod:(SEL)selector
+</code></pre>
+
+<h6>第13条：用“方法调配技术” 调试 “黑盒方法”(✨✨✨✨✨✨)</h6>
+
+<pre><code>// 交换方法实现
+void method_exchangeImplementations(&lt;#Method m1#&gt;, &lt;#Method m2#&gt;)
+// 获取对象方法
+Method class_getInstanceMethod(&lt;#__unsafe_unretained Class cls#&gt;, &lt;#SEL name#&gt;)
+</code></pre>
+
+<h6>第14条：理解“类对象”的用意</h6>
+
+<pre><code>typedef struct objc_object{
+    Class isa;
+} *id;
+</code></pre>
+
+<h6>第15条：多用派发队列，少用同步锁</h6>
+
+<p>同步锁效率较低</p>
+
+<h6>第16条：多用GCD,少用performSelector系列方法</h6>
+
+<p>在使用performSelector方法时容易引起ARC不自动使用，造成内存泄露。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/04/30/best-practices/">Best Practices</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-04-30T16:11:22+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>30</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>4:11 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Preferred:</p>
+
+<pre><code>if (!error) {
+    return success;
+}
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>if (!error)
+    return success;
+
+or
+
+if (!error) return success;
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>if ([myValue isEqual:@42]) { ...
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>if ([@42 isEqual:myValue]) { ...
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>if (nil == myValue) { ...
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>if (myValue == nil) { ...
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>if (someObject) { ...
+if (![someObject boolValue]) { ...
+if (!someObject) { ...
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>if (someObject == YES) { ... // Wrong
+if (myRawValue == YES) { ... // Never do this.
+if ([someObject boolValue] == NO) { ...
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>- (void)someMethod {
+  if (![someOther boolValue]) {
+      return;
+  }
+
+  //Do something important
+}
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>- (void)someMethod {
+  if ([someOther boolValue]) {
+    //Do something important
+  }
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>BOOL nameContainsSwift  = [sessionName containsString:@"Swift"];
+BOOL isCurrentYear      = [sessionDateCompontents year] == 2014;
+BOOL isSwiftSession     = nameContainsSwift &amp;&amp; isCurrentYear;
+
+if (isSwiftSession) {
+    // Do something very cool
+}
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>// 不建议写在一起，可读性差，容易出错
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>result = object ? : [self createObject];
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>result = object ? object : [self createObject];
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>NSError *error = nil;
+if (![self trySomethingWithError:&amp;error]) {
+    // Handle Error
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>switch (menuType) {
+    case ZOCEnumNone:
+        // ...
+        break;
+    case ZOCEnumValue1:
+        // ...
+        break;
+    case ZOCEnumValue2:
+        // ...
+        break;
+}
+// 如果有枚举没处理，会提示
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>switch (condition) {
+    case 1:
+        // ...
+        break;
+    case 2: {
+        // ...
+        // Multi-line example using braces
+        break;
+       }
+    case 3:
+        // ...
+        break;
+    default: 
+        // ...
+        break;
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>typedef NS_ENUM(NSUInteger, ZOCMachineState) {
+    ZOCMachineStateNone,
+    ZOCMachineStateIdle,
+    ZOCMachineStateRunning,
+    ZOCMachineStatePaused
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>static NSString * const ZOCCacheControllerDidClearCacheNotification = @"ZOCCacheControllerDidClearCacheNotification";
+static const CGFloat ZOCImageThumbnailHeight = 50.0f;
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>#define CompanyName @"Apple Inc."
+#define magicNumber 42
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>NSArray *names = @[@"Brian", @"Matt", @"Chris", @"Alex", @"Steve", @"Paul"];
+NSDictionary *productManagers = @{@"iPhone" : @"Kate", @"iPad" : @"Kamal", @"Mobile Web" : @"Bill"};
+NSNumber *shouldUseLiterals = @YES;
+NSNumber *buildingZIPCode = @10018;
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>NSArray *names = [NSArray arrayWithObjects:@"Brian", @"Matt", @"Chris", @"Alex", @"Steve", @"Paul", nil];
+NSDictionary *productManagers = [NSDictionary dictionaryWithObjectsAndKeys: @"Kate", @"iPhone", @"Kamal", @"iPad", @"Bill", @"Mobile Web", nil];
+NSNumber *shouldUseLiterals = [NSNumber numberWithBool:YES];
+NSNumber *buildingZIPCode = [NSNumber numberWithInteger:10018];
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>+ (instancetype)sharedInstance
+{
+   static id sharedInstance = nil;
+   static dispatch_once_t onceToken = 0;
+   dispatch_once(&amp;onceToken, ^{
+      sharedInstance = [[self alloc] init];
+   });
+   return sharedInstance;
+}
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>+ (instancetype)sharedInstance
+{
+    static id sharedInstance;
+    @synchronized(self) {
+        if (sharedInstance == nil) {
+            sharedInstance = [[MyClass alloc] init];
+        }
+    }
+    return sharedInstance;
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>view.backgroundColor = [UIColor orangeColor];
+[UIApplication sharedApplication].delegate;
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>[view setBackgroundColor:[UIColor orangeColor]];
+UIApplication.sharedApplication.delegate;
+</code></pre>
+
+<p>Lazy Loading</p>
+
+<pre><code>- (NSDateFormatter *)dateFormatter {
+  if (!_dateFormatter) {
+    _dateFormatter = [[NSDateFormatter alloc] init];
+        NSLocale *enUSPOSIXLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
+        [dateFormatter setLocale:enUSPOSIXLocale];
+        [dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSSS"];
+  }
+  return _dateFormatter;
+}
+</code></pre>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/04/21/nei-cun-cun-chu-xiang-guan-zhi-shi/">内存存储相关知识及static和extern关键字的使用</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-04-21T17:10:27+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>21</span><span class='date-suffix'>st</span>, <span class='date-year'>2015</span></span> <span class='time'>5:10 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h4>一、程序的内存分配</h4>
+
+<h6>1、栈区（stack）— 由编译器自动分配释放 ，存放函数的参数值，局部变量的值等。其操作方式类似于数据结构中的栈。</h6>
+
+<h6>2、堆区（heap） — 一般由程序员分配释放， 若程序员不释放，程序结束时可能由OS回收 。注意它与数据结构中的堆是两回事，分配方式倒是类似于链表。</h6>
+
+<h6>3、全局区（静态区）（static）— 所有的全局变量都是静态变量、被关键字static修饰的局部变量也是静态变量<code>不改变其作用域</code></h6>
+
+<pre><code>#include &lt;stdio.h&gt;
+int a;
+void test() {
+    static int b = 0;
+    b++;
+
+    int c = 0;
+    c++;
+
+    printf("b=%d, c=%d \n", b, c);
+}
+int main() {
+    int i;
+    // 连续调用3次test函数
+    for (i = 0; i&lt;3; i++) {
+        test();
+    }
+
+    return 0;
+}
+* 第3行的变量a、第6行的变量b都是静态变量，第9行的变量c、第16行的变量i是自动变量。
+* 因为第6行的变量b是静态变量，所以它只会被创建一次，而且生命周期会延续到程序结束。因为它只会创建一次，所以第6行代码只会执行一次，下次再调用test函数时，变量b的值不会被重新初始化为0。
+</code></pre>
+
+<h6>4、文字常量区—常量字符串就是放在这里的。 程序结束后由系统释放</h6>
+
+<h6>5、程序代码区—存放函数体的二进制代码。</h6>
+
+<h4>二、static和extern关键字的使用</h4>
+
+<h4>static和extern对函数的作用</h4>
+
+<h6>1、外部、内部函数</h6>
+
+<p>（1）外部函数：如果在当前文件中定义的函数允许其他文件访问、调用，就称为外部函数。C语言规定，不允许有同名的外部函数。</p>
+
+<p>（2）内部函数：如果在当前文件中定义的函数不允许其他文件访问、调用，只能在内部使用，就称为内部函数。C语言规定不同的源文件可以有同名的内部函数，并且互不干扰。</p>
+
+<h6>2、static和extern对函数的作用</h6>
+
+<p>（1）extern用来修饰外部函数，<code>extern跟auto关键字一样废，完全可以省略，因为默认情况下，所有的函数就是外部函数。</code>
+extern关键字对函数的作用：用来定义和声明一个外部函数。其实extern又跟auto一样废，完全可以省略。</p>
+
+<pre><code>void one();  // 等同于extern void one();
+int main(){
+one();
+return 0;
+}
+</code></pre>
+
+<p>（2）在定义函数时，在函数的最左边加上static可以把该函数声明为内部函数(又叫静态函数)，这样该函数就只能在其定义所在的文件中使用。如果在不同的文件中有同名的内部函数，则互不干扰。<code>static也可以用来声明一个内部函数</code></p>
+
+<h4>static和extern对变量的作用</h4>
+
+<p>1.extern可以用来声明一个全局变量，但是不能用来定义变量</p>
+
+<p>2.默认情况下，一个全局变量是可以供多个源文件共享的，也就说，多个源文件中同名的全局变量都代表着同一个变量</p>
+
+<p>3.如果在定义全局变量的时候加上static关键字，此时static的作用在于限制该全局变量的作用域，只能在定义该全局变量的文件中才能使用，跟其他源文件中的同名变量互不干扰</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/04/16/iosying-yong-jia-gou/">iOS应用架构</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-04-16T10:19:48+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>16</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>10:19 am</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>在cocoaChina上看到一篇将iOS应用架构的文章<a href="http://www.cocoachina.com/ios/20150414/11557.html">http://www.cocoachina.com/ios/20150414/11557.html</a>，觉得不错，总结下.</p>
+
+<h4>一、在设计app时需要注意的几点</h4>
+
+<h6>1、网络层设计方案？设计网络层时要考虑哪些问题？对网络层做优化的时候，可以从哪些地方入手？</h6>
+
+<h6>2、页面的展示、调用和组织都有哪些设计方案？我们做这些方案的时候都要考虑哪些问题？</h6>
+
+<h6>3、本地持久化层的设计方案都有哪些？优劣势都是什么？不同方案间要注意的问题分别都是什么？</h6>
+
+<h6>4、要实现动态部署，都有哪些方案？不同方案之间的优劣点，他们的侧重点？</h6>
+
+<h6>5、如何让业务开发工程师方便安全地调用网络API？然后尽可能保证用户在各种网络环境下都能有良好的体验？</h6>
+
+<h6>6、页面如何组织，才能尽可能降低业务方代码的耦合度？尽可能降低业务方开发界面的复杂度，提高他们的效率？</h6>
+
+<h6>7、当数据有在本地存取的需求的时候，如何能够保证数据在本地的合理安排？如何尽可能地减小性能消耗？</h6>
+
+<h6>8、iOS应用有审核周期，如何能够通过不发版本的方式展示新的内容给用户？如何修复紧急bug？</h6>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/">压缩、截取上传图片,设置圆形UIImageView,App版本更新，设置tableView随textFiled焦点滑动</a></h1>
     
     
       <p class="meta">
@@ -242,6 +925,34 @@ self.icon.backgroundColor = [UIColor whiteColor];
     @"itms-apps://itunes.apple.com/app/id%@",APPID];
 
     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:str]];
+</code></pre>
+
+<h4>四、设置tableView随textFiled焦点滑动</h4>
+
+<h6>第一种方法：</h6>
+
+<p>CGPoint origin = textField.frame.origin;</p>
+
+<pre><code>CGPoint point = [textField.superview convertPoint:origin toView:self.tableView];
+
+float navBarHeight = self.navigationController.navigationBar.frame.size.height;
+
+CGPoint offset = self.tableView.contentOffset;
+
+offset.y = (point.y - navBarHeight);
+
+[self.tableView setContentOffset:offset animated:YES];
+</code></pre>
+
+<h6>第二种方法</h6>
+
+<pre><code>CGPoint point = [textField.superview convertPoint:textField.frame.origin toView:self.tableView];
+
+NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:point];
+
+NSLog(@"%zd",indexPath.row);
+
+[self.tableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionTop animated:YES];
 </code></pre>
 </div>
   
@@ -1127,974 +1838,6 @@ NSArray* trueDeepCopyArray = [NSKeyedUnarchiver unarchiveObjectWithData:
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/01/13/li-yong-crashdui-zhan-xin-xi-ding-wei-dian-xing-de-ye-zhi-zhen-cuo-wu/">利用crash堆栈信息定位典型的野指针错误</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-01-13T17:13:23+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>5:13 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>通过堆栈信息，确定了代码的具体位置</p>
-
-<pre><code>[self.delegate respondsToSelector:@selector(httpConnectionDidFailed:withError:)]
-</code></pre>
-
-<p>通过这个信息，猜测是delegate这个对象在网络请求回来之前已经释放掉，导致野指针错误。
-控制器的具体代码如下：</p>
-
-<pre><code>@interface TrainSearchListVC ()
-// 这个HttpUtil是封装的网络工具类
-@property (nonatomic, strong) HttpUtil *checkOrderUtil;
-@property (nonatomic, strong) HttpUtil *cancelOrderUtil;
-
-@end
-
-
-- (void)dealloc
-{
-    [self unregisterNotification];
-    // 首先要取消请求
-    // 然后设置为nil (MRC需要release)
-    ***因为没有设置为nil 导致野指针为题***
-    [self.checkOrderUtil cancel];
-    [self.cancelOrderUtil cancel];
-    self.checkOrderUtil = nil;
-    self.cancelOrderUtil = nil;
-    [_tableViewList setDataSource:nil];
-    [_tableViewList setDelegate:nil];
-}
-
-[_checkOrderUtil requestWithURLString:url Content:paramJson StartLoading:YES EndLoading:YES Delegate:self]; 设置了网络请求代理，但是当网络数据返回的时候，代理已经销毁了，出现也只真为题。
-</code></pre>
-
-<p>提供一个计算进制的python方法：</p>
-
-<pre><code>EBJ1297:~ zhaoyan$ python
-Python 2.7.6 (default, Sep  9 2014, 15:04:36) 
-[GCC 4.2.1 Compatible Apple LLVM 6.0 (clang-600.0.39)] on darwin
-Type "help", "copyright", "credits" or "license" for more information.
-&gt;&gt;&gt; hex(0x000f45f5 - 136693)
-'0xd3000'
-&gt;&gt;&gt; hex(0x00604963 - 5712227)
-'0x92000'
-&gt;&gt;&gt; hex(0x0059e963 - 5712227)
-'0x2c000'
-&gt;&gt;&gt; 
-</code></pre>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/01/12/li-yong-crashdui-zhan-xin-xi-ding-wei-dai-ma-beng-kui-wei-zhi/">利用crash堆栈信息定位代码崩溃位置</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-01-12T18:32:15+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>12</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>6:32 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>根据程序崩溃的堆栈信息确定代码crash位置,以下是一段crash堆栈信息</p>
-
-<pre><code>........(
-........0...Client.........................0x005c3963.ElongClient. .5712227,
-........0,
-........Client,
-........0x005c3963.Client. .5712227,
-........0x005c3963
-....)
-此crash堆栈信息,需要加入第三方管理,通过后台进行数据统计
-</code></pre>
-
-<p>使用下面的命令符号化,可以准确地定位crash代码的位置</p>
-
-<pre><code>atos -arch armv7 -o .Dsyms路径 -l 0x52000 0x005c3963
-</code></pre>
-
-<p>在终端下输入该指令,结果或显示具体方法,具体文件,具体行数</p>
-
-<pre><code>-[ViewController viewDidLoad] (ViewController.m:156)
-</code></pre>
-
-<p>0x52000是由0x005c3963减去10进制的5712227计算而得,.Dsyms文件是在程序打包的时候一起获得的文件(线上crash版本必须和这个配套)</p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/01/05/uiwebviewxiu-gai-ye-mian-xiang-guan/">UIWebView修改页面相关</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-01-05T17:56:03+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>5</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>5:56 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>UIWebView打开html后，UIWebView有左右滚动条，要去掉左右滚动效果；</p>
-
-<p>方法：通过js截获UIWebView中的html，然后修改html标签内容；</p>
-
-<p>实例代码： 服务器端html</p>
-
-<pre><code>&lt;html&gt;&lt;head&gt;  
-&lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8"&gt;  
-&lt;meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"&gt;   
-&lt;title&gt;网曝四川省一考场时钟慢半小时 老师称这就是命&lt;/title&gt;&lt;/head&lt;body&gt;网曝四川省一考场时钟慢半小时 老师称这就是命&lt;/body&gt;&lt;/html&gt; 
-</code></pre>
-
-<p>这样显示的结果网页的最小宽度会是device-width；但有时候不需要这个宽度，就需要修改width=device-width为width=myWidth;
-客户端代码</p>
-
-<pre><code>- (void)webViewDidFinishLoad:(UIWebView *)webView  
-{     
-    //修改服务器页面的meta的值  
-    NSString *meta = [NSString stringWithFormat:@"document.getElementsByName(\"viewport\")[0].content = \"width=%f, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no\"", webView.frame.size.width];  
-    [webView stringByEvaluatingJavaScriptFromString:meta];  
-}  
-</code></pre>
-
-<p>给网页增加utf-8编码</p>
-
-<pre><code>[webView stringByEvaluatingJavaScriptFromString:  
- @"var tagHead =document.documentElement.firstChild;"  
-  "var tagMeta = document.createElement(\"meta\");"   
-  "tagMeta.setAttribute(\"http-equiv\", \"Content-Type\");"   
-  "tagMeta.setAttribute(\"content\", \"text/html; charset=utf-8\");"   
-  "var tagHeadAdd = tagHead.appendChild(tagMeta);"]; 
-</code></pre>
-
-<p>给网页增加css样式</p>
-
-<pre><code>[webView stringByEvaluatingJavaScriptFromString:  
-     @"var tagHead =document.documentElement.firstChild;"  
-     "var tagStyle = document.createElement(\"style\");"   
-     "tagStyle.setAttribute(\"type\", \"text/css\");"   
-     "tagStyle.appendChild(document.createTextNode(\"BODY{padding: 20pt 15pt}\"));"  
-     "var tagHeadAdd = tagHead.appendChild(tagStyle);"];
-</code></pre>
-
-<p>拦截网页图片  并修改图片大小</p>
-
-<pre><code>[webView stringByEvaluatingJavaScriptFromString:  
- @"var script = document.createElement('script');"   
- "script.type = 'text/javascript';"   
- "script.text = \"function ResizeImages() { "   
-     "var myimg,oldwidth;"  
-     "var maxwidth=380;" //缩放系数   
-     "for(i=0;i &lt;document.images.length;i++){"   
-         "myimg = document.images[i];"  
-         "if(myimg.width &gt; maxwidth){"   
-             "oldwidth = myimg.width;"   
-             "myimg.width = maxwidth;"   
-             "myimg.height = myimg.height * (maxwidth/oldwidth);"   
-         "}"   
-     "}"   
- "}\";"   
- "document.getElementsByTagName('head')[0].appendChild(script);"];   
-[webView stringByEvaluatingJavaScriptFromString:@"ResizeImages();"]; 
-</code></pre>
-
-<p>参考网址：</p>
-
-<p>stringByEvaluatingJavaScriptFromString的使用方法:</p>
-
-<p><a href="http://www.uml.org.cn/mobiledev/201108181.asp">http://www.uml.org.cn/mobiledev/201108181.asp</a></p>
-
-<p>iphone 获取UIWebView内Html方法</p>
-
-<p><a href="http://blog.csdn.net/diyagoanyhacker/article/details/6564897">http://blog.csdn.net/diyagoanyhacker/article/details/6564897</a></p>
-
-<p>IOS UIWebView引用外部CSS样式</p>
-
-<p><a href="http://hi.baidu.com/jwq359699768/item/780879e5c98bfb3e4ddcaf22">http://hi.baidu.com/jwq359699768/item/780879e5c98bfb3e4ddcaf22</a>
-<a href="http://blog.csdn.net/xdonx/article/details/6973521">http://blog.csdn.net/xdonx/article/details/6973521</a></p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/01/05/ioskai-fa-zhong-%5B%3F%5D-xie-xiao-ji-qiao/">iOS开发中一些小技巧</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-01-05T11:13:29+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>5</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:13 am</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>原文地址：<a href="http://www.cocoachina.com/ios/20141231/10783.html">http://www.cocoachina.com/ios/20141231/10783.html</a>最近cocoachina上很火的一篇文章</p>
-
-<h4>1.TableView不显示没内容的Cell</h4>
-
-<pre><code>self.tableView.tableFooterView = [[UIView alloc] init];
-</code></pre>
-
-<h4>2.自定义了leftBarbuttonItem左滑返回手势失效了</h4>
-
-<pre><code>self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]
-                                     initWithImage:img
-                                     style:UIBarButtonItemStylePlain
-                                     target:self
-                                     action:@selector(onBack:)];
-self.navigationController.interactivePopGestureRecognizer.delegate = (id)self;
-</code></pre>
-
-<p>在iOS7以后系统自动支持了左侧滑动返回功能,但当设置了左侧返回按钮,就会失效,这个方法很好地解决了问题</p>
-
-<h4>3.ScrollView莫名其妙不能在viewController划到顶怎么办?</h4>
-
-<pre><code>self.automaticallyAdjustsScrollViewInsets = NO;
-</code></pre>
-
-<p>这个功能也是iOS7之后系统带的功能</p>
-
-<h4>4.像safari一样滑动的时候隐藏navigationbar?</h4>
-
-<pre><code>navigationController.hidesBarsOnSwipe = Yes
-</code></pre>
-
-<h4>5.导航条返回键带的title太讨厌了,怎么让它消失!</h4>
-
-<pre><code>[[UIBarButtonItem appearance] setBackButtonTitlePositionAdjustment:UIOffsetMake(0, -60) forBarMetrics:UIBarMetricsDefault];
-</code></pre>
-
-<h4>6.怎么把tableview里cell的小对勾的颜色改成别的颜色？</h4>
-
-<pre><code>_mTableView.tintColor = [UIColor redColor];
-</code></pre>
-
-<h4>7.本来我的statusbar是lightcontent的，结果用UIImagePickerController会导致我的statusbar的样式变成黑色，怎么办？</h4>
-
-<pre><code>- (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated
-{
-    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
-}
-</code></pre>
-
-<h4>8.怎么把我的navigationbar弄成透明的而不是带模糊的效果？</h4>
-
-<pre><code>[self.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
-self.navigationBar.shadowImage = [UIImage new];
-self.navigationBar.translucent = YES;
-</code></pre>
-
-<h4>9.怎么改变uitextfield placeholder的颜色和位置？</h4>
-
-<pre><code>- (void) drawPlaceholderInRect:(CGRect)rect {
-    [[UIColor blueColor] setFill];
-    [self.placeholder drawInRect:rect withFont:self.font    lineBreakMode:UILineBreakModeTailTruncation alignment:self.textAlignment];
-}
-</code></pre>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/11/24/chang-yong-gong-ju-fang-fa-zong-jie/">常用工具方法总结</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-11-24T10:02:28+08:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>10:02 am</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h3>一.文件操作常用方法总结:</h3>
-
-<h4>1.写入文件</h4>
-
-<pre><code>+ (BOOL)writeFileName:(NSString *)fileName data:(id)result{
-   NSString *pathName =  [LSCacheFile filePath:fileName];
-    if ([LSCacheFile isExistsFile:pathName]) {
-        [[NSFileManager defaultManager] removeItemAtPath:pathName error:nil];
-    }
-    return [LSCacheFile writeFile:pathName object:result];
-}
-</code></pre>
-
-<h4>2.读出文件</h4>
-
-<pre><code>+ (id)readFileName:(NSString *)fileName{
-
-    if (!fileName) {
-        return nil;
-    }
-    if(![LSCacheFile isExistsFile:fileName]){
-        return nil;
-    }
-
-    id object = [LSCacheFile readFile:[LSCacheFile filePath:fileName]];
-    if (!object) {
-        return nil;
-    }
-    return object;
-}
-</code></pre>
-
-<h4>3.计算文件大小</h4>
-
-<pre><code>+ (NSString *)folderSizeStringAtPath:(NSString *)folderPath
-{
-    long long folderSize = [LSCacheFile folderSizeAtPath:folderPath];
-    return [self sizeStringFromSizeLong:folderSize];
-}
-
-// 计算文件夹下文件的总大小
-+ (long long)folderSizeAtPath:(NSString*)folderPath{
-    NSFileManager* manager = [NSFileManager defaultManager];
-    if (![manager fileExistsAtPath:folderPath]) return 0;
-    NSEnumerator *childFilesEnumerator = [[manager subpathsAtPath:folderPath] objectEnumerator];
-    NSString* fileName;
-    long long folderSize = 0;
-    while ((fileName = [childFilesEnumerator nextObject]) != nil){
-        NSString* fileAbsolutePath = [folderPath stringByAppendingPathComponent:fileName];
-        folderSize += [LSCacheFile fileSizeAtPath:fileAbsolutePath];
-    }
-    return folderSize;
-}
-// 根据文件大小返回对应单位
-+(NSString*)sizeStringFromSizeLong:(long long) folderSize{
-    if (folderSize &lt; 1024) {
-        return @"0K";
-    }else if(folderSize/1024.0 &lt; 1024){
-        return [NSString stringWithFormat:@"%.2fK",folderSize/1024.0];
-    }else if(folderSize/1024.0/1024.0 &lt; 1024){
-        return [NSString stringWithFormat:@"%.2fM",folderSize/1024.0/1024.0];
-    }else if(folderSize/1024.0/1024.0/1024.0 &lt; 1024){
-        return [NSString stringWithFormat:@"%.2fG",folderSize/1024.0/1024.0/1024.0];
-    }
-    return @"";
-}
-</code></pre>
-
-<h4>4.格式化size单位</h4>
-
-<pre><code>+ (NSString *)formatFileSize:(int)fileSize {
-    float size = fileSize;
-    if (fileSize &lt; 1023) {
-        return([NSString stringWithFormat:@"%i bytes",fileSize]);
-    }
-
-    size = size / 1024.0f;
-    if (size &lt; 1023) {
-        return([NSString stringWithFormat:@"%1.2f KB",size]);
-    }
-
-    size = size / 1024.0f;
-    if (size &lt; 1023) {
-        return([NSString stringWithFormat:@"%1.2f MB",size]);
-    }
-
-    size = size / 1024.0f;
-    return [NSString stringWithFormat:@"%1.2f GB",size];
-}
-</code></pre>
-
-<h4>5.获取目录下的文件大小(返回字节)</h4>
-
-<pre><code>+ (long long)folderSizeAtPath:(NSString*)folderPath{
-    NSFileManager* manager = [NSFileManager defaultManager];
-    if (![manager fileExistsAtPath:folderPath]) return 0;
-    NSEnumerator *childFilesEnumerator = [[manager subpathsAtPath:folderPath] objectEnumerator];
-    NSString* fileName;
-    long long folderSize = 0;
-    while ((fileName = [childFilesEnumerator nextObject]) != nil){
-        NSString* fileAbsolutePath = [folderPath stringByAppendingPathComponent:fileName];
-        folderSize += [LSCacheFile fileSizeAtPath:fileAbsolutePath];
-    }
-    return folderSize;
-}
-</code></pre>
-
-<h4>6.判断文件是否存在</h4>
-
-<pre><code>+ (BOOL)isExistsFile:(NSString *)filepath{
-    NSFileManager *filemanage = [NSFileManager defaultManager];
-    return [filemanage fileExistsAtPath:[LSCacheFile filePath:filepath]];
-}
-</code></pre>
-
-<h4>7.删除缓存文件</h4>
-
-<pre><code>+(void)deleteCacheFile:(NSString *)filepath
-{
-    if([[NSFileManager defaultManager] fileExistsAtPath:filepath isDirectory:NO])
-    {
-        [[NSFileManager defaultManager] removeItemAtPath:filepath error:nil];
-    }
-}
-</code></pre>
-
-<h4>8.创建文件夹</h4>
-
-<pre><code>+ (BOOL)createFolder:(NSString*)folderPath isDirectory:(BOOL)isDirectory {
-    NSString *path = nil;
-    if(isDirectory) {
-        path = folderPath;
-    } else {
-        path = [folderPath stringByDeletingLastPathComponent];
-    }
-
-    if(folderPath &amp;&amp; [[NSFileManager defaultManager] fileExistsAtPath:path] == NO) {
-        NSError *error = nil;
-        BOOL ret;
-
-        ret = [[NSFileManager defaultManager] createDirectoryAtPath:path
-                                        withIntermediateDirectories:YES
-                                                         attributes:nil
-                                                              error:&amp;error];
-        if(!ret &amp;&amp; error) {
-            NSLog(@"create folder failed at path '%@',error:%@,%@",folderPath,[error localizedDescription],[error localizedFailureReason]);
-            return NO;
-        }
-    }
-
-    return YES;
-}
-</code></pre>
-
-<h4>9.得到用户document中的一个路径</h4>
-
-<pre><code>+ (NSString*)getPathInUserDocument:(NSString*) aPath{
-    NSString *fullPath = nil;
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    if ([paths count] &gt; 0)
-    {
-        fullPath = (NSString *)[paths objectAtIndex:0];
-        if(aPath != nil &amp;&amp; [aPath compare:@""] != NSOrderedSame)
-        {
-            fullPath = [fullPath stringByAppendingPathComponent:aPath];
-        }
-    }
-    return fullPath;
-}
-</code></pre>
-
-<h4>10.文件创建日期</h4>
-
-<pre><code>+ (NSDate*)dateOfFileCreateWithFolderName:(NSString *)folderName cacheName:(NSString *)cacheName
-{
-    NSString *folder = [[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:folderName];
-    NSString *filePath = [folder stringByAppendingPathComponent:cacheName];
-    NSError *error;
-    NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:&amp;error];
-
-    if(!error) {
-        return [attributes objectForKey:NSFileCreationDate];
-    }
-
-    return nil;
-}
-</code></pre>
-
-<h4>11.获取NSBundele中的资源图片</h4>
-
-<pre><code>+ (UIImage *)imageAtApplicationDirectoryWithName:(NSString *)fileName {
-    if(fileName) {
-        NSString *path = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:[fileName stringByDeletingPathExtension]];
-        path = [NSString stringWithFormat:@"%@@2x.%@",path,[fileName pathExtension]];
-        if(![[NSFileManager defaultManager] fileExistsAtPath:path]) {
-            path = nil;
-        }
-
-        if(!path) {
-            path = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:fileName];
-        }
-        return [UIImage imageWithContentsOfFile:path];
-    }
-    return nil;
-}
-</code></pre>
-
-<h4>12.移除某个文件夹下的所有文件(非遍历)并重新创建被删除的文件夹</h4>
-
-<pre><code>+ (void) deleteContentsOfFolder:(NSString *)folderPath {
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtPath:folderPath error:nil];
-    BOOL isDir = NO;
-    BOOL existed = [fileManager fileExistsAtPath:folderPath isDirectory:&amp;isDir];
-    if ( !(isDir == YES &amp;&amp; existed == YES) ) {
-        [fileManager createDirectoryAtPath:folderPath withIntermediateDirectories:YES attributes:nil error:nil];
-    }
-}
-</code></pre>
-
-<h3>二.文件操作常用方法总结:</h3>
-
-<h4>1.获取请求sign</h4>
-
-<pre><code>+(NSString *)getSign{
-    NSString *username = @"zhaoyan106";
-    NSString *pwd = @"zhaoyan106";
-    NSString *pwd_md5 = [pwd md5];
-    NSString *time_key_md5 = [[NSString stringWithFormat:@"%@%@",[self getTimeStamp],@"zhaoyan106"] md5];
-    NSString *sign = [[NSString stringWithFormat:@"%@%@%@",username, pwd_md5,time_key_md5] md5];
-    return sign;
-}
-
-- (NSString*)md5 {
-    const char* string = [self UTF8String];
-    unsigned char result[16];
-    CC_MD5(string, strlen(string), result);
-    NSString* hash = [NSString stringWithFormat:@"%@%@@%%@%@@@%@@%@@%@@@@@%@@@@%@@@%@@%@@@%@@%",
-                      result[0], result[1], result[2], result[3], result[4], result[5], result[6], result[7],
-                      result[8], result[9], result[10], result[11], result[12], result[13], result[14], result[15]];
-    return [hash lowercaseString];
-}
-
-// 获取时间戳
-+(NSString *)getTimeStamp{
-    NSDate* dat = [NSDate dateWithTimeIntervalSinceNow:0];
-    NSTimeInterval a=[dat timeIntervalSince1970];
-    NSString *timeString = [NSString stringWithFormat:@"%.0f", a];
-    return timeString;
-}
-</code></pre>
-
-<h4>2.获取时间戳</h4>
-
-<pre><code>+(NSString *)getTimeStamp{
-    NSDate* dat = [NSDate dateWithTimeIntervalSinceNow:0];
-    NSTimeInterval a=[dat timeIntervalSince1970];
-    NSString *timeString = [NSString stringWithFormat:@"%.0f", a];
-    return timeString;
-}
-</code></pre>
-
-<h4>3.将对象转化为json字符串</h4>
-
-<pre><code>+ (NSString *)jsonStringFromObject:(id)object{
-    if([NSJSONSerialization isValidJSONObject:object]){
-        NSData *data = [NSJSONSerialization dataWithJSONObject:object options:NSJSONWritingPrettyPrinted error:nil];
-        NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        return jsonString;
-    }
-    return @"";
-}
-</code></pre>
-
-<h4>4.去除字典元素(去除NSNull)</h4>
-
-<pre><code>+ (id)valueForKey:(NSString *)key object:(NSDictionary *)object{
-    if([object isKindOfClass:[NSDictionary class]]){
-        id value = [object objectForKey:key];
-        if([value isKindOfClass:[NSNull class]]){
-            return nil;
-        }
-        return value;
-    }
-    return nil;
-}
-</code></pre>
-
-<h4>5.http request header 访问信息</h4>
-
-<p>关于UDID等标识不清楚的可以参考下这篇文章<a href="http://www.cocoachina.com/industry/20130715/6597.html">http://www.cocoachina.com/industry/20130715/6597.html</a></p>
-
-<pre><code>+ (NSString *)getTraceInfo {
-    //版本号
-    NSString *versionname  = [NSString stringWithFormat:@"%.1f", ((NSString *)[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"]).integerValue-1.0+7.0];
-    //内部版本
-    NSString *versioncode  = ([[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"]);
-    //发布版本
-    NSString *buildversion = ([[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"]);
-    //系统版本
-    NSString *osversion = [[UIDevice currentDevice] systemVersion];
-    //设备型号
-    NSString *model = [self deviceType];
-    //软件名称
-    NSString *appname = @"stem";
-    //软件平台
-    NSString *clientname = @"iphone";
-    //广告唯一标识符
-    NSString *idfa = [self getAdvertisingIdentifier];
-    //UDID
-    NSString *clientid = [LSHelper getCurrentDeviceUDID];
-//    NSString *traceInfo = [NSString stringWithFormat:@"versionname=%@;appname=%@;clientname=%@;",versionname,appname,clientname];
-    NSString *traceInfo = [NSString stringWithFormat:@"versionname=%@;versioncode=%@;buildversion=%@;osversion=%@;model=%@;appname=%@;clientname=%@;idfa=%@;clientid=%@;",versionname,versioncode,buildversion,osversion,model,appname,clientname,idfa,clientid];
-    return traceInfo;
-}
-
-// 获取当前设备类型如ipod，iphone，ipad
-+ (NSString *)deviceType {
-    struct utsname systemInfo;
-    uname(&amp;systemInfo);
-    return [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding];
-}
-
-// 获取用户的ADFA
-+ (NSString *) getAdvertisingIdentifier{
-    return [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
-}
-
-// 获取当前设备的UDID
-+(NSString*) getCurrentDeviceUDID
-{
-    if ([self getCurrentDeviceVersion]&gt;=7.0) {
-    // OpenUDID
-        return [OpenUDID value];
-    }else{
-        return [self UUID];
-    }
-
-}
-
-
-// 获取当前设备的UDID(ios7.0以下系统)
-+ (NSString *)UUID {
-    NSInteger mib[6];
-    size_t              len;
-    char                *buf;
-    unsigned char       *ptr;
-    struct if_msghdr    *ifm;
-    struct sockaddr_dl  *sdl;
-
-    mib[0] = CTL_NET;
-    mib[1] = AF_ROUTE;
-    mib[2] = 0;
-    mib[3] = AF_LINK;
-    mib[4] = NET_RT_IFLIST;
-
-    if ((mib[5] = if_nametoindex("en0")) == 0) {
-        printf("Error: if_nametoindex error\n");
-        return NULL;
-    }
-
-    if (sysctl(mib, 6, NULL, &amp;len, NULL, 0) &lt; 0) {
-        printf("Error: sysctl, take 1\n");
-        return NULL;
-    }
-
-    if ((buf = malloc(len)) == NULL) {
-        printf("Could not allocate memory. error!\n");
-        return NULL;
-    }
-
-    if (sysctl(mib, 6, buf, &amp;len, NULL, 0) &lt; 0) {
-        free(buf);
-        printf("Error: sysctl, take 2");
-        return NULL;
-    }
-
-    ifm = (struct if_msghdr *)buf;
-    sdl = (struct sockaddr_dl *)(ifm + 1);
-    ptr = (unsigned char *)LLADDR(sdl);
-    NSString *macaddress = [NSString stringWithFormat:@"%02X:%02X:%02X:%02X:%02X:%02X",
-                            *ptr, *(ptr+1), *(ptr+2), *(ptr+3), *(ptr+4), *(ptr+5)];
-    free(buf);
-
-
-    if (macaddress) {
-        NSString *uniqueIdentifier = [macaddress stringByReplacingOccurrencesOfString:@":" withString:@""];
-        return uniqueIdentifier;
-    } else {
-        NSUserDefaults *handler = [NSUserDefaults standardUserDefaults];
-        NSString *result = (NSString *)[handler objectForKey:kUUID];
-
-        if (NULL == result || 46 &gt; [result length]) {
-            CFUUIDRef uuid = CFUUIDCreate(NULL);
-            CFStringRef uuidStr = CFUUIDCreateString(NULL, uuid);
-
-            result = [NSString stringWithFormat:@"%@", uuidStr];
-            CFRelease(uuidStr);
-            CFRelease(uuid);
-
-            [handler setObject:result forKey:kUUID];
-            [handler synchronize];
-        }
-
-        return result;
-    }
-}
-</code></pre>
-
-<h4>6.(参数 + url)md5加密</h4>
-
-<pre><code>+(NSString *)keyMD5StringWithParamDic:(NSDictionary *)paramDic methodName:(NSString *)methodName
-{
-    NSMutableString *keyMutableString = nil;
-    if (paramDic == nil) {
-        return nil;
-    }
-
-    NSArray *keys = [paramDic allKeys];
-    NSArray *sortedArray = [keys sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-        return [obj1 compare:obj2 options:NSNumericSearch];
-    }];
-
-    keyMutableString = [NSMutableString string];
-    for (NSInteger index = 0; index &lt; sortedArray.count; index++) {
-        NSString *key = [sortedArray objectAtIndex:index];
-        NSString *value = [paramDic objectForKey:key];
-        if (index == 0) {
-            [keyMutableString appendFormat:@"%@=%@",key,value];
-        } else {
-            [keyMutableString appendFormat:@"|%@=%@",key,value];
-        }
-    }
-    NSString *url = [NSString stringWithFormat:@"%@%@",kServerAddress,methodName];
-    [keyMutableString appendString:url];
-    return [keyMutableString md5];
-}
-</code></pre>
-
-<h4>7.cookie操作</h4>
-
-<pre><code>// 设置cooike
-+ (void)setHttpCookieValue:(NSString *)value{
-    //过期时间一个小时
-    NSDate *date = [NSDate dateWithTimeIntervalSinceNow:60*60];
-    //设置了过期时间，如果过期，则NSURLRequest就不会使用此cookie
-    NSHTTPCookie *cookie = [NSHTTPCookie cookieWithProperties:@{NSHTTPCookiePath:@"/", NSHTTPCookieName:@"JSESSIONID", NSHTTPCookieValue:value, NSHTTPCookieOriginURL:kServerAddress, NSHTTPCookieExpires:date}];
-    [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookie:cookie];
-    [self writeFileName:kSpecialCookieFileName data:@[cookie]];
-}
-// 读取cookie
-+ (NSString *)valueFromHttpCookie{
-    NSArray *cookieArr = [self readFileName:kSpecialCookieFileName];
-    NSMutableArray *mutableArr = [NSMutableArray arrayWithArray:cookieArr];
-    NSString *value = nil;
-    for(NSHTTPCookie *cookie in cookieArr){
-        if([cookie.name isEqual:@"JSESSIONID"] &amp;&amp; cookie.value.length &gt; 0){
-            //如果过期了，则删除本地
-            if([cookie.expiresDate compare:[NSDate date]] == NSOrderedAscending){
-                [mutableArr removeObject:cookie];
-            }
-            else{
-                [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookie:cookie];
-                value = cookie.value;
-            }
-        }
-    }
-    [self writeFileName:kSpecialCookieFileName data:mutableArr];
-    return value;
-}
-// 删除cookie
-+ (void)removeHttpCookieCache{
-    [self deleteCacheFile:kSpecialCookieFileName];
-}
-</code></pre>
-
-<h3>三.时间常用方法总结:</h3>
-
-<h4>1.获取当前时间</h4>
-
-<pre><code>+ (NSString *)getCurrentTime
-{
-    NSDate *senddate = [NSDate date];
-
-    NSDateFormatter *dateformatter = [[NSDateFormatter alloc] init];
-
-    [dateformatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
-
-    NSString *locationString = [dateformatter stringFromDate:senddate];
-
-    return locationString;
-
-}
-</code></pre>
-
-<h4>2.字符时间转date</h4>
-
-<pre><code>+ (NSDate *)dateFromString:(NSString *)dateString {
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"eee, dd MMM yyyy HH:mm:ss ZZZZ"];
-    NSDate *date = [formatter dateFromString:dateString];
-    return date;
-}
-</code></pre>
-
-<h4>3.date转字符串</h4>
-
-<pre><code>+ (NSString *)stringFromDate:(NSDate *)date {
-    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    //zzz表示时区，zzz可以删除，这样返回的日期字符将不包含时区信息。
-    [dateFormatter setDateFormat:@"yyyy-MM-dd"];
-    NSString *destDateString = [dateFormatter stringFromDate:date];
-    return destDateString;
-}
-</code></pre>
-
-<h4>4.自1970年距离现在时间转换</h4>
-
-<pre><code>+ (NSString *)timeFactorySeconds:(NSNumber *)seconds andFormat:(TimeFormat)type {
-    float second = [seconds doubleValue];
-    if (second == 0) {
-        return nil;
-    }
-    NSString *result = nil;
-    NSDate *date = [NSDate dateWithTimeIntervalSince1970:[seconds doubleValue]/1000];
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    switch (type) {
-        case YearMonthDayHourMin: {
-            [formatter setDateFormat:@"yyyy-MM-dd HH:mm"];
-            result = [formatter stringFromDate:date];
-        }
-            break;
-        case YearMonthDay: {
-            [formatter setDateFormat:@"yyyy-MM-dd"];
-            result = [formatter stringFromDate:date];
-        }
-            break;
-        case MonthDayHourMin: {
-            [formatter setDateFormat:@"MM-dd HH:mm"];
-            result = [formatter stringFromDate:date];
-        }
-            break;
-        case YearMonthDayHZ: {
-            [formatter setDateFormat:@"yyyy年MM月dd日"];
-            result = [formatter stringFromDate:date];
-        }
-            break;
-        default:
-            break;
-    }
-    return result;
-}
-</code></pre>
-
-<h4>5. 数组按时间排序</h4>
-
-<pre><code>//数组按时间排序
-+ (NSArray *)resortHomePageData:(NSArray *)data {
-// NSSortDescriptor可以直接对对象的某个属性进行排列
-    NSArray *sortDescriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"mtime" ascending:YES]];
-    return [data sortedArrayUsingDescriptors:sortDescriptors];
-}
-</code></pre>
-
-<h3>四.图片操作</h3>
-
-<h4>1.去最大的正方形</h4>
-
-<pre><code>+ (UIImage *)cutToRect:(UIImage *)image {
-    double width = ((UIImage *)image).size.width * image.scale;
-    double height = ((UIImage *)image).size.height * image.scale;
-    UIImage *img = nil;
-    if (width &gt; height) {
-        CGImageRef imageRef = CGImageCreateWithImageInRect([image CGImage], CGRectMake((width - height)/2.0f, 0, height, height));
-        img = [UIImage imageWithCGImage:imageRef scale:image.scale orientation:image.imageOrientation];
-        CGImageRelease(imageRef);
-    }
-    else {
-        CGImageRef imageRef = CGImageCreateWithImageInRect([image CGImage], CGRectMake(0, (height - width)/2.0f, width, width));
-        img = [UIImage imageWithCGImage:imageRef scale:image.scale orientation:image.imageOrientation];
-        CGImageRelease(imageRef);
-    }
-    return img;
-}
-</code></pre>
-
-<h4>2.按比例取最大图片</h4>
-
-<pre><code>+ (UIImage *)cutToBigRect:(UIImage *)image size:(CGSize)size {
-    UIImage *imageRemove = [self imageResize:image size:image.size];//去掉拍照 图片带的方向信息
-    double width = imageRemove.size.width * imageRemove.scale;
-    double height = imageRemove.size.height * imageRemove.scale;
-    UIImage *img = nil;
-    CGImageRef imageRef;
-    if (height / width &lt;= size.height / size.width) {//height小
-        imageRef = CGImageCreateWithImageInRect([imageRemove CGImage], CGRectMake((width - height * (size.width / size.height))/2.0f, 0, height * (size.width / size.height), height));
-    }
-    else {
-        imageRef = CGImageCreateWithImageInRect([imageRemove CGImage], CGRectMake(0, (height - width * (size.height / size.width))/2.0f, width, width * (size.height / size.width)));
-
-    }
-    img = [UIImage imageWithCGImage:imageRef scale:imageRemove.scale orientation:imageRemove.imageOrientation];
-    CGImageRelease(imageRef);
-    return img;
-}
-</code></pre>
-
-<h4>3.将图片放缩到指定大小</h4>
-
-<pre><code>+ (UIImage*)imageResize:(UIImage*)image size:(CGSize)size {
-    UIGraphicsBeginImageContext(size);
-    [image drawInRect:CGRectMake(0,0,size.width, size.height)];
-    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    return newImage;
-}
-</code></pre>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/2">&larr; Older</a>
@@ -2110,23 +1853,23 @@ self.navigationBar.translucent = YES;
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/">压缩、截取上传图片,设置圆形UIImageView,App版本更新</a>
+        <a href="/blog/2015/07/03/xiang-mu-cha-jian-hua-cocoapodsde-shi-yong/">项目插件化-CocoaPods的使用</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2015/02/09/postqing-qiu-shang-chuan-wen-jian/">POST请求上传文件</a>
+        <a href="/blog/2015/05/13/effective-objective-c-2-dot-0zong-jie/">Effective Objective-C 2.0总结</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2015/02/02/duo-xian-cheng-zong-jie/">多线程总结</a>
+        <a href="/blog/2015/04/30/best-practices/">Best Practices</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2015/01/26/wang-luo-duo-xian-cheng-ying-yong/">网络多线程应用</a>
+        <a href="/blog/2015/04/21/nei-cun-cun-chu-xiang-guan-zhi-shi/">内存存储相关知识及static和extern关键字的使用</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2015/01/23/shen-kao-bei-yu-qian-kao-bei-fen-xi/">深拷贝与浅拷贝分析</a>
+        <a href="/blog/2015/04/16/iosying-yong-jia-gou/">iOS应用架构</a>
       </li>
     
   </ul>

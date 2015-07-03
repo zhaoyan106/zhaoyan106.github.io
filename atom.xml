@@ -4,7 +4,7 @@
   <title><![CDATA[My iOS Journey]]></title>
   <link href="http://zhaoyan106.github.io/atom.xml" rel="self"/>
   <link href="http://zhaoyan106.github.io/"/>
-  <updated>2015-02-11T15:12:13+08:00</updated>
+  <updated>2015-07-03T13:53:46+08:00</updated>
   <id>http://zhaoyan106.github.io/</id>
   <author>
     <name><![CDATA[zhao yan]]></name>
@@ -14,7 +14,588 @@
 
   
   <entry>
-    <title type="html"><![CDATA[压缩、截取上传图片,设置圆形UIImageView,App版本更新]]></title>
+    <title type="html"><![CDATA[项目插件化-CocoaPods的使用]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/07/03/xiang-mu-cha-jian-hua-cocoapodsde-shi-yong/"/>
+    <updated>2015-07-03T10:52:05+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/07/03/xiang-mu-cha-jian-hua-cocoapodsde-shi-yong</id>
+    <content type="html"><![CDATA[<h4>一、CocoaPods的安装</h4>
+
+<h6>1、安装ruby环境,添加淘宝ruby镜像</h6>
+
+<pre><code>$ gem sources --remove https://rubygems.org/
+//等有反应之后再敲入以下命令
+$ gem sources -a http://ruby.taobao.org/
+</code></pre>
+
+<h6>2、查看是否设置成功:</h6>
+
+<pre><code>$ gem sources -l
+</code></pre>
+
+<h6>3、然后安装cocoapods:</h6>
+
+<pre><code>$ sudo gem install cocoapods
+</code></pre>
+
+<h6>4、查看cocoapods是否支持某个类库</h6>
+
+<pre><code>$ pod search 类库名,支持模糊查询(如:AFNetworking)
+</code></pre>
+
+<h4>二、CocoaPods的使用</h4>
+
+<h6>1、在项目根目录下新建一个“Podfile”的文件</h6>
+
+<p><code>注:Podfile也可以放在任何位置,但是需要在Podfile顶部使用”xcodeproj”关键字指定工程的路径,如下:</code></p>
+
+<pre><code>xcodeproj"/User/Desktop/CocoaPodsDemo/CocoaPodsDemo.xcworkspace"
+platform:ios
+pod 'JSONKit',        '~&gt;1.4'
+pod 'Reachability',  '~&gt;3.0.0'
+pod 'AFNetworking',   '~&gt;2.2.4'
+</code></pre>
+
+<h6>2、在项目podfile所在目录下运行(会在你当前项目中导入podfile所配置的库,所以要在项目目录下运行)</h6>
+
+<p><code>执行pod install命令后,生成的文件将在Podfile所在的目录</code></p>
+
+<pre><code>$ pod install
+</code></pre>
+
+<p>注意上述命令运行完毕后终端输出的最后一段话,意思就是以后打开项目就用CocoaPodsDemo.xcworkspace 打开，而不是之前的.xcodeproj文件</p>
+
+<h4>三、使用过程中遇到的一些问题</h4>
+
+<h6>1、引入第三方库后找不到头文件</h6>
+
+<p>在项目的Targe- Build Settings - Search Paths - User Header Searcj Paths中添加 ${SRCROOT} 值为 recursive</p>
+
+<h6>2、如何删除cocopods</h6>
+
+<p>1、删除工程文件夹下的Podfile、Podfile.lock及Pods文件夹</p>
+
+<p>2、删除xcworkspace文件</p>
+
+<p>3、使用xcodeproj文件打开工程，删除Frameworks组下的Pods.xcconfig及libPods.a引用</p>
+
+<p>4、在工程设置中的Build Phases下删除Check Pods Manifest.lock及Copy Pods Resources</p>
+
+<h4>四、Podfile.lock文件的作用</h4>
+
+<p>在使用CocoaPods，执行完pod install之后，会生成一个Podfile.lock文件。这个文件看起来跟我们关系不大，实际上绝对不应该忽略它。该文件用于保存已经安装的Pods依赖库的版本</p>
+
+<p>Podfile.lock文件最大得用处在于多人开发。当团队中的某个人执行完pod install命令后，生成Podfile.lock文件就记录下了当时最新Pods依赖库的版本，这时团队中的其它人check下来这份包含Podfile.lock文件的工程以后，再去执行pod install命令时，获取下来的Pods依赖库的版本就和最开始用户获取到的版本一致。</p>
+
+<p><code>如果没有Podfile.lock文件，后续所有用户执行pod install命令都会获取最新版本的SBJson，这就有可能造成同一个团队使用的依赖库版本不一致，这对团队协作来说绝对是个灾难！</code></p>
+
+<p>在这种情况下，如果团队想使用当前最新版本的SBJson依赖库，有两种方案：</p>
+
+<p>1、更改Podfile，使其指向最新版本的SBJson依赖库；</p>
+
+<p>2、执行pod update命令；</p>
+
+<p>鉴于Podfile.lock文件对团队协作如此重要，我们需要将它添加到版本管理中。</p>
+
+<h4>五、制作自己的Cocopods库</h4>
+
+<h6>1、在github上新建一个工程</h6>
+
+<p>license类型</p>
+
+<p>正规的仓库都应该有一个license文件，Pods依赖库对这个文件的要求更严，是必须要有的。因此最好在这里让github创建一个，也可以自己后续再创建。我使用的license类型是MIT。</p>
+
+<h5>2、podspec创建</h5>
+
+<p>把项目clone到本地然后在根目录下新建MyPodDemo.podspec或者</p>
+
+<pre><code>$ pod spec create MyPodDemo
+</code></pre>
+
+<p>podsepc的编写</p>
+
+<pre><code>Pod::Spec.new do |s| 
+s.name = "MyPodDemo" 
+s.version = "0.0.1" 
+s.summary = "A short description of MyPodDemo." 
+s.description = &lt;&lt;-DESC A longer description of MyPodDemo in Markdown format. * Think: Why did you write this? What is the focus? What does it do? * CocoaPods will be using this to generate tags, and improve search results. * Try to keep it short, snappy and to the point. * Finally, don't worry about the indent, CocoaPods strips it! 
+DESC 
+s.homepage = "https://github.com/goingta/MyPodDemo" 
+s.license = "MIT" s.author = { "goingta" =&gt; "tangle1128@gmail.com" } 
+s.source = { :git =&gt; "https://github.com/goingta/MyPodDemo.git", :tag =&gt; "0.0.1" } s.source_files = "MyPodDemo/Src", "MyPodDemo/Src/**/*.{h,m}" 
+s.requires_arc = true # s.framework = "SomeFramework" # 
+s.frameworks = "SomeFramework", "AnotherFramework" 
+# s.library = "iconv" 
+# s.libraries = "iconv", "xml2" 
+# s.dependency "JSONKit", "~&gt; 1.4" 
+# s.dependency "AFNetworking", "~&gt; 2.2.4" end
+</code></pre>
+
+<p>属性解析</p>
+
+<pre><code>name: 导入pod后的目录名 
+version: 当前版本号 
+deployment_target: 配置的target 
+prefix_header_file: 预编译头文件路径，将该文件的内容插入到Pod的pch文件内 
+source: 来源的具体路径，是http链接还是本地路径 
+requires_arc: 是否需要arc 
+source_files: 指定该目录下包含哪些文件 
+其他可选参数还包括：
+dependency: 指定依赖，如果依赖的库不存在或者依赖库的版本不符合要求将会报错 
+libraries: 指定导入的库，比如sqlite3 
+frameworks: 指定导入的framework 
+weak_frameworks: 弱链接，比如说一个项目同时兼容iOS6和iOS7，但某一个framework只在iOS7上有，这时候如果用强链接，那么在iOS7上运行就会crash，使用weak_frameworks可以避免这种情况。
+</code></pre>
+
+<p>整个podspec语法是一个嵌套结构从Pod::Spec.new do |s|到最后一个end是最大的循环，表示整个podspec导入的文件。中间每一个subspec到end结束是一个子目录，Pods会为每个subspec创建一个逻辑目录，相当于Xcode的group概念。|**|中间是subspec的名字，可以随便命名，但后面使用的名称必须一致。</p>
+
+<p>通配符说明</p>
+
+<pre><code>a{bb,bc}def.{h,m}表示四个文件abbdef.h abbdef.m abcdef.h abcdef.m
+
+*.{h,m,mm}表示所有的.h .m .mm文件
+Class/**/*.{h,m}表示Class目录下的所有.h .m文件
+</code></pre>
+
+<p>写完podspec文件后使用pod spec lint验证spec是否合格,有error则需要修改</p>
+
+<p>配置非ARC文件
+一个私有的pods库中某几个文件是在非ARC时代写的,如果要进行修改工程量浩大,于是乎要对这几个文件单独处理,这几个文件不使用arc其他文件使用arc,网上查了一些资料,只需要对source_file进行修改并排除那几个不使用ARC的文件就可以了,大致修改如下：
+Pod::Spec.new do |s|
+s.name = &ldquo;MyPodDemo&rdquo; s.version = &ldquo;0.0.1&rdquo;
+s.summary = &ldquo;A short description of MyPodDemo.
+s.homepage = &#8221;<a href="https://github.com/goingta/MyPodDemo">https://github.com/goingta/MyPodDemo</a>&rdquo;
+s.license = &ldquo;MIT&rdquo;
+s.author = { &ldquo;goingta&rdquo; => &ldquo;<a href="&#109;&#97;&#x69;&#x6c;&#x74;&#111;&#x3a;&#x74;&#97;&#x6e;&#103;&#x6c;&#x65;&#x31;&#x31;&#x32;&#x38;&#x40;&#x67;&#109;&#x61;&#105;&#x6c;&#46;&#99;&#111;&#x6d;">&#116;&#x61;&#110;&#103;&#x6c;&#x65;&#x31;&#x31;&#50;&#x38;&#64;&#x67;&#x6d;&#x61;&#x69;&#x6c;&#x2e;&#99;&#111;&#109;</a>&rdquo; }
+s.source = { :git => &ldquo;<a href="https://github.com/goingta/MyPodDemo.git">https://github.com/goingta/MyPodDemo.git</a>&rdquo;, :tag => &ldquo;0.0.1&rdquo; } s.source_files = &ldquo;MyPodDemo&rdquo;
+non_arc_files = &lsquo;MyPodDemo/NoArcFile1.{h,m}&rsquo;,&lsquo;MyPodDemo/NoArcFile2.{h,m}&rsquo;
+s.requires_arc = true</p>
+
+<p>s.exclude_files = non_arc_files
+s.subspec &lsquo;no-arc&rsquo; do |sna|
+sna.requires_arc = false
+sna.source_files = non_arc_files
+end</p>
+
+<h5>3、上传代码至github</h5>
+
+<h5>4、私有库实现,编写podfile</h5>
+
+<p>如果由于某些原因我们编写的库不能公开,但是又想使用pods来进行管理,要怎么办呢?</p>
+
+<p>首先我们要将我们刚刚在github上建的仓库改为Private(不然还用Public搞毛啊)</p>
+
+<p>然后修改我们项目的podfile,与已加入Cocopods仓库的公有库相比我们只需要指明私有库低git地址,如下:</p>
+
+<pre><code>platform :ios, '6.0' 
+pod 'MyPodDemo', :git =&gt; 'https://github.com/goingta/MyPodDemo.git' //私有库 
+pod 'CocoaLumberjack'//公有库
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Effective Objective-C 2.0总结]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/05/13/effective-objective-c-2-dot-0zong-jie/"/>
+    <updated>2015-05-13T15:32:57+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/05/13/effective-objective-c-2-dot-0zong-jie</id>
+    <content type="html"><![CDATA[<h6>第三条：多用字面量语法，少用预制等价的方法。</h6>
+
+<p><code>需要注意 NSMutableArray *arrayM = [@[@"1",@"2",@"3"] mutableCopy];</code></p>
+
+<h6>第四条：多用类型常量，少用#define预处理指令</h6>
+
+<pre><code>#define ANIMATION_DURATION 0.3
+Static const NSTimeInterval KAnimationDuration = 0.3;
+</code></pre>
+
+<h6>第七条：在对象内部尽量直接访问实例变量</h6>
+
+<p><code>在对象内部读取时直接访问实例变量,设置时使用self.（懒加载除外）</code></p>
+
+<p>  1、如果不使用self.可能会造成copy属性不能实现。</p>
+
+<p>  2、KVO不触发</p>
+
+<p>  3、直接读取效率较高</p>
+
+<p>  4、子类可能重写get方法，使用_更安全</p>
+
+<h6>第12条：理解消息转发机制 (✨✨✨✨✨✨)</h6>
+
+<p><code>unrecongiezed selector send to instance 0x87,当找不到对应方法时会实现消息转发机制</code></p>
+
+<p>对象在收到无法解读的消息后，首先会调用</p>
+
+<pre><code>+ （BOOL)resolveInstanceMehtod:(SEL)selector
+</code></pre>
+
+<h6>第13条：用“方法调配技术” 调试 “黑盒方法”(✨✨✨✨✨✨)</h6>
+
+<pre><code>// 交换方法实现
+void method_exchangeImplementations(&lt;#Method m1#&gt;, &lt;#Method m2#&gt;)
+// 获取对象方法
+Method class_getInstanceMethod(&lt;#__unsafe_unretained Class cls#&gt;, &lt;#SEL name#&gt;)
+</code></pre>
+
+<h6>第14条：理解“类对象”的用意</h6>
+
+<pre><code>typedef struct objc_object{
+    Class isa;
+} *id;
+</code></pre>
+
+<h6>第15条：多用派发队列，少用同步锁</h6>
+
+<p>同步锁效率较低</p>
+
+<h6>第16条：多用GCD,少用performSelector系列方法</h6>
+
+<p>在使用performSelector方法时容易引起ARC不自动使用，造成内存泄露。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Best Practices]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/04/30/best-practices/"/>
+    <updated>2015-04-30T16:11:22+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/04/30/best-practices</id>
+    <content type="html"><![CDATA[<p>Preferred:</p>
+
+<pre><code>if (!error) {
+    return success;
+}
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>if (!error)
+    return success;
+
+or
+
+if (!error) return success;
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>if ([myValue isEqual:@42]) { ...
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>if ([@42 isEqual:myValue]) { ...
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>if (nil == myValue) { ...
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>if (myValue == nil) { ...
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>if (someObject) { ...
+if (![someObject boolValue]) { ...
+if (!someObject) { ...
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>if (someObject == YES) { ... // Wrong
+if (myRawValue == YES) { ... // Never do this.
+if ([someObject boolValue] == NO) { ...
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>- (void)someMethod {
+  if (![someOther boolValue]) {
+      return;
+  }
+
+  //Do something important
+}
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>- (void)someMethod {
+  if ([someOther boolValue]) {
+    //Do something important
+  }
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>BOOL nameContainsSwift  = [sessionName containsString:@"Swift"];
+BOOL isCurrentYear      = [sessionDateCompontents year] == 2014;
+BOOL isSwiftSession     = nameContainsSwift &amp;&amp; isCurrentYear;
+
+if (isSwiftSession) {
+    // Do something very cool
+}
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>// 不建议写在一起，可读性差，容易出错
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>result = object ? : [self createObject];
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>result = object ? object : [self createObject];
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>NSError *error = nil;
+if (![self trySomethingWithError:&amp;error]) {
+    // Handle Error
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>switch (menuType) {
+    case ZOCEnumNone:
+        // ...
+        break;
+    case ZOCEnumValue1:
+        // ...
+        break;
+    case ZOCEnumValue2:
+        // ...
+        break;
+}
+// 如果有枚举没处理，会提示
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>switch (condition) {
+    case 1:
+        // ...
+        break;
+    case 2: {
+        // ...
+        // Multi-line example using braces
+        break;
+       }
+    case 3:
+        // ...
+        break;
+    default: 
+        // ...
+        break;
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>typedef NS_ENUM(NSUInteger, ZOCMachineState) {
+    ZOCMachineStateNone,
+    ZOCMachineStateIdle,
+    ZOCMachineStateRunning,
+    ZOCMachineStatePaused
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>static NSString * const ZOCCacheControllerDidClearCacheNotification = @"ZOCCacheControllerDidClearCacheNotification";
+static const CGFloat ZOCImageThumbnailHeight = 50.0f;
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>#define CompanyName @"Apple Inc."
+#define magicNumber 42
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>NSArray *names = @[@"Brian", @"Matt", @"Chris", @"Alex", @"Steve", @"Paul"];
+NSDictionary *productManagers = @{@"iPhone" : @"Kate", @"iPad" : @"Kamal", @"Mobile Web" : @"Bill"};
+NSNumber *shouldUseLiterals = @YES;
+NSNumber *buildingZIPCode = @10018;
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>NSArray *names = [NSArray arrayWithObjects:@"Brian", @"Matt", @"Chris", @"Alex", @"Steve", @"Paul", nil];
+NSDictionary *productManagers = [NSDictionary dictionaryWithObjectsAndKeys: @"Kate", @"iPhone", @"Kamal", @"iPad", @"Bill", @"Mobile Web", nil];
+NSNumber *shouldUseLiterals = [NSNumber numberWithBool:YES];
+NSNumber *buildingZIPCode = [NSNumber numberWithInteger:10018];
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>+ (instancetype)sharedInstance
+{
+   static id sharedInstance = nil;
+   static dispatch_once_t onceToken = 0;
+   dispatch_once(&amp;onceToken, ^{
+      sharedInstance = [[self alloc] init];
+   });
+   return sharedInstance;
+}
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>+ (instancetype)sharedInstance
+{
+    static id sharedInstance;
+    @synchronized(self) {
+        if (sharedInstance == nil) {
+            sharedInstance = [[MyClass alloc] init];
+        }
+    }
+    return sharedInstance;
+}
+</code></pre>
+
+<p>Preferred:</p>
+
+<pre><code>view.backgroundColor = [UIColor orangeColor];
+[UIApplication sharedApplication].delegate;
+</code></pre>
+
+<p>Not preferred:</p>
+
+<pre><code>[view setBackgroundColor:[UIColor orangeColor]];
+UIApplication.sharedApplication.delegate;
+</code></pre>
+
+<p>Lazy Loading</p>
+
+<pre><code>- (NSDateFormatter *)dateFormatter {
+  if (!_dateFormatter) {
+    _dateFormatter = [[NSDateFormatter alloc] init];
+        NSLocale *enUSPOSIXLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
+        [dateFormatter setLocale:enUSPOSIXLocale];
+        [dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSSS"];
+  }
+  return _dateFormatter;
+}
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[内存存储相关知识及static和extern关键字的使用]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/04/21/nei-cun-cun-chu-xiang-guan-zhi-shi/"/>
+    <updated>2015-04-21T17:10:27+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/04/21/nei-cun-cun-chu-xiang-guan-zhi-shi</id>
+    <content type="html"><![CDATA[<h4>一、程序的内存分配</h4>
+
+<h6>1、栈区（stack）— 由编译器自动分配释放 ，存放函数的参数值，局部变量的值等。其操作方式类似于数据结构中的栈。</h6>
+
+<h6>2、堆区（heap） — 一般由程序员分配释放， 若程序员不释放，程序结束时可能由OS回收 。注意它与数据结构中的堆是两回事，分配方式倒是类似于链表。</h6>
+
+<h6>3、全局区（静态区）（static）— 所有的全局变量都是静态变量、被关键字static修饰的局部变量也是静态变量<code>不改变其作用域</code></h6>
+
+<pre><code>#include &lt;stdio.h&gt;
+int a;
+void test() {
+    static int b = 0;
+    b++;
+
+    int c = 0;
+    c++;
+
+    printf("b=%d, c=%d \n", b, c);
+}
+int main() {
+    int i;
+    // 连续调用3次test函数
+    for (i = 0; i&lt;3; i++) {
+        test();
+    }
+
+    return 0;
+}
+* 第3行的变量a、第6行的变量b都是静态变量，第9行的变量c、第16行的变量i是自动变量。
+* 因为第6行的变量b是静态变量，所以它只会被创建一次，而且生命周期会延续到程序结束。因为它只会创建一次，所以第6行代码只会执行一次，下次再调用test函数时，变量b的值不会被重新初始化为0。
+</code></pre>
+
+<h6>4、文字常量区—常量字符串就是放在这里的。 程序结束后由系统释放</h6>
+
+<h6>5、程序代码区—存放函数体的二进制代码。</h6>
+
+<h4>二、static和extern关键字的使用</h4>
+
+<h4>static和extern对函数的作用</h4>
+
+<h6>1、外部、内部函数</h6>
+
+<p>（1）外部函数：如果在当前文件中定义的函数允许其他文件访问、调用，就称为外部函数。C语言规定，不允许有同名的外部函数。</p>
+
+<p>（2）内部函数：如果在当前文件中定义的函数不允许其他文件访问、调用，只能在内部使用，就称为内部函数。C语言规定不同的源文件可以有同名的内部函数，并且互不干扰。</p>
+
+<h6>2、static和extern对函数的作用</h6>
+
+<p>（1）extern用来修饰外部函数，<code>extern跟auto关键字一样废，完全可以省略，因为默认情况下，所有的函数就是外部函数。</code>
+extern关键字对函数的作用：用来定义和声明一个外部函数。其实extern又跟auto一样废，完全可以省略。</p>
+
+<pre><code>void one();  // 等同于extern void one();
+int main(){
+one();
+return 0;
+}
+</code></pre>
+
+<p>（2）在定义函数时，在函数的最左边加上static可以把该函数声明为内部函数(又叫静态函数)，这样该函数就只能在其定义所在的文件中使用。如果在不同的文件中有同名的内部函数，则互不干扰。<code>static也可以用来声明一个内部函数</code></p>
+
+<h4>static和extern对变量的作用</h4>
+
+<p>1.extern可以用来声明一个全局变量，但是不能用来定义变量</p>
+
+<p>2.默认情况下，一个全局变量是可以供多个源文件共享的，也就说，多个源文件中同名的全局变量都代表着同一个变量</p>
+
+<p>3.如果在定义全局变量的时候加上static关键字，此时static的作用在于限制该全局变量的作用域，只能在定义该全局变量的文件中才能使用，跟其他源文件中的同名变量互不干扰</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[iOS应用架构]]></title>
+    <link href="http://zhaoyan106.github.io/blog/2015/04/16/iosying-yong-jia-gou/"/>
+    <updated>2015-04-16T10:19:48+08:00</updated>
+    <id>http://zhaoyan106.github.io/blog/2015/04/16/iosying-yong-jia-gou</id>
+    <content type="html"><![CDATA[<p>在cocoaChina上看到一篇将iOS应用架构的文章<a href="http://www.cocoachina.com/ios/20150414/11557.html">http://www.cocoachina.com/ios/20150414/11557.html</a>，觉得不错，总结下.</p>
+
+<h4>一、在设计app时需要注意的几点</h4>
+
+<h6>1、网络层设计方案？设计网络层时要考虑哪些问题？对网络层做优化的时候，可以从哪些地方入手？</h6>
+
+<h6>2、页面的展示、调用和组织都有哪些设计方案？我们做这些方案的时候都要考虑哪些问题？</h6>
+
+<h6>3、本地持久化层的设计方案都有哪些？优劣势都是什么？不同方案间要注意的问题分别都是什么？</h6>
+
+<h6>4、要实现动态部署，都有哪些方案？不同方案之间的优劣点，他们的侧重点？</h6>
+
+<h6>5、如何让业务开发工程师方便安全地调用网络API？然后尽可能保证用户在各种网络环境下都能有良好的体验？</h6>
+
+<h6>6、页面如何组织，才能尽可能降低业务方代码的耦合度？尽可能降低业务方开发界面的复杂度，提高他们的效率？</h6>
+
+<h6>7、当数据有在本地存取的需求的时候，如何能够保证数据在本地的合理安排？如何尽可能地减小性能消耗？</h6>
+
+<h6>8、iOS应用有审核周期，如何能够通过不发版本的方式展示新的内容给用户？如何修复紧急bug？</h6>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[压缩、截取上传图片,设置圆形UIImageView,App版本更新，设置tableView随textFiled焦点滑动]]></title>
     <link href="http://zhaoyan106.github.io/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/"/>
     <updated>2015-02-11T14:47:42+08:00</updated>
     <id>http://zhaoyan106.github.io/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian</id>
@@ -173,6 +754,34 @@ self.icon.backgroundColor = [UIColor whiteColor];
     @"itms-apps://itunes.apple.com/app/id%@",APPID];
 
     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:str]];
+</code></pre>
+
+<h4>四、设置tableView随textFiled焦点滑动</h4>
+
+<h6>第一种方法：</h6>
+
+<p>CGPoint origin = textField.frame.origin;</p>
+
+<pre><code>CGPoint point = [textField.superview convertPoint:origin toView:self.tableView];
+
+float navBarHeight = self.navigationController.navigationBar.frame.size.height;
+
+CGPoint offset = self.tableView.contentOffset;
+
+offset.y = (point.y - navBarHeight);
+
+[self.tableView setContentOffset:offset animated:YES];
+</code></pre>
+
+<h6>第二种方法</h6>
+
+<pre><code>CGPoint point = [textField.superview convertPoint:textField.frame.origin toView:self.tableView];
+
+NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:point];
+
+NSLog(@"%zd",indexPath.row);
+
+[self.tableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionTop animated:YES];
 </code></pre>
 ]]></content>
   </entry>
@@ -2388,537 +2997,6 @@ NSURLRequest 的 setHTTPBodyStream 接受的是一个 NSInputStream* 参数，�
 <h4>3.源码注释</h4>
 
 <p>AFURLRequestSerialization.m</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[AFNetworking源码解析(一)]]></title>
-    <link href="http://zhaoyan106.github.io/blog/2014/10/28/afnetworkingyuan-ma-jie-xi-%5B%3F%5D/"/>
-    <updated>2014-10-28T15:02:47+08:00</updated>
-    <id>http://zhaoyan106.github.io/blog/2014/10/28/afnetworkingyuan-ma-jie-xi-[?]</id>
-    <content type="html"><![CDATA[<p>原文地址：<a href="http://www.cocoachina.com/ios/20140829/9480.html">http://www.cocoachina.com/ios/20140829/9480.html</a></p>
-
-<h4>0、AFNetworking代码中有一些常用技巧：</h4>
-
-<p>A.为保证线程安全，所有单例都用dispatch_once生成，保证只执行一次。例如：</p>
-
-<pre><code>static dispatch_queue_t url_request_operation_completion_queue() { 
-    static dispatch_queue_t af_url_request_operation_completion_queue; 
-    static dispatch_once_t onceToken; 
-    dispatch_once(&amp;onceToken, ^{ 
-        af_url_request_operation_completion_queue = dispatch_queue_create("com.alamofire.networking.operation.queue",DISPATCH_QUEUE_CONCURRENT ); 
-    }); 
-    return af_url_request_operation_completion_queue; 
-    } 
-</code></pre>
-
-<p>B.常看到一个 block 要使用 self，会处理成在外部声明一个 weak 变量指向 self，在 block 里又声明一个 strong 变量指向 weakSelf：</p>
-
-<pre><code> __weak __typeof(self)weakSelf = self; 
-self.backgroundTaskIdentifier = [application beginBackgroundTaskWithExpirationHandler:^{ 
-    __strong __typeof(weakSelf)strongSelf = weakSelf; 
-}]; 
-</code></pre>
-
-<p>weakSelf是为了block不持有self，避免循环引用，而再声明一个strongSelf是因为一旦进入block执行，就不允许self在这个执行过程中释放。block执行完后这个strongSelf会自动释放，没有循环引用问题。</p>
-
-<h4>1、线程</h4>
-
-<p>先来看看 NSURLConnection 发送请求时的线程情况，NSURLConnection 是被设计成异步发送的，调用了start方法后，NSURLConnection 会新建一些线程用底层的 CFSocket 去发送和接收请求，在发送和接收的一些事件发生后通知原来线程的Runloop去回调事件。</p>
-
-<p>NSURLConnection 的同步方法 sendSynchronousRequest 方法也是基于异步的，同样要在其他线程去处理请求的发送和接收，只是同步方法会手动block住线程，发送状态的通知也不是通过 RunLoop 进行。</p>
-
-<p>使用NSURLConnection有几种选择：</p>
-
-<p>A.在主线程调异步接口
-若直接在主线程调用异步接口，会有个Runloop相关的问题：</p>
-
-<p>当在主线程调用 [[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:YES] 时，请求发出，侦听任务会加入到主线程的 Runloop 下，RunloopMode 会默认为 NSDefaultRunLoopMode。这表明只有当前线程的Runloop 处于 NSDefaultRunLoopMode 时，这个任务才会被执行。但当用户滚动 tableview 或 scrollview 时，主线程的 Runloop 是处于 NSEventTrackingRunLoopMode 模式下的，不会执行 NSDefaultRunLoopMode 的任务，所以会出现一个问题，请求发出后，如果用户一直在操作UI上下滑动屏幕，那在滑动结束前是不会执行回调函数的，只有在滑动结束，RunloopMode 切回 NSDefaultRunLoopMode，才会执行回调函数。苹果一直把动画效果性能放在第一位，估计这也是苹果提升UI动画性能的手段之一。</p>
-
-<p>所以若要在主线程使用 NSURLConnection 异步接口，需要手动把 RunloopMode 设为 NSRunLoopCommonModes。这个 mode 意思是无论当前 Runloop 处于什么状态，都执行这个任务。</p>
-
-<pre><code>NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:NO]; 
-[connection scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes]; 
-[connection start];
-</code></pre>
-
-<p>B.在子线程调同步接口
-若在子线程调用同步接口，一条线程只能处理一个请求，因为请求一发出去线程就阻塞住等待回调，需要给每个请求新建一个线程，这是很浪费的，这种方式唯一的好处应该是易于控制请求并发的数量。</p>
-
-<p>C.在子线程调异步接口
-子线程调用异步接口，子线程需要有 Runloop 去接收异步回调事件，这里也可以每个请求都新建一条带有 Runloop 的线程去侦听回调，但这一点好处都没有，既然是异步回调，除了处理回调内容，其他时间线程都是空闲可利用的，所有请求共用一个响应的线程就够了。</p>
-
-<p>AFNetworking 用的就是第三种方式，创建了一条常驻线程专门处理所有请求的回调事件，这个模型跟 nodejs 有点类似。网络请求回调处理完，组装好数据后再给上层调用者回调，这时候回调是抛回主线程的，因为主线程是最安全的，使用者可能会在回调中更新UI，在子线程更新UI会导致各种问题，一般使用者也可以不需要关心线程问题。</p>
-
-<p>以下是相关线程大致的关系，实际上多个 NSURLConnection 会共用一个 NSURLConnectionLoader 线程，这里就不细化了，除了处理 socket 的 CFSocket 线程，还有一些 Javascript:Core 的线程，目前不清楚作用，归为 NSURLConnection里的其他线程。因为 NSURLConnection 是系统控件，每个iOS版本可能都有不一样，可以先把 NSURLConnection 当成一个黑盒，只管它的 start 和 callback 就行了。如果使用 AFHttpRequestOperationManager 的接口发送请求，这些请求会统一在一个 NSOperationQueue 里去发，所以多了上面 NSOperationQueue 的一个线程。</p>
-
-<p><img src="http://www.cocoachina.com/cms/uploads/allimg/140829/4196_140829094446_1.png" alt="Resize icon" /></p>
-
-<p>相关代码：-networkRequestThread:, -start:, -operationDidStart:</p>
-
-<h4>2.状态机</h4>
-
-<p>继承 NSOperation 有个很麻烦的东西要处理，就是改变状态时需要发 KVO 通知，否则这个类加入 NSOperationQueue 不可用了。 NSOperationQueue 是用 KVO 方式侦听 NSOperation 状态的改变，以判断这个任务当前是否已完成，完成的任务需要在队列中除去并释放。</p>
-
-<p>AFURLConnectionOperation 对此做了个状态机，统一搞定状态切换以及发 KVO 通知的问题，内部要改变状态时，就只需要类似 self.state = AFOperationReadyState 的调用而不需要做其他了，状态改变的 KVO 通知在 setState 里发出。
-总的来说状态管理相关代码就三部分，一是限制一个状态可以切换到其他哪些状态，避免状态切换混乱，二是状态 Enum值 与 NSOperation 四个状态方法的对应，三是在 setState 时统一发 KVO 通知。详见代码注释。</p>
-
-<p>相关代码：AFKeyPathFromOperationState, AFStateTransitionIsValid, -setState:, -isPaused:, -isReady:, -isExecuting:, -isFinished:.</p>
-
-<h4>3.NSURLConnectionDelegate</h4>
-
-<p>处理 NSURLConnection Delegate 的内容不多，代码也是按请求回调的顺序排列下去，十分易读，主要流程就是接收到响应的时候打开 outputStream，接着有数据过来就往 outputStream 写，在上传/接收数据过程中会回调上层传进来的相应的callback，在请求完成回调到 connectionDidFinishLoading 时，关闭 outputStream，用 outputStream 组装 responseData 作为接收到的数据，把 NSOperation 状态设为 finished，表示任务完成，NSOperation 会自动调用 completeBlock，再回调到上层。</p>
-
-<h4>4.setCompleteBlock</h4>
-
-<p>NSOperation 在 iOS4.0 以后提供了个接口 setCompletionBlock，可以传入一个 block 作为任务执行完成时（state状态机变为finished时）的回调，AFNetworking直接用了这个接口，并通过重写加了几个功能：</p>
-
-<p>A.消除循环引用
-在 NSOperation 的实现里，completionBlock 是 NSOperation 对象的一个成员，NSOperation 对象持有着 completionBlock，若传进来的 block 用到了 NSOperation 对象，或者 block 用到的对象持有了这个 NSOperation 对象，就会造成循环引用。这里执行完 block 后调用 [strongSelf setCompletionBlock:nil] 把 completionBlock 设成 nil，手动释放 self(NSOperation对象) 持有的 completionBlock 对象，打破循环引用。</p>
-
-<p>可以理解成对外保证传进来的block一定会被释放，解决外部使用使很容易出现的因对象关系复杂导致循环引用的问题，让使用者不知道循环引用这个概念都能正确使用。</p>
-
-<p>B.dispatch_group
-这里允许用户让所有 operation 的 completionBlock 在一个 group 里执行，但我没看出这样做的作用，若想组装一组请求（见下面的batchOfRequestOperations）也不需要再让completionBlock在group里执行，求解。</p>
-
-<p>C.”The Deallocation Problem”
-作者在注释里说这里重写的setCompletionBlock方法解决了”The Deallocation Problem”，实际上并没有。<a href="https://developer.apple.com/library/ios/technotes/tn2109/_index.html">”The Deallocation Problem”</a>简单来说就是不要让UIKit的东西在子线程释放。</p>
-
-<p>这里如果传进来的block持有了外部的UIViewController或其他UIKit对象（下面暂时称为A对象），并且在请求完成之前其他所有对这个A对象的引用都已经释放了，那么这个completionBlock就是最后一个持有这个A对象的，这个block释放时A对象也会释放。这个block在什么线程释放，A对象就会在什么线程释放。我们看到block释放的地方是url_request_operation_completion_queue()，这是AFNetworking特意生成的子线程，所以按理说A对象是会在子线程释放的，会导致UIKit对象在子线程释放，会有问题。</p>
-
-<p>但AFNetworking实际用起来却没问题，想了很久不得其解，后来做了实验，发现iOS5以后苹果对UIKit对象的释放做了特殊处理，只要发现在子线程释放这些对象，就自动转到主线程去释放，断点出来是由一个叫_objc_deallocOnMainThreadHelper 的方法做的。如果不是UIKit对象就不会跳到主线程释放。AFNetworking2.0只支持iOS6+，所以没问题。</p>
-
-<p><img src="http://www.cocoachina.com/cms/uploads/allimg/140829/4196_140829094950_1.jpg" alt="Resize icon" /></p>
-
-<h4>5.batchOfRequestOperations</h4>
-
-<p>这里额外提供了一个便捷接口，可以传入一组请求，在所有请求完成后回调 complionBlock，在每一个请求完成时回调 progressBlock 通知外面有多少个请求已完成。详情参见代码注释，这里需要说明下 dispatch_group_enter 和dispatch_group_leave 的使用，这两个方法用于把一个异步任务加入 group 里。</p>
-
-<p>一般我们要把一个任务加入一个group里是这样：</p>
-
-<pre><code>dispatch_group_async(group, queue, ^{ 
-    block(); 
-}); 
-</code></pre>
-
-<p>这个写法等价于</p>
-
-<pre><code>dispatch_async(queue, ^{ 
-    dispatch_group_enter(group); 
-    block() 
-    dispatch_group_leave(group); 
-});
-</code></pre>
-
-<p>如果要把一个异步任务加入group，这样就行不通了：</p>
-
-<pre><code>dispatch_group_async(group, queue, ^{ 
-    [self performBlock:^(){ 
-        block(); 
-    }]; 
-    //未执行到block() group任务就已经完成了 
-}); 
-</code></pre>
-
-<p>这时需要这样写：</p>
-
-<pre><code>dispatch_group_enter(group); 
-[self performBlock:^(){ 
-    block(); 
-    dispatch_group_leave(group); 
-}]; 
-</code></pre>
-
-<p>异步任务回调后才算这个group任务完成。对batchOfRequest的实现来说就是请求完成并回调后，才算这个任务完成。</p>
-
-<p>其实这跟retain/release差不多，都是计数，dispatch_group_enter时任务数+1，dispatch_group_leave时任务数-1，任务数为0时执行dispatch_group_notify的内容。</p>
-
-<p>相关代码：-batchOfRequestOperations:progressBlock:completionBlock:</p>
-
-<h4>6.其他</h4>
-
-<p>A.锁
-AFURLConnectionOperation 有一把递归锁，在所有会访问/修改成员变量的对外接口都加了锁，因为这些对外的接口用户是可以在任意线程调用的，对于访问和修改成员变量的接口，必须用锁保证线程安全。</p>
-
-<p>B.序列化
-AFNetworking 的多数类都支持序列化，但实现的是 NSSecureCoding 的接口，而不是 NSCoding，区别在于解数据时要指定 Class，用 -decodeObjectOfClass:forKey: 方法代替了 -decodeObjectForKey: 。这样做更安全，因为序列化后的数据有可能被篡改，若不指定 Class，-decode 出来的对象可能不是原来的对象，有潜在风险。另外，NSSecureCoding 是 iOS 6 以上才有的。详见这里。</p>
-
-<p>这里在序列化时保存了当前任务状态，接收的数据等，但回调block是保存不了的，需要在取出来发送时重新设置。可以像下面这样持久化保存和取出任务：</p>
-
-<pre><code>AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request]; 
-NSData *data = [NSKeyedArchiver archivedDataWithRootObject:operation]; 
-
-AFHTTPRequestOperation *operationFromDB = [NSKeyedUnarchiver unarchiveObjectWithData:data]; 
-[operationFromDB start];    
-</code></pre>
-
-<p>C.backgroundTask
-这里提供了setShouldExecuteAsBackgroundTaskWithExpirationHandler 接口，决定APP进入后台后是否继续发送接收请求，并在后台执行时间超时后取消所有请求。在 dealloc 里需要调用 [application endBackgroundTask:] ，告诉系统这个后台任务已经完成，不然系统会一直让你的APP运行在后台，直到超时。</p>
-
-<p>相关代码：-setShouldExecuteAsBackgroundTaskWithExpirationHandler:, -dealloc:</p>
-
-<h4>7.AFHTTPRequestOperation</h4>
-
-<p>AFHTTPRequestOperation 继承了 AFURLConnectionOperation，把它放一起说是因为它没做多少事情，主要多了responseSerializer，暂停下载断点续传，以及提供接口请求成功失败的回调接口 -setCompletionBlockWithSuccess:failure:。详见源码注释。</p>
-
-<h4>8.源码注释</h4>
-
-<p>AFURLConnectionOperation.m</p>
-
-<p>AFHTTPRequestOperation.m</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[tableViewCell拖动]]></title>
-    <link href="http://zhaoyan106.github.io/blog/2014/10/14/at-tableviewcelltuo-dong/"/>
-    <updated>2014-10-14T17:54:15+08:00</updated>
-    <id>http://zhaoyan106.github.io/blog/2014/10/14/at-tableviewcelltuo-dong</id>
-    <content type="html"><![CDATA[<ol>
-<li><p>为tableView添加长按手势</p>
-
-<pre><code> UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPressGestureRecognized:)];
- [self.tableView addGestureRecognizer:longPress];
-</code></pre></li>
-<li><p>监听方法,根据手势状态进行Cell的复制，移动</p>
-
-<pre><code> - (IBAction)longPressGestureRecognized:(id)sender {
-     UILongPressGestureRecognizer *longPress = (UILongPressGestureRecognizer *)sender;
-     UIGestureRecognizerState state = longPress.state;
-     CGPoint location = [longPress locationInView:self.tableView];
-     NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:location];
-     static UIView       *snapshot = nil;        ///&lt; A snapshot of the row user is moving.
-     static NSIndexPath  *sourceIndexPath = nil; ///&lt; Initial index path, where gesture begins.
-     switch (state) {
-         case UIGestureRecognizerStateBegan: {
-             if (indexPath) {
-             sourceIndexPath = indexPath;
-             UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:indexPath];
-             // Take a snapshot of the selected row using helper method.
-              snapshot = [self customSnapshoFromView:cell]; 
-               // Add the snapshot as subview, centered at cell's center...
-              __block CGPoint center = cell.center;
-              snapshot.center = center;
-              snapshot.alpha = 0.0;
-              [self.tableView addSubview:snapshot];
-              [UIView animateWithDuration:0.25 animations:^{
-                  // Offset for gesture location.
-                     center.y = location.y;
-                     snapshot.center = center;
-                     snapshot.transform = CGAffineTransformMakeScale(1.05, 1.05);
-                     snapshot.alpha = 0.98;
-                     cell.alpha = 0.0;  
-             } completion:^(BOOL finished) {
-                     cell.hidden = YES；
-             }];
-         }
-                  break;
-     }
-         case UIGestureRecognizerStateChanged: {
-             CGPoint center = snapshot.center;
-             center.y = location.y;
-             snapshot.center = center;
-             // Is destination valid and is it different from source?
-             if (indexPath &amp;&amp; ![indexPath isEqual:sourceIndexPath]) {
-             // ... update data source.
-             [self.objects exchangeObjectAtIndex:indexPath.row withObjectAtIndex:sourceIndexPath.row];        
-             // ... move the rows.
-             [self.tableView moveRowAtIndexPath:sourceIndexPath toIndexPath:indexPath];
-             // ... and update source so it is in sync with UI changes.
-             sourceIndexPath = indexPath;
-     }
-                 break;
-     }
-         default: {
-         // Clean up.
-                 UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:sourceIndexPath];
-                 cell.hidden = NO;
-                 cell.alpha = 0.0;
-                 [UIView animateWithDuration:0.25 animations:^{
-                         snapshot.center = cell.center;
-                         snapshot.transform = CGAffineTransformIdentity;
-                         snapshot.alpha = 0.0;
-                         cell.alpha = 1.0;
-                 } completion:^(BOOL finished) {
-                     sourceIndexPath = nil;
-                     [snapshot removeFromSuperview];
-                     snapshot = nil;
-                 }];
-                 break;
-         }
-     }
- }
-</code></pre></li>
-<li><p>生产镜像Cell</p>
-
-<pre><code> - (UIView *)customSnapshoFromView:(UIView *)inputView {
-     UIView *snapshot = [inputView snapshotViewAfterScreenUpdates:YES];
-     snapshot.layer.masksToBounds = NO;
-     snapshot.layer.cornerRadius = 0.0;
-     snapshot.layer.shadowOffset = CGSizeMake(-5.0, 0.0);
-     snapshot.layer.shadowRadius = 5.0;
-     snapshot.layer.shadowOpacity = 0.4;
-     return snapshot;
- }
-</code></pre></li>
-</ol>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[定位及地理编码]]></title>
-    <link href="http://zhaoyan106.github.io/blog/2014/10/13/ding-wei-ji-di-li-bian-ma/"/>
-    <updated>2014-10-13T10:04:55+08:00</updated>
-    <id>http://zhaoyan106.github.io/blog/2014/10/13/ding-wei-ji-di-li-bian-ma</id>
-    <content type="html"><![CDATA[<h4>定位</h4>
-
-<p>在iOS8中,取消了之前的定位调用方式,需要对设备版本进行判断</p>
-
-<pre><code>// 定位管理者
-_locManager = [[CLLocationManager alloc] init];
-[_locManager setDelegate:self];
-[_locManager setDesiredAccuracy:kCLLocationAccuracyBest];
-#if __IPHONE_OS_VERSION_MAX_ALLOWED &gt; __IPHONE_7_1 
-if ([_locManager respondsToSelector:@selector(requestWhenInUseAuthorization)]) {
-    [_locManager requestWhenInUseAuthorization];
-    [_locManager requestAlwaysAuthorization];
-}
-#endif
-CLAuthorizationStatus status = [CLLocationManager authorizationStatus];
-if (kCLAuthorizationStatusDenied == status || kCLAuthorizationStatusRestricted == status) {
-    [LSHelper alertWithTitle:@"定位失败" message:@"您的本次拜访将无法记录位置信息，请在设置中打开您的位置服务，并重新进入该页面！"];
-}
-else {
-    [_locManager startUpdatingLocation];
-    [self showProgressViewWithTitle:@"定位中..."];
-}
-</code></pre>
-
-<h4>地理编码</h4>
-
-<p>以下是代理方法:</p>
-
-<pre><code>- (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation {
-    [_locManager stopUpdatingLocation];
-    [self hideProgressView];
-    CLLocationCoordinate2D loc = [newLocation coordinate];
-    _locLatitude = [[NSString stringWithFormat:@"%f",loc.latitude] floatValue] + 0.00130;
-    _locLongitude = [[NSString stringWithFormat:@"%f",loc.longitude] floatValue] + 0.00625;
-
-    CLLocation *location = [[CLLocation alloc] initWithLatitude:_locLatitude longitude:_locLongitude];
-    [self.geoCoder reverseGeocodeLocation:location completionHandler:^(NSArray *placemarks, NSError *error) {
-        if (error || placemarks.count == 0) {
-            [self.view makeToast:@"定位失败，请稍后重试！"];
-            [self.locBtn setBackgroundImage:[UIImage imageNamed:@"MapPinGray"] forState:UIControlStateNormal];
-            [self.locBtn addTarget:self action:@selector(locationIconBtnClick) forControlEvents:UIControlEventTouchUpInside];
-            self.locLab.textColor = [UIColor redColor];
-            self.locLab.text = @"未定位成功";
-        } else {
-            [self.view makeToast:@"定位成功！"];
-            self.locBtn.enabled = NO;
-            [self.locBtn setBackgroundImage:[UIImage imageNamed:@"MapPin@2x"] forState:UIControlStateNormal];
-            self.locLab.textColor = [UIColor blackColor];
-            CLPlacemark *firstPlacemark = [placemarks firstObject];
-            self.locLab.text = firstPlacemark.name;
-        }
-    }];
-}
-
-- (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error {
-    [_locManager stopUpdatingLocation];
-    [self hideProgressView];
-    [LSHelper alertWithTitle:@"定位失败，请稍后重试！" message:nil];
-
-    [self.locBtn setBackgroundImage:[UIImage imageNamed:@"MapPinGray"] forState:UIControlStateNormal];
-    [self.locBtn addTarget:self action:@selector(locationIconBtnClick) forControlEvents:UIControlEventTouchUpInside];
-    self.locLab.textColor = [UIColor redColor];
-    self.locLab.text = @"未定位成功";
-}
-</code></pre>
-
-<p>高德地图的火星坐标需要进行处理,在此代理方法中对坐标进行地理编码操作,注意: 定位可以在没有网络的情况下进行,但是地理编码需要依靠网络.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Git分支模型]]></title>
-    <link href="http://zhaoyan106.github.io/blog/2014/10/13/gitfen-zhi-mo-xing/"/>
-    <updated>2014-10-13T09:39:03+08:00</updated>
-    <id>http://zhaoyan106.github.io/blog/2014/10/13/gitfen-zhi-mo-xing</id>
-    <content type="html"><![CDATA[<h3>主分支(main branches)</h3>
-
-<p>&#160; &#160;&#160; &#160;本质上，该开发模型是从现有的模型中获得灵感而产生的。中心仓库中维护着两个永生不灭的主分支：</p>
-
-<p>*master</p>
-
-<p>*develop</p>
-
-<p>&#160; &#160;&#160; &#160; 每一个Git用户应该都熟悉origin中的master分支。与master平行，还存在另一个被称为develop的分支。
-&#160; &#160;&#160; &#160;我们将origin/master考虑成这样的一个主分支，其源码的HEAD始终代表了产品就绪的状态。
-&#160; &#160;&#160; &#160;我们将origin/develop考虑成这样的一个主分支，其源码的HEAD总是代表已经并入了最新的开发变更的状态，这些变更将用于下次的发布。有人喜欢将其称之为“集成分支(integration branch)”。这也是自动的nightly build的源码来源。
-&#160; &#160;&#160; &#160;当develop分支中的源码达到一个稳定点且准备发布时，所有的变更应当被合并回master分支，然后将打上版本号标签。至于具体是怎么实现的，接下来将进一步讨论。</p>
-
-<p>&#160; &#160;&#160; &#160;因此，按(我们的)定义，每当变更被合并回master，都将导致一个新产品发布。我们倾向于采用非常严格的策略，因此理论上，我们可以使用一个Git的脚本钩子，当master上有一个提交(commit)时，可以自动构建并将软件转到产品服务器。</p>
-
-<h3>辅助分支(Supporting branches)</h3>
-
-<p>&#160; &#160;&#160; &#160;除了主分支master和develop，我们的开发模型使用了各种各样的辅助分支来——帮助团队成员间的并行开发，减轻特性的追踪的痛苦，准备产品的发布以及快速修复发布产品中的缺陷。不同于主分支，这些分支的生存周期总是有限的，因为它们最终会被移除。</p>
-
-<p>我们可能用到的不同的分支类型：</p>
-
-<p>&#160; &#160;&#160; &#160;特性分支(Feature branches)</p>
-
-<p>&#160; &#160;&#160; &#160;发布分支(Release branches)</p>
-
-<p>&#160; &#160;&#160; &#160;快速修复分支(Hotfix branches)</p>
-
-<p>&#160; &#160;&#160; &#160;这些分支中的每一个都有着特定的目的，也必须遵守严格的规则：哪些它们所起源于的分支，也是它们必须要合并到的目标分支。我们将很快将介绍一遍它们。</p>
-
-<p>&#160; &#160;&#160; &#160;从技术角度看，这些分支绝没有任何“特殊性”。分支类型是依据我们的使用方式划分的。毫无疑问，它们仍是普通的Git分支。</p>
-
-<p>特性分支(Feature branches)</p>
-
-<p>可能起源于分支：develop</p>
-
-<p>必须合并回分支：develop</p>
-
-<p>分支命名惯例：除 master、develop、release-<em> 或 hotfix-</em> 外的任何名字</p>
-
-<p>&#160; &#160;&#160; &#160;Feature分支(有时被称为topic分支)，用于为即将到来的或远期的版本开发新功能。当开始开发一个新的功能时，此时包含该功能的目标可能尚未很好定义。Feature分支的本质是，在新功能开发期间始终存在；但是它最终要合并回develop分支(将添加到下次发布的版本中)或者废弃(在实验让人沮丧的情况下)。</p>
-
-<p>典型情况下，feature分支只存在于开发者的仓库中，而不在origin中出现。</p>
-
-<h4>创建feature分支</h4>
-
-<p>&#160; &#160;&#160; &#160;当开始工作于一个新功能时，从develop分支创建新的分支：</p>
-
-<pre><code>$ git checkout -b myfeature developSwitched to a new branch "myfeature"
-</code></pre>
-
-<p>将完成的feature并入develop</p>
-
-<p>完成的特性将会合并回develop分支，并终会被加入将到来的release中：</p>
-
-<pre><code>$ git checkout developSwitched to branch 'develop'$ git merge --no-ff myfeatureUpdating ea1b82a..05e9557(Summary of changes)$ git branch -d myfeatureDeleted branch myfeature (was 05e9557).$ git push origin develop
-</code></pre>
-
-<p>标记&ndash;no-ff使得，即使在可以fast-forward的条件下，合并操作也总是生成一个commit对象。这可以避免feature分支中历史信息的丢失，并可使feature分支中的所有commit保持仍在一块。比较：</p>
-
-<p>&#160; &#160;&#160; &#160;在后一种情况下，从Git的历史中是不可能看出，哪些commit对象共同实现了一个特性——你必须手动阅读所有的日志信息。而要移除整个特性(即，一组commit)，在后一种情况下真真切切地让人头痛；而若使用了&ndash;no-ff标记，则很容易做到。</p>
-
-<p>&#160; &#160;&#160; &#160;当然，这会创建一些空的commit对象，但收益比这点浪费要大得多。</p>
-
-<p>&#160; &#160;&#160; &#160;不幸的是，我尚未找到使得git merge中默认行为启用&ndash;no-ff的方法，但它真的很需要如此。</p>
-
-<h4>发布分支(Release branches)</h4>
-
-<p>可能起源于分支：develop</p>
-
-<p>必须合并回分支：develop 和 master</p>
-
-<p>分支命名惯例：release-*</p>
-
-<p>&#160; &#160;&#160; &#160;Release分支用于做新产品发布前的准备。它使得在最后一刻可以进行细枝末节的完善。更进一步讲，它允许小bug的修复以及发布所需元数据(版本号，构建日期等)的准备。通过在release分支做这些工作，develop分支可以干净地接收为下一个大发行版准备的功能。</p>
-
-<p>&#160; &#160;&#160; &#160;从develop创建release分支的关键时机是，develop分支(几乎)可以反映新版本就绪状态的时刻。至少是将要建构的发行版所有的feature分支都已经被合并到了develop分支的时刻。所有的针对未来版本开发的feature可能不会被并入——它们必须等到该release分支创建以后。</p>
-
-<p>&#160; &#160;&#160; &#160;正是在release分支开始时，即将发布的产品才被分配一个版本号——而不是先前。直到这一刻，develop分支才开始反映“下一版”的变化，但是在下一个release分支开始前，下一版最终将变成0.3还是1.0都是不明确的。这种决定是在release分支开始时，通过项目的版本号规则实施的。</p>
-
-<h4>创建发布分支</h4>
-
-<p>&#160; &#160;&#160; &#160;Release分支是从develop分支中创建而来。例如，假定1.1.5是当前产品的版本，而我们即将有一个大的发行版。Develop分支对于“下一版”已经就绪，而且我们已经确定这将是版本1.2(而不是1.1.6或2.0)。因此，我们创建release分支并赋予它一个反映新版本号的名字：</p>
-
-<pre><code>$ git checkout -b release-1.2 developSwitched to a new branch "release-1.2"$ ./bump-version.sh 1.2Files modified successfully, version bumped to 1.2.$ git commit -a -m "Bumped version number to 1.2"[release-1.2 74d9424] Bumped version number to 1.21 files changed, 1 insertions(+), 1 deletions(-)
-</code></pre>
-
-<p>&#160; &#160;&#160; &#160;创建一个新的分支并切换进来以后，我们修改版本号。这儿的 bump-version.sh 是一个虚构的脚本，被用来修改工作区中的一些文件以反映出新版本。(当然，这也可以是手动修改的)。而后，修改后的版本号被提交。</p>
-
-<p>&#160; &#160;&#160; &#160;在发布最终完成之前，这个新的分支可能一直存在。在这期间，修复的bug会应用到该分支(而不是develop分支)。在这儿添加大的新特性是严格被禁止的。它们必须被合并到develop，并去等待下一个大的发行版本。</p>
-
-<h4>完成发布分支</h4>
-
-<p>&#160; &#160;&#160; &#160;当release分支的状态已经符合正式发行的要求时，一些动作需要被实施。首先，release分支被合并进master(回想一下，按定义，master上的每一个提交都导致一个新的版本)。其次，master上的该次提交必须被打上标签，以方便以后引用这个历史版本。最后，release分支中的所有变更都需要合并回develop，使得未来版本也包含这些bug补丁。</p>
-
-<p>在Git中，前两步操作：</p>
-
-<pre><code>$ git checkout masterSwitched to branch 'master'$ git merge --no-ff release-1.2Merge made by recursive.(Summary of changes)$ git tag -a 1.2
-</code></pre>
-
-<p>release现在已经完成，且打上标签以备未来引用。</p>
-
-<p>注: 你可能也想使用 -s 或 -u <key> 标记来私密签名。</p>
-
-<p>&#160; &#160;&#160; &#160;要保持我们在release分支所做的变更，我们需要将其合并会develop。在Git中：</p>
-
-<pre><code>$ git checkout developSwitched to branch 'develop'$ git merge --no-ff release-1.2Merge made by recursive.(Summary of changes)
-</code></pre>
-
-<p>这步操作可能引起合并冲突(很可能，因为我们已经改变了版本号)。如果是这样，修复并提交。</p>
-
-<p>&#160; &#160;&#160; &#160;现在，我们真的完成了，且该release分支将被移除，因为我们不再需要它了：</p>
-
-<pre><code>$ git branch -d release-1.2Deleted branch release-1.2 (was ff452fe).
-</code></pre>
-
-<p>快速修复分支(Hotfix branches)
-可能起源于分支：master</p>
-
-<p>必须合并回分支：develop 和 master</p>
-
-<p>分支命名惯例：hotfix-*</p>
-
-<p>&#160; &#160;&#160; &#160;Hotfix分支非常像release分支，因为它也是为新产品(虽然是计划外的)发布做准备的。它们起源于对当前已发布产品中不理想状态的立即响应的需求。当产品中出现一个紧急bug需要被立即解决时，一个hotfix分支可以从master分支中标记该产品版本的标签开始创建。</p>
-
-<p>&#160; &#160;&#160; &#160;其实质是，当一个人在准备产品的快速修复时，团队其他成员在develop分支的工作能够继续进行。</p>
-
-<h3>创建hotfix分支</h3>
-
-<p>&#160; &#160;&#160; &#160;Hotfix分支从master分支中创建。例如，假定1.2是当前已经发布的产品，却由于严重的bug导致了问题。但是develop分支中的变更尚不稳定。我们可能选择创建hotfix分支并开始修复这个问题：</p>
-
-<pre><code>$ git checkout -b hotfix-1.2.1 masterSwitched to a new branch "hotfix-1.2.1"$ ./bump-version.sh 1.2.1Files modified successfully, version bumped to 1.2.1.$ git commit -a -m "Bumped version number to 1.2.1"[hotfix-1.2.1 41e61bb] Bumped version number to 1.2.11 files changed, 1 insertions(+), 1 deletions(-)
-</code></pre>
-
-<p>创建分支以后不用忘记修改版本号！</p>
-
-<p>然后，修复bug并将代码以一个或多个commit的形式提交。</p>
-
-<pre><code>$ git commit -m "Fixed severe production problem"[hotfix-1.2.1 abbe5d6] Fixed severe production problem5 files changed, 32 insertions(+), 17 deletions(-)
-</code></pre>
-
-<p>结束hotfix分支</p>
-
-<p>&#160; &#160;&#160; &#160;当完成时，对bug的修复需要合并进master分支，也需要合并回develop分支，以确保补丁代码也被包含在下一个版本中。这与release分支结束时的情况是完全类似的。</p>
-
-<p>首先，更新master并对该次发布打上标签。</p>
-
-<pre><code>$ git checkout masterSwitched to branch 'master'$ git merge --no-ff hotfix-1.2.1Merge made by recursive.(Summary of changes)$ git tag -a 1.2.1
-</code></pre>
-
-<p>注: 你可能也想使用 -s 或 -u <key> 标记来私密签名。</p>
-
-<p>接着，使develop中也包含该修复代码：</p>
-
-<pre><code>$ git checkout developSwitched to branch 'develop'$ git merge --no-ff hotfix-1.2.1Merge made by recursive.(Summary of changes)
-</code></pre>
-
-<p>&#160; &#160;&#160; &#160;此处规则的一个例外是，当release分支已经存在，hotfix的变更需要合并进这个release分支，而不是develop。合并进release分支的补丁代码最终也会在release分支完成时被合并进develop。(如果develop中的工作急需这个补丁且等不及release最终完成，你也可以安全地将补丁合并进develop。)</p>
-
-<p>最后，移除这个临时分支：</p>
-
-<pre><code>$ git branch -d hotfix-1.2.1Deleted branch hotfix-1.2.1 (was abbe5d6)
-</code></pre>
-
-<h3>git 常用指令</h3>
-
-<pre><code>git checkout -b develop master  基于master创建develop(如果当前在master可省略不写)
-# 切换到Master分支 
-git checkout master
-# 对Develop分支进行合并
-git merge --no-ff develop (使用--no-ff参数后，会执行正常合并，在Master分支上生成一个新节点。为了保证版本演进的清晰，我们希望采用这种做法)
-git checkout 查看本地分支
-git checkout -a 查看远程分支
-</code></pre>
 ]]></content>
   </entry>
   
