@@ -227,22 +227,24 @@ Class/**/*.{h,m}表示Class目录下的所有.h .m文件
 <p>写完podspec文件后使用pod spec lint验证spec是否合格,有error则需要修改</p>
 
 <p>配置非ARC文件
-一个私有的pods库中某几个文件是在非ARC时代写的,如果要进行修改工程量浩大,于是乎要对这几个文件单独处理,这几个文件不使用arc其他文件使用arc,网上查了一些资料,只需要对source_file进行修改并排除那几个不使用ARC的文件就可以了,大致修改如下：
-Pod::Spec.new do |s|
-s.name = &ldquo;MyPodDemo&rdquo; s.version = &ldquo;0.0.1&rdquo;
-s.summary = &ldquo;A short description of MyPodDemo.
-s.homepage = &#8221;<a href="https://github.com/goingta/MyPodDemo">https://github.com/goingta/MyPodDemo</a>&rdquo;
-s.license = &ldquo;MIT&rdquo;
-s.author = { &ldquo;goingta&rdquo; => &ldquo;<a href="&#109;&#97;&#x69;&#x6c;&#x74;&#111;&#x3a;&#x74;&#97;&#x6e;&#103;&#x6c;&#x65;&#x31;&#x31;&#x32;&#x38;&#x40;&#x67;&#109;&#x61;&#105;&#x6c;&#46;&#99;&#111;&#x6d;">&#116;&#x61;&#110;&#103;&#x6c;&#x65;&#x31;&#x31;&#50;&#x38;&#64;&#x67;&#x6d;&#x61;&#x69;&#x6c;&#x2e;&#99;&#111;&#109;</a>&rdquo; }
-s.source = { :git => &ldquo;<a href="https://github.com/goingta/MyPodDemo.git">https://github.com/goingta/MyPodDemo.git</a>&rdquo;, :tag => &ldquo;0.0.1&rdquo; } s.source_files = &ldquo;MyPodDemo&rdquo;
-non_arc_files = &lsquo;MyPodDemo/NoArcFile1.{h,m}&rsquo;,&lsquo;MyPodDemo/NoArcFile2.{h,m}&rsquo;
-s.requires_arc = true</p>
+一个私有的pods库中某几个文件是在非ARC时代写的,如果要进行修改工程量浩大,于是乎要对这几个文件单独处理,这几个文件不使用arc其他文件使用arc,网上查了一些资料,只需要对source_file进行修改并排除那几个不使用ARC的文件就可以了,大致修改如下：</p>
 
-<p>s.exclude_files = non_arc_files
-s.subspec &lsquo;no-arc&rsquo; do |sna|
-sna.requires_arc = false
-sna.source_files = non_arc_files
-end</p>
+<pre><code>Pod::Spec.new do |s| 
+s.name = "MyPodDemo" s.version = "0.0.1" 
+s.summary = "A short description of MyPodDemo. 
+s.homepage = "https://github.com/goingta/MyPodDemo" 
+s.license = "MIT" 
+s.author = { "goingta" =&gt; "tangle1128@gmail.com" } 
+s.source = { :git =&gt; "https://github.com/goingta/MyPodDemo.git", :tag =&gt; "0.0.1" } s.source_files = "MyPodDemo" 
+non_arc_files = 'MyPodDemo/NoArcFile1.{h,m}','MyPodDemo/NoArcFile2.{h,m}' 
+s.requires_arc = true 
+
+s.exclude_files = non_arc_files 
+s.subspec 'no-arc' do |sna| 
+sna.requires_arc = false 
+sna.source_files = non_arc_files 
+end
+</code></pre>
 
 <h5>3、上传代码至github</h5>
 
