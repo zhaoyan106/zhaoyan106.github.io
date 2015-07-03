@@ -9,8 +9,9 @@
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="第三条：多用字面量语法，少用预制等价的方法。 需要注意 NSMutableArray *arrayM = [@[@"1",@"2",@"3"] mutableCopy]; 第四条：多用类型常量，少用#define预处理指令 #define ANIMATION_DURATION 0.3
-Static &hellip;">
+  <meta name="description" content="一、CocoaPods的安装 1、安装ruby环境,添加淘宝ruby镜像 $ gem sources --remove https://rubygems.org/
+//等有反应之后再敲入以下命令
+$ gem sources -a http://ruby.taobao.org/ 2、查看是否设置成功 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -66,6 +67,206 @@ Static &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/07/03/xiang-mu-cha-jian-hua-cocoapodsde-shi-yong/">项目插件化-CocoaPods的使用</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-07-03T10:52:05+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>3</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>10:52 am</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h4>一、CocoaPods的安装</h4>
+
+<h6>1、安装ruby环境,添加淘宝ruby镜像</h6>
+
+<pre><code>$ gem sources --remove https://rubygems.org/
+//等有反应之后再敲入以下命令
+$ gem sources -a http://ruby.taobao.org/
+</code></pre>
+
+<h6>2、查看是否设置成功:</h6>
+
+<pre><code>$ gem sources -l
+</code></pre>
+
+<h6>3、然后安装cocoapods:</h6>
+
+<pre><code>$ sudo gem install cocoapods
+</code></pre>
+
+<h6>4、查看cocoapods是否支持某个类库</h6>
+
+<pre><code>$ pod search 类库名,支持模糊查询(如:AFNetworking)
+</code></pre>
+
+<h4>二、CocoaPods的使用</h4>
+
+<h6>1、在项目根目录下新建一个“Podfile”的文件</h6>
+
+<p><code>注:Podfile也可以放在任何位置,但是需要在Podfile顶部使用”xcodeproj”关键字指定工程的路径,如下:</code></p>
+
+<pre><code>xcodeproj"/User/Desktop/CocoaPodsDemo/CocoaPodsDemo.xcworkspace"
+platform:ios
+pod 'JSONKit',        '~&gt;1.4'
+pod 'Reachability',  '~&gt;3.0.0'
+pod 'AFNetworking',   '~&gt;2.2.4'
+</code></pre>
+
+<h6>2、在项目podfile所在目录下运行(会在你当前项目中导入podfile所配置的库,所以要在项目目录下运行)</h6>
+
+<p><code>执行pod install命令后,生成的文件将在Podfile所在的目录</code></p>
+
+<pre><code>$ pod install
+</code></pre>
+
+<p>注意上述命令运行完毕后终端输出的最后一段话,意思就是以后打开项目就用CocoaPodsDemo.xcworkspace 打开，而不是之前的.xcodeproj文件</p>
+
+<h4>三、使用过程中遇到的一些问题</h4>
+
+<h6>1、引入第三方库后找不到头文件</h6>
+
+<p>在项目的Targe- Build Settings - Search Paths - User Header Searcj Paths中添加 ${SRCROOT} 值为 recursive</p>
+
+<h6>2、如何删除cocopods</h6>
+
+<p>1、删除工程文件夹下的Podfile、Podfile.lock及Pods文件夹</p>
+
+<p>2、删除xcworkspace文件</p>
+
+<p>3、使用xcodeproj文件打开工程，删除Frameworks组下的Pods.xcconfig及libPods.a引用</p>
+
+<p>4、在工程设置中的Build Phases下删除Check Pods Manifest.lock及Copy Pods Resources</p>
+
+<h4>四、Podfile.lock文件的作用</h4>
+
+<p>在使用CocoaPods，执行完pod install之后，会生成一个Podfile.lock文件。这个文件看起来跟我们关系不大，实际上绝对不应该忽略它。该文件用于保存已经安装的Pods依赖库的版本</p>
+
+<p>Podfile.lock文件最大得用处在于多人开发。当团队中的某个人执行完pod install命令后，生成Podfile.lock文件就记录下了当时最新Pods依赖库的版本，这时团队中的其它人check下来这份包含Podfile.lock文件的工程以后，再去执行pod install命令时，获取下来的Pods依赖库的版本就和最开始用户获取到的版本一致。</p>
+
+<p><code>如果没有Podfile.lock文件，后续所有用户执行pod install命令都会获取最新版本的SBJson，这就有可能造成同一个团队使用的依赖库版本不一致，这对团队协作来说绝对是个灾难！</code></p>
+
+<p>在这种情况下，如果团队想使用当前最新版本的SBJson依赖库，有两种方案：</p>
+
+<p>1、更改Podfile，使其指向最新版本的SBJson依赖库；</p>
+
+<p>2、执行pod update命令；</p>
+
+<p>鉴于Podfile.lock文件对团队协作如此重要，我们需要将它添加到版本管理中。</p>
+
+<h4>五、制作自己的Cocopods库</h4>
+
+<h6>1、在github上新建一个工程</h6>
+
+<p>license类型</p>
+
+<p>正规的仓库都应该有一个license文件，Pods依赖库对这个文件的要求更严，是必须要有的。因此最好在这里让github创建一个，也可以自己后续再创建。我使用的license类型是MIT。</p>
+
+<h5>2、podspec创建</h5>
+
+<p>把项目clone到本地然后在根目录下新建MyPodDemo.podspec或者</p>
+
+<pre><code>$ pod spec create MyPodDemo
+</code></pre>
+
+<p>podsepc的编写</p>
+
+<pre><code>Pod::Spec.new do |s| 
+s.name = "MyPodDemo" 
+s.version = "0.0.1" 
+s.summary = "A short description of MyPodDemo." 
+s.description = &lt;&lt;-DESC A longer description of MyPodDemo in Markdown format. * Think: Why did you write this? What is the focus? What does it do? * CocoaPods will be using this to generate tags, and improve search results. * Try to keep it short, snappy and to the point. * Finally, don't worry about the indent, CocoaPods strips it! 
+DESC 
+s.homepage = "https://github.com/goingta/MyPodDemo" 
+s.license = "MIT" s.author = { "goingta" =&gt; "tangle1128@gmail.com" } 
+s.source = { :git =&gt; "https://github.com/goingta/MyPodDemo.git", :tag =&gt; "0.0.1" } s.source_files = "MyPodDemo/Src", "MyPodDemo/Src/**/*.{h,m}" 
+s.requires_arc = true # s.framework = "SomeFramework" # 
+s.frameworks = "SomeFramework", "AnotherFramework" 
+# s.library = "iconv" 
+# s.libraries = "iconv", "xml2" 
+# s.dependency "JSONKit", "~&gt; 1.4" 
+# s.dependency "AFNetworking", "~&gt; 2.2.4" end
+</code></pre>
+
+<p>属性解析</p>
+
+<pre><code>name: 导入pod后的目录名 
+version: 当前版本号 
+deployment_target: 配置的target 
+prefix_header_file: 预编译头文件路径，将该文件的内容插入到Pod的pch文件内 
+source: 来源的具体路径，是http链接还是本地路径 
+requires_arc: 是否需要arc 
+source_files: 指定该目录下包含哪些文件 
+其他可选参数还包括：
+dependency: 指定依赖，如果依赖的库不存在或者依赖库的版本不符合要求将会报错 
+libraries: 指定导入的库，比如sqlite3 
+frameworks: 指定导入的framework 
+weak_frameworks: 弱链接，比如说一个项目同时兼容iOS6和iOS7，但某一个framework只在iOS7上有，这时候如果用强链接，那么在iOS7上运行就会crash，使用weak_frameworks可以避免这种情况。
+</code></pre>
+
+<p>整个podspec语法是一个嵌套结构从Pod::Spec.new do |s|到最后一个end是最大的循环，表示整个podspec导入的文件。中间每一个subspec到end结束是一个子目录，Pods会为每个subspec创建一个逻辑目录，相当于Xcode的group概念。|**|中间是subspec的名字，可以随便命名，但后面使用的名称必须一致。</p>
+
+<p>通配符说明</p>
+
+<pre><code>a{bb,bc}def.{h,m}表示四个文件abbdef.h abbdef.m abcdef.h abcdef.m
+
+*.{h,m,mm}表示所有的.h .m .mm文件
+Class/**/*.{h,m}表示Class目录下的所有.h .m文件
+</code></pre>
+
+<p>写完podspec文件后使用pod spec lint验证spec是否合格,有error则需要修改</p>
+
+<p>配置非ARC文件
+一个私有的pods库中某几个文件是在非ARC时代写的,如果要进行修改工程量浩大,于是乎要对这几个文件单独处理,这几个文件不使用arc其他文件使用arc,网上查了一些资料,只需要对source_file进行修改并排除那几个不使用ARC的文件就可以了,大致修改如下：
+Pod::Spec.new do |s|
+s.name = &ldquo;MyPodDemo&rdquo; s.version = &ldquo;0.0.1&rdquo;
+s.summary = &ldquo;A short description of MyPodDemo.
+s.homepage = &#8221;<a href="https://github.com/goingta/MyPodDemo">https://github.com/goingta/MyPodDemo</a>&rdquo;
+s.license = &ldquo;MIT&rdquo;
+s.author = { &ldquo;goingta&rdquo; => &ldquo;<a href="&#x6d;&#x61;&#105;&#x6c;&#x74;&#111;&#x3a;&#116;&#97;&#x6e;&#103;&#x6c;&#101;&#x31;&#49;&#50;&#x38;&#64;&#103;&#x6d;&#x61;&#105;&#108;&#x2e;&#x63;&#111;&#x6d;">&#116;&#97;&#110;&#103;&#x6c;&#101;&#49;&#49;&#x32;&#x38;&#64;&#x67;&#x6d;&#x61;&#105;&#108;&#x2e;&#x63;&#111;&#x6d;</a>&rdquo; }
+s.source = { :git => &ldquo;<a href="https://github.com/goingta/MyPodDemo.git">https://github.com/goingta/MyPodDemo.git</a>&rdquo;, :tag => &ldquo;0.0.1&rdquo; } s.source_files = &ldquo;MyPodDemo&rdquo;
+non_arc_files = &lsquo;MyPodDemo/NoArcFile1.{h,m}&rsquo;,&lsquo;MyPodDemo/NoArcFile2.{h,m}&rsquo;
+s.requires_arc = true</p>
+
+<p>s.exclude_files = non_arc_files
+s.subspec &lsquo;no-arc&rsquo; do |sna|
+sna.requires_arc = false
+sna.source_files = non_arc_files
+end</p>
+
+<h5>3、上传代码至github</h5>
+
+<h5>4、私有库实现,编写podfile</h5>
+
+<p>如果由于某些原因我们编写的库不能公开,但是又想使用pods来进行管理,要怎么办呢?</p>
+
+<p>首先我们要将我们刚刚在github上建的仓库改为Private(不然还用Public搞毛啊)</p>
+
+<p>然后修改我们项目的podfile,与已加入Cocopods仓库的公有库相比我们只需要指明私有库低git地址,如下:</p>
+
+<pre><code>platform :ios, '6.0' 
+pod 'MyPodDemo', :git =&gt; 'https://github.com/goingta/MyPodDemo.git' //私有库 
+pod 'CocoaLumberjack'//公有库
+</code></pre>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1637,81 +1838,6 @@ NSArray* trueDeepCopyArray = [NSKeyedUnarchiver unarchiveObjectWithData:
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/01/13/li-yong-crashdui-zhan-xin-xi-ding-wei-dian-xing-de-ye-zhi-zhen-cuo-wu/">利用crash堆栈信息定位典型的野指针错误</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-01-13T17:13:23+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>5:13 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>通过堆栈信息，确定了代码的具体位置</p>
-
-<pre><code>[self.delegate respondsToSelector:@selector(httpConnectionDidFailed:withError:)]
-</code></pre>
-
-<p>通过这个信息，猜测是delegate这个对象在网络请求回来之前已经释放掉，导致野指针错误。
-控制器的具体代码如下：</p>
-
-<pre><code>@interface TrainSearchListVC ()
-// 这个HttpUtil是封装的网络工具类
-@property (nonatomic, strong) HttpUtil *checkOrderUtil;
-@property (nonatomic, strong) HttpUtil *cancelOrderUtil;
-
-@end
-
-
-- (void)dealloc
-{
-    [self unregisterNotification];
-    // 首先要取消请求
-    // 然后设置为nil (MRC需要release)
-    ***因为没有设置为nil 导致野指针为题***
-    [self.checkOrderUtil cancel];
-    [self.cancelOrderUtil cancel];
-    self.checkOrderUtil = nil;
-    self.cancelOrderUtil = nil;
-    [_tableViewList setDataSource:nil];
-    [_tableViewList setDelegate:nil];
-}
-
-[_checkOrderUtil requestWithURLString:url Content:paramJson StartLoading:YES EndLoading:YES Delegate:self]; 设置了网络请求代理，但是当网络数据返回的时候，代理已经销毁了，出现也只真为题。
-</code></pre>
-
-<p>提供一个计算进制的python方法：</p>
-
-<pre><code>EBJ1297:~ zhaoyan$ python
-Python 2.7.6 (default, Sep  9 2014, 15:04:36) 
-[GCC 4.2.1 Compatible Apple LLVM 6.0 (clang-600.0.39)] on darwin
-Type "help", "copyright", "credits" or "license" for more information.
-&gt;&gt;&gt; hex(0x000f45f5 - 136693)
-'0xd3000'
-&gt;&gt;&gt; hex(0x00604963 - 5712227)
-'0x92000'
-&gt;&gt;&gt; hex(0x0059e963 - 5712227)
-'0x2c000'
-&gt;&gt;&gt; 
-</code></pre>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/2">&larr; Older</a>
@@ -1727,6 +1853,10 @@ Type "help", "copyright", "credits" or "license" for more information.
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/07/03/xiang-mu-cha-jian-hua-cocoapodsde-shi-yong/">项目插件化-CocoaPods的使用</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/05/13/effective-objective-c-2-dot-0zong-jie/">Effective Objective-C 2.0总结</a>
       </li>
     
@@ -1740,10 +1870,6 @@ Type "help", "copyright", "credits" or "license" for more information.
     
       <li class="post">
         <a href="/blog/2015/04/16/iosying-yong-jia-gou/">iOS应用架构</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/">压缩、截取上传图片,设置圆形UIImageView,App版本更新，设置tableView随textFiled焦点滑动</a>
       </li>
     
   </ul>

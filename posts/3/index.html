@@ -9,7 +9,7 @@
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="为tableView添加长按手势 UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector( &hellip;">
+  <meta name="description" content="原文地址：http://www.cocoachina.com/ios/20140829/9480.html 0、AFNetworking代码中有一些常用技巧： A.为保证线程安全，所有单例都用dispatch_once生成，保证只执行一次。例如： static dispatch_queue_t &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -65,6 +65,204 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/10/28/afnetworkingyuan-ma-jie-xi-%5B%3F%5D/">AFNetworking源码解析(一)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-10-28T15:02:47+08:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>28</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>3:02 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>原文地址：<a href="http://www.cocoachina.com/ios/20140829/9480.html">http://www.cocoachina.com/ios/20140829/9480.html</a></p>
+
+<h4>0、AFNetworking代码中有一些常用技巧：</h4>
+
+<p>A.为保证线程安全，所有单例都用dispatch_once生成，保证只执行一次。例如：</p>
+
+<pre><code>static dispatch_queue_t url_request_operation_completion_queue() { 
+    static dispatch_queue_t af_url_request_operation_completion_queue; 
+    static dispatch_once_t onceToken; 
+    dispatch_once(&amp;onceToken, ^{ 
+        af_url_request_operation_completion_queue = dispatch_queue_create("com.alamofire.networking.operation.queue",DISPATCH_QUEUE_CONCURRENT ); 
+    }); 
+    return af_url_request_operation_completion_queue; 
+    } 
+</code></pre>
+
+<p>B.常看到一个 block 要使用 self，会处理成在外部声明一个 weak 变量指向 self，在 block 里又声明一个 strong 变量指向 weakSelf：</p>
+
+<pre><code> __weak __typeof(self)weakSelf = self; 
+self.backgroundTaskIdentifier = [application beginBackgroundTaskWithExpirationHandler:^{ 
+    __strong __typeof(weakSelf)strongSelf = weakSelf; 
+}]; 
+</code></pre>
+
+<p>weakSelf是为了block不持有self，避免循环引用，而再声明一个strongSelf是因为一旦进入block执行，就不允许self在这个执行过程中释放。block执行完后这个strongSelf会自动释放，没有循环引用问题。</p>
+
+<h4>1、线程</h4>
+
+<p>先来看看 NSURLConnection 发送请求时的线程情况，NSURLConnection 是被设计成异步发送的，调用了start方法后，NSURLConnection 会新建一些线程用底层的 CFSocket 去发送和接收请求，在发送和接收的一些事件发生后通知原来线程的Runloop去回调事件。</p>
+
+<p>NSURLConnection 的同步方法 sendSynchronousRequest 方法也是基于异步的，同样要在其他线程去处理请求的发送和接收，只是同步方法会手动block住线程，发送状态的通知也不是通过 RunLoop 进行。</p>
+
+<p>使用NSURLConnection有几种选择：</p>
+
+<p>A.在主线程调异步接口
+若直接在主线程调用异步接口，会有个Runloop相关的问题：</p>
+
+<p>当在主线程调用 [[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:YES] 时，请求发出，侦听任务会加入到主线程的 Runloop 下，RunloopMode 会默认为 NSDefaultRunLoopMode。这表明只有当前线程的Runloop 处于 NSDefaultRunLoopMode 时，这个任务才会被执行。但当用户滚动 tableview 或 scrollview 时，主线程的 Runloop 是处于 NSEventTrackingRunLoopMode 模式下的，不会执行 NSDefaultRunLoopMode 的任务，所以会出现一个问题，请求发出后，如果用户一直在操作UI上下滑动屏幕，那在滑动结束前是不会执行回调函数的，只有在滑动结束，RunloopMode 切回 NSDefaultRunLoopMode，才会执行回调函数。苹果一直把动画效果性能放在第一位，估计这也是苹果提升UI动画性能的手段之一。</p>
+
+<p>所以若要在主线程使用 NSURLConnection 异步接口，需要手动把 RunloopMode 设为 NSRunLoopCommonModes。这个 mode 意思是无论当前 Runloop 处于什么状态，都执行这个任务。</p>
+
+<pre><code>NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:NO]; 
+[connection scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes]; 
+[connection start];
+</code></pre>
+
+<p>B.在子线程调同步接口
+若在子线程调用同步接口，一条线程只能处理一个请求，因为请求一发出去线程就阻塞住等待回调，需要给每个请求新建一个线程，这是很浪费的，这种方式唯一的好处应该是易于控制请求并发的数量。</p>
+
+<p>C.在子线程调异步接口
+子线程调用异步接口，子线程需要有 Runloop 去接收异步回调事件，这里也可以每个请求都新建一条带有 Runloop 的线程去侦听回调，但这一点好处都没有，既然是异步回调，除了处理回调内容，其他时间线程都是空闲可利用的，所有请求共用一个响应的线程就够了。</p>
+
+<p>AFNetworking 用的就是第三种方式，创建了一条常驻线程专门处理所有请求的回调事件，这个模型跟 nodejs 有点类似。网络请求回调处理完，组装好数据后再给上层调用者回调，这时候回调是抛回主线程的，因为主线程是最安全的，使用者可能会在回调中更新UI，在子线程更新UI会导致各种问题，一般使用者也可以不需要关心线程问题。</p>
+
+<p>以下是相关线程大致的关系，实际上多个 NSURLConnection 会共用一个 NSURLConnectionLoader 线程，这里就不细化了，除了处理 socket 的 CFSocket 线程，还有一些 Javascript:Core 的线程，目前不清楚作用，归为 NSURLConnection里的其他线程。因为 NSURLConnection 是系统控件，每个iOS版本可能都有不一样，可以先把 NSURLConnection 当成一个黑盒，只管它的 start 和 callback 就行了。如果使用 AFHttpRequestOperationManager 的接口发送请求，这些请求会统一在一个 NSOperationQueue 里去发，所以多了上面 NSOperationQueue 的一个线程。</p>
+
+<p><img src="http://www.cocoachina.com/cms/uploads/allimg/140829/4196_140829094446_1.png" alt="Resize icon" /></p>
+
+<p>相关代码：-networkRequestThread:, -start:, -operationDidStart:</p>
+
+<h4>2.状态机</h4>
+
+<p>继承 NSOperation 有个很麻烦的东西要处理，就是改变状态时需要发 KVO 通知，否则这个类加入 NSOperationQueue 不可用了。 NSOperationQueue 是用 KVO 方式侦听 NSOperation 状态的改变，以判断这个任务当前是否已完成，完成的任务需要在队列中除去并释放。</p>
+
+<p>AFURLConnectionOperation 对此做了个状态机，统一搞定状态切换以及发 KVO 通知的问题，内部要改变状态时，就只需要类似 self.state = AFOperationReadyState 的调用而不需要做其他了，状态改变的 KVO 通知在 setState 里发出。
+总的来说状态管理相关代码就三部分，一是限制一个状态可以切换到其他哪些状态，避免状态切换混乱，二是状态 Enum值 与 NSOperation 四个状态方法的对应，三是在 setState 时统一发 KVO 通知。详见代码注释。</p>
+
+<p>相关代码：AFKeyPathFromOperationState, AFStateTransitionIsValid, -setState:, -isPaused:, -isReady:, -isExecuting:, -isFinished:.</p>
+
+<h4>3.NSURLConnectionDelegate</h4>
+
+<p>处理 NSURLConnection Delegate 的内容不多，代码也是按请求回调的顺序排列下去，十分易读，主要流程就是接收到响应的时候打开 outputStream，接着有数据过来就往 outputStream 写，在上传/接收数据过程中会回调上层传进来的相应的callback，在请求完成回调到 connectionDidFinishLoading 时，关闭 outputStream，用 outputStream 组装 responseData 作为接收到的数据，把 NSOperation 状态设为 finished，表示任务完成，NSOperation 会自动调用 completeBlock，再回调到上层。</p>
+
+<h4>4.setCompleteBlock</h4>
+
+<p>NSOperation 在 iOS4.0 以后提供了个接口 setCompletionBlock，可以传入一个 block 作为任务执行完成时（state状态机变为finished时）的回调，AFNetworking直接用了这个接口，并通过重写加了几个功能：</p>
+
+<p>A.消除循环引用
+在 NSOperation 的实现里，completionBlock 是 NSOperation 对象的一个成员，NSOperation 对象持有着 completionBlock，若传进来的 block 用到了 NSOperation 对象，或者 block 用到的对象持有了这个 NSOperation 对象，就会造成循环引用。这里执行完 block 后调用 [strongSelf setCompletionBlock:nil] 把 completionBlock 设成 nil，手动释放 self(NSOperation对象) 持有的 completionBlock 对象，打破循环引用。</p>
+
+<p>可以理解成对外保证传进来的block一定会被释放，解决外部使用使很容易出现的因对象关系复杂导致循环引用的问题，让使用者不知道循环引用这个概念都能正确使用。</p>
+
+<p>B.dispatch_group
+这里允许用户让所有 operation 的 completionBlock 在一个 group 里执行，但我没看出这样做的作用，若想组装一组请求（见下面的batchOfRequestOperations）也不需要再让completionBlock在group里执行，求解。</p>
+
+<p>C.”The Deallocation Problem”
+作者在注释里说这里重写的setCompletionBlock方法解决了”The Deallocation Problem”，实际上并没有。<a href="https://developer.apple.com/library/ios/technotes/tn2109/_index.html">”The Deallocation Problem”</a>简单来说就是不要让UIKit的东西在子线程释放。</p>
+
+<p>这里如果传进来的block持有了外部的UIViewController或其他UIKit对象（下面暂时称为A对象），并且在请求完成之前其他所有对这个A对象的引用都已经释放了，那么这个completionBlock就是最后一个持有这个A对象的，这个block释放时A对象也会释放。这个block在什么线程释放，A对象就会在什么线程释放。我们看到block释放的地方是url_request_operation_completion_queue()，这是AFNetworking特意生成的子线程，所以按理说A对象是会在子线程释放的，会导致UIKit对象在子线程释放，会有问题。</p>
+
+<p>但AFNetworking实际用起来却没问题，想了很久不得其解，后来做了实验，发现iOS5以后苹果对UIKit对象的释放做了特殊处理，只要发现在子线程释放这些对象，就自动转到主线程去释放，断点出来是由一个叫_objc_deallocOnMainThreadHelper 的方法做的。如果不是UIKit对象就不会跳到主线程释放。AFNetworking2.0只支持iOS6+，所以没问题。</p>
+
+<p><img src="http://www.cocoachina.com/cms/uploads/allimg/140829/4196_140829094950_1.jpg" alt="Resize icon" /></p>
+
+<h4>5.batchOfRequestOperations</h4>
+
+<p>这里额外提供了一个便捷接口，可以传入一组请求，在所有请求完成后回调 complionBlock，在每一个请求完成时回调 progressBlock 通知外面有多少个请求已完成。详情参见代码注释，这里需要说明下 dispatch_group_enter 和dispatch_group_leave 的使用，这两个方法用于把一个异步任务加入 group 里。</p>
+
+<p>一般我们要把一个任务加入一个group里是这样：</p>
+
+<pre><code>dispatch_group_async(group, queue, ^{ 
+    block(); 
+}); 
+</code></pre>
+
+<p>这个写法等价于</p>
+
+<pre><code>dispatch_async(queue, ^{ 
+    dispatch_group_enter(group); 
+    block() 
+    dispatch_group_leave(group); 
+});
+</code></pre>
+
+<p>如果要把一个异步任务加入group，这样就行不通了：</p>
+
+<pre><code>dispatch_group_async(group, queue, ^{ 
+    [self performBlock:^(){ 
+        block(); 
+    }]; 
+    //未执行到block() group任务就已经完成了 
+}); 
+</code></pre>
+
+<p>这时需要这样写：</p>
+
+<pre><code>dispatch_group_enter(group); 
+[self performBlock:^(){ 
+    block(); 
+    dispatch_group_leave(group); 
+}]; 
+</code></pre>
+
+<p>异步任务回调后才算这个group任务完成。对batchOfRequest的实现来说就是请求完成并回调后，才算这个任务完成。</p>
+
+<p>其实这跟retain/release差不多，都是计数，dispatch_group_enter时任务数+1，dispatch_group_leave时任务数-1，任务数为0时执行dispatch_group_notify的内容。</p>
+
+<p>相关代码：-batchOfRequestOperations:progressBlock:completionBlock:</p>
+
+<h4>6.其他</h4>
+
+<p>A.锁
+AFURLConnectionOperation 有一把递归锁，在所有会访问/修改成员变量的对外接口都加了锁，因为这些对外的接口用户是可以在任意线程调用的，对于访问和修改成员变量的接口，必须用锁保证线程安全。</p>
+
+<p>B.序列化
+AFNetworking 的多数类都支持序列化，但实现的是 NSSecureCoding 的接口，而不是 NSCoding，区别在于解数据时要指定 Class，用 -decodeObjectOfClass:forKey: 方法代替了 -decodeObjectForKey: 。这样做更安全，因为序列化后的数据有可能被篡改，若不指定 Class，-decode 出来的对象可能不是原来的对象，有潜在风险。另外，NSSecureCoding 是 iOS 6 以上才有的。详见这里。</p>
+
+<p>这里在序列化时保存了当前任务状态，接收的数据等，但回调block是保存不了的，需要在取出来发送时重新设置。可以像下面这样持久化保存和取出任务：</p>
+
+<pre><code>AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request]; 
+NSData *data = [NSKeyedArchiver archivedDataWithRootObject:operation]; 
+
+AFHTTPRequestOperation *operationFromDB = [NSKeyedUnarchiver unarchiveObjectWithData:data]; 
+[operationFromDB start];    
+</code></pre>
+
+<p>C.backgroundTask
+这里提供了setShouldExecuteAsBackgroundTaskWithExpirationHandler 接口，决定APP进入后台后是否继续发送接收请求，并在后台执行时间超时后取消所有请求。在 dealloc 里需要调用 [application endBackgroundTask:] ，告诉系统这个后台任务已经完成，不然系统会一直让你的APP运行在后台，直到超时。</p>
+
+<p>相关代码：-setShouldExecuteAsBackgroundTaskWithExpirationHandler:, -dealloc:</p>
+
+<h4>7.AFHTTPRequestOperation</h4>
+
+<p>AFHTTPRequestOperation 继承了 AFURLConnectionOperation，把它放一起说是因为它没做多少事情，主要多了responseSerializer，暂停下载断点续传，以及提供接口请求成功失败的回调接口 -setCompletionBlockWithSuccess:failure:。详见源码注释。</p>
+
+<h4>8.源码注释</h4>
+
+<p>AFURLConnectionOperation.m</p>
+
+<p>AFHTTPRequestOperation.m</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -494,6 +692,10 @@ git checkout -a 查看远程分支
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/07/03/xiang-mu-cha-jian-hua-cocoapodsde-shi-yong/">项目插件化-CocoaPods的使用</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/05/13/effective-objective-c-2-dot-0zong-jie/">Effective Objective-C 2.0总结</a>
       </li>
     
@@ -507,10 +709,6 @@ git checkout -a 查看远程分支
     
       <li class="post">
         <a href="/blog/2015/04/16/iosying-yong-jia-gou/">iOS应用架构</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/02/11/ya-suo-slash-jie-qu-shang-chuan-tu-pian/">压缩、截取上传图片,设置圆形UIImageView,App版本更新，设置tableView随textFiled焦点滑动</a>
       </li>
     
   </ul>
