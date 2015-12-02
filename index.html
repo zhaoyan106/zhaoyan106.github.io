@@ -9,9 +9,7 @@
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="一、CocoaPods的安装 1、安装ruby环境,添加淘宝ruby镜像 $ gem sources --remove https://rubygems.org/
-//等有反应之后再敲入以下命令
-$ gem sources -a http://ruby.taobao.org/ 2、查看是否设置成功 &hellip;">
+  <meta name="description" content="NSInvocation可以对某个对象发送消息(多参数使用),可以处理参数和返回值 1、创建NSInvocation对象需要一个方法签名 NSMethodSignature * sig = [self methodSignatureForSelector:sel] 2、 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -67,6 +65,78 @@ $ gem sources -a http://ruby.taobao.org/ 2、查看是否设置成功 &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/12/02/nsinvocationshi-yong/">NSInvocation使用</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-12-02T12:25:04+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2015</span></span> <span class='time'>12:25 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h5>NSInvocation可以对某个对象发送消息(多参数使用),可以处理参数和返回值</h5>
+
+<p>1、创建NSInvocation对象需要一个方法签名</p>
+
+<pre><code>NSMethodSignature * sig = [self methodSignatureForSelector:sel]
+</code></pre>
+
+<p>2、利用得到的这个方法签名创建NSInvocation对象</p>
+
+<pre><code>NSInvocation *inv = [NSInvocation invocationWithMethodSignature:sig];
+</code></pre>
+
+<p>3、通过调用NSInvocation的相关方法设置消息接收对象及参数</p>
+
+<pre><code>[inv setTarget:self];
+[inv setSelector:sel];
+</code></pre>
+
+<p>4、参数解析设置传参</p>
+
+<pre><code>va_list args;
+va_start(args, sel);
+// 通过方法签名能够获取参数个数及参数类型
+// [sig numberOfArguments]
+// char *type = (char *)[sig getArgumentTypeAtIndex:index];
+// 根据匹配出的类型通过va_arg取出入参
+// int arg = va_arg(args, int);
+[inv setArgument:&amp;arg atIndex:index];
+</code></pre>
+
+<p>5、调用执行方法</p>
+
+<pre><code>[inv invoke]
+</code></pre>
+
+<p>6、获取方法返回值</p>
+
+<pre><code>NSUInteger length = [sig methodReturnLength];
+// 如果length为0方法返回为void
+char *type = (char *)[sig methodReturnType];
+// 根据type匹配出对应的类型，得到具体返回值
+id ret = nil;
+[inv getReturnValue:&amp;ret];
+</code></pre>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1694,152 +1764,6 @@ typedef enum {
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/01/23/shen-kao-bei-yu-qian-kao-bei-fen-xi/">深拷贝与浅拷贝分析</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-01-23T09:37:21+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>23</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>9:37 am</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>深拷贝:开辟新的存储空间,修改copy后的对象,不会影响本身</p>
-
-<p>浅拷贝:只是指针的copy,修改copy后的对象,会影响本身.</p>
-
-<p>对象要具备复制功能，必须实现<NSCopying>协议或者<NSMutableCopying>协议，常用的可复制对象有：</p>
-
-<p>NSNumber、NSString、NSMutableString、NSArray、NSMutableArray、NSDictionary、NSMutableDictionary</p>
-
-<p>对于以上的Foundation都遵循这个规律(arrayI为不可变数组,arrayM为可变数组)</p>
-
-<pre><code>(lldb) po arrayI
-&lt;__NSArrayI 0x7fb620704ba0&gt;(
-
-)
-
-(lldb) po [arrayI copy]
-&lt;__NSArrayI 0x7fb620704ba0&gt;(
-
-)
-
-(lldb) po [arrayI mutableCopy]
-&lt;__NSArrayM 0x7fb62042d050&gt;(
-
-)
-
-(lldb) po arrayM
-&lt;__NSArrayM 0x7fb620605570&gt;(
-
-)
-
-(lldb) po [arrayM copy]
-&lt;__NSArrayI 0x7fb620704ba0&gt;(
-
-)
-
-(lldb) po [arrayM mutableCopy]
-&lt;__NSArrayM 0x7fb620451ce0&gt;(
-
-)
-</code></pre>
-
-<p>容器类对象深浅复制,对于容器而言，其元素对象始终是指针复制。如果需要元素对象也是对象复制，就需要实现深拷贝.</p>
-
-<pre><code>NSArray *array = [NSArray arrayWithObjects:[NSMutableString stringWithString:@"first"],[NSStringstringWithString:@"b"],@"c",nil];
-// 里面的元素浅复制
-NSArray *deepCopyArray=[[NSArray alloc] initWithArray: array copyItems: YES];
-// 里面的元素深复制
-NSArray* trueDeepCopyArray = [NSKeyedUnarchiver unarchiveObjectWithData:
-[NSKeyedArchiver archivedDataWithRootObject: array]];
-</code></pre>
-
-<p>自己实现深拷贝的方法</p>
-
-<p>NSDictionaryMutableDeepCopy.h</p>
-
-<pre><code>#import &lt;foundation /Foundation.h&gt;
-
-@interface NSDictionary(MutableDeepCopy)
-
-- (NSMutableDictionary *)mutableDeepCopy;
-
-@end
-</code></pre>
-
-<p>NSDictionaryMutableDeepCopy.m</p>
-
-<pre><code>#import "NSDictionaryMutableDeepCopy.h"
-
-@implementation NSDictionary(MutableDeepCopy)
-
-- (NSMutableDictionary *)mutableDeepCopy {
-    NSMutableDictionary *ret = [[NSMutableDictionary alloc]
-                                initWithCapacity:[self count]];
-    NSArray *keys = [self allKeys];
-    for (id key in keys) {
-        id oneValue = [self valueForKey:key];
-        id oneCopy = nil;
-
-        if ([oneValue respondsToSelector:@selector(mutableDeepCopy)]) {
-            oneCopy = [oneValue mutableDeepCopy];
-        }
-        else if ([oneValue respondsToSelector:@selector(mutableCopy)]) {
-            oneCopy = [oneValue mutableCopy];
-        }
-        if (oneCopy == nil) {
-            oneCopy = [oneValue copy];
-        }
-        [ret setValue:oneCopy forKey:key];
-    }
-
-    return ret;
-}
-
-@end
-</code></pre>
-
-<p>一般对象的拷贝,需要实现两个方法&lt;NSCopying,NSMutableCopying></p>
-
-<p>浅拷贝</p>
-
-<pre><code>-（id）copyWithZone:(NSZone *)zone{  
-
-           Person *person = [[[self Class]allocWithZone:zone]init];  
-           p.name = _name;  
-           p.age = _age;  
-           return person;  
-       }  
-</code></pre>
-
-<p>深拷贝</p>
-
-<pre><code>-(void)copyWithZone:(NSZone *)zone{  
-            Person *person = [[[self Class]allocWithZone:zone]init];  
-            person.name = [_name copy];  
-            person.age = [_age copy];  
-            return person;                    
-        }  
-</code></pre>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/2">&larr; Older</a>
@@ -1855,6 +1779,10 @@ NSArray* trueDeepCopyArray = [NSKeyedUnarchiver unarchiveObjectWithData:
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/12/02/nsinvocationshi-yong/">NSInvocation使用</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/07/03/xiang-mu-cha-jian-hua-cocoapodsde-shi-yong/">项目插件化-CocoaPods的使用</a>
       </li>
     
@@ -1868,10 +1796,6 @@ NSArray* trueDeepCopyArray = [NSKeyedUnarchiver unarchiveObjectWithData:
     
       <li class="post">
         <a href="/blog/2015/04/21/nei-cun-cun-chu-xiang-guan-zhi-shi/">内存存储相关知识及static和extern关键字的使用</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/04/16/iosying-yong-jia-gou/">iOS应用架构</a>
       </li>
     
   </ul>

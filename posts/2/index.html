@@ -9,7 +9,7 @@
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="通过堆栈信息，确定了代码的具体位置 [self.delegate respondsToSelector:@selector(httpConnectionDidFailed:withError:)] 通过这个信息，猜测是delegate这个对象在网络请求回来之前已经释放掉，导致野指针错误。 &hellip;">
+  <meta name="description" content="深拷贝:开辟新的存储空间,修改copy后的对象,不会影响本身 浅拷贝:只是指针的copy,修改copy后的对象,会影响本身. 对象要具备复制功能，必须实现协议或者协议，常用的可复制对象有： NSNumber、NSString、NSMutableString、NSArray、 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -65,6 +65,152 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/01/23/shen-kao-bei-yu-qian-kao-bei-fen-xi/">深拷贝与浅拷贝分析</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-01-23T09:37:21+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>23</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>9:37 am</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>深拷贝:开辟新的存储空间,修改copy后的对象,不会影响本身</p>
+
+<p>浅拷贝:只是指针的copy,修改copy后的对象,会影响本身.</p>
+
+<p>对象要具备复制功能，必须实现<NSCopying>协议或者<NSMutableCopying>协议，常用的可复制对象有：</p>
+
+<p>NSNumber、NSString、NSMutableString、NSArray、NSMutableArray、NSDictionary、NSMutableDictionary</p>
+
+<p>对于以上的Foundation都遵循这个规律(arrayI为不可变数组,arrayM为可变数组)</p>
+
+<pre><code>(lldb) po arrayI
+&lt;__NSArrayI 0x7fb620704ba0&gt;(
+
+)
+
+(lldb) po [arrayI copy]
+&lt;__NSArrayI 0x7fb620704ba0&gt;(
+
+)
+
+(lldb) po [arrayI mutableCopy]
+&lt;__NSArrayM 0x7fb62042d050&gt;(
+
+)
+
+(lldb) po arrayM
+&lt;__NSArrayM 0x7fb620605570&gt;(
+
+)
+
+(lldb) po [arrayM copy]
+&lt;__NSArrayI 0x7fb620704ba0&gt;(
+
+)
+
+(lldb) po [arrayM mutableCopy]
+&lt;__NSArrayM 0x7fb620451ce0&gt;(
+
+)
+</code></pre>
+
+<p>容器类对象深浅复制,对于容器而言，其元素对象始终是指针复制。如果需要元素对象也是对象复制，就需要实现深拷贝.</p>
+
+<pre><code>NSArray *array = [NSArray arrayWithObjects:[NSMutableString stringWithString:@"first"],[NSStringstringWithString:@"b"],@"c",nil];
+// 里面的元素浅复制
+NSArray *deepCopyArray=[[NSArray alloc] initWithArray: array copyItems: YES];
+// 里面的元素深复制
+NSArray* trueDeepCopyArray = [NSKeyedUnarchiver unarchiveObjectWithData:
+[NSKeyedArchiver archivedDataWithRootObject: array]];
+</code></pre>
+
+<p>自己实现深拷贝的方法</p>
+
+<p>NSDictionaryMutableDeepCopy.h</p>
+
+<pre><code>#import &lt;foundation /Foundation.h&gt;
+
+@interface NSDictionary(MutableDeepCopy)
+
+- (NSMutableDictionary *)mutableDeepCopy;
+
+@end
+</code></pre>
+
+<p>NSDictionaryMutableDeepCopy.m</p>
+
+<pre><code>#import "NSDictionaryMutableDeepCopy.h"
+
+@implementation NSDictionary(MutableDeepCopy)
+
+- (NSMutableDictionary *)mutableDeepCopy {
+    NSMutableDictionary *ret = [[NSMutableDictionary alloc]
+                                initWithCapacity:[self count]];
+    NSArray *keys = [self allKeys];
+    for (id key in keys) {
+        id oneValue = [self valueForKey:key];
+        id oneCopy = nil;
+
+        if ([oneValue respondsToSelector:@selector(mutableDeepCopy)]) {
+            oneCopy = [oneValue mutableDeepCopy];
+        }
+        else if ([oneValue respondsToSelector:@selector(mutableCopy)]) {
+            oneCopy = [oneValue mutableCopy];
+        }
+        if (oneCopy == nil) {
+            oneCopy = [oneValue copy];
+        }
+        [ret setValue:oneCopy forKey:key];
+    }
+
+    return ret;
+}
+
+@end
+</code></pre>
+
+<p>一般对象的拷贝,需要实现两个方法&lt;NSCopying,NSMutableCopying></p>
+
+<p>浅拷贝</p>
+
+<pre><code>-（id）copyWithZone:(NSZone *)zone{  
+
+           Person *person = [[[self Class]allocWithZone:zone]init];  
+           p.name = _name;  
+           p.age = _age;  
+           return person;  
+       }  
+</code></pre>
+
+<p>深拷贝</p>
+
+<pre><code>-(void)copyWithZone:(NSZone *)zone{  
+            Person *person = [[[self Class]allocWithZone:zone]init];  
+            person.name = [_name copy];  
+            person.age = [_age copy];  
+            return person;                    
+        }  
+</code></pre>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1484,205 +1630,6 @@ securityPolicy.allowInvalidCertificates = YES;
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/10/29/afnnetworkingyuan-ma-jie-xi-(er-)/">AFNNetworking源码解析（二）</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-10-29T13:26:44+08:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>1:26 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>原文地址：<a href="http://www.cocoachina.com/ios/20140904/9523.html">http://www.cocoachina.com/ios/20140904/9523.html</a></p>
-
-<p>AFURLRequestSerialization用于帮助构建NSURLRequest，主要做了两个事情：</p>
-
-<p>1.构建普通请求：格式化请求参数，生成HTTP Header。
-2.构建multipart请求。</p>
-
-<p>分别看看它在这两点具体做了什么，怎么做的。</p>
-
-<h4>1.构建普通请求</h4>
-
-<p>A.格式化请求参数
-一般我们请求都会按key=value的方式带上各种参数，GET方法参数直接加在URL上，POST方法放在body上，NSURLRequest没有封装好这个参数的解析，只能我们自己拼好字符串。AFNetworking提供了接口，让参数可以是NSDictionary, NSArray, NSSet这些类型，再由内部解析成字符串后赋给NSURLRequest。</p>
-
-<p>转化过程大致是这样的：</p>
-
-<pre><code>@{ 
-    @"name" : @"bang", 
-    @"phone": @{@"mobile": @"xx", @"home": @"xx"}, 
-    @"families": @[@"father", @"mother"], 
-    @"nums": [NSSet setWithObjects:@"1", @"2", nil] 
-} 
--&gt; 
-@[ 
-    field: @"name", value: @"bang", 
-    field: @"phone[mobile]", value: @"xx", 
-    field: @"phone[home]", value: @"xx", 
-    field: @"families[]", value: @"father", 
-    field: @"families[]", value: @"mother", 
-    field: @"nums", value: @"1", 
-    field: @"nums", value: @"2", 
-] 
--&gt; 
-name=bang&amp;phone[mobile]=xx&amp;phone[home]=xx&amp;families[]=father&amp;families[]=mother&amp;nums=1&amp;num=2
-</code></pre>
-
-<p>第一部分是用户传进来的数据，支持包含NSArray,NSDictionary,NSSet这三种数据结构。</p>
-
-<p>第二部分是转换成AFNetworking内自己的数据结构，每一个key-value对都用一个对象AFQueryStringPair表示，作用是最后可以根据不同的字符串编码生成各自的key=value字符串。主要函数是AFQueryStringPairsFromKeyAndValue，详见源码注释。</p>
-
-<p>第三部分是最后生成NSURLRequest可用的字符串数据，并且对参数进行url编码，在AFQueryStringFromParametersWithEncoding这个函数里。</p>
-
-<p>最后在把数据赋给NSURLRequest时根据不同的HTTP方法分别处理，对于GET/HEAD/DELETE方法，把参数加到URL后面，对于其他如POST/PUT方法，把数据加到body上，并设好HTTP头，告诉服务端字符串的编码。</p>
-
-<p>B.HTTP Header
-AFNetworking帮你组装好了一些HTTP请求头，包括语言Accept-Language，根据 [NSLocale preferredLanguages] 方法读取本地语言，告诉服务端自己能接受的语言。还有构建 User-Agent，以及提供Basic Auth 认证接口，帮你把用户名密码做 base64 编码后放入 HTTP 请求头。详见源码注释。</p>
-
-<p>C.其他格式化方式
-HTTP请求参数不一定是要key=value形式，可以是任何形式的数据，可以是json格式，苹果的plist格式，二进制protobuf格式等，AFNetworking提供了方法可以很容易扩展支持这些格式，默认就实现了json和plist格式。详见源码的类AFJSONRequestSerializer和AFPropertyListRequestSerializer。</p>
-
-<h4>2.构建multipart请求</h4>
-
-<p>构建Multipart请求是占篇幅很大的一个功能，AFURLRequestSerialization里2/3的代码都是在做这个事。</p>
-
-<p>A.Multipart协议介绍
-Multipart是HTTP协议为web表单新增的上传文件的协议，协议文档是rfc1867，它基于HTTP的POST方法，数据同样是放在body上，跟普通POST方法的区别是数据不是key=value形式，key=value形式难以表示文件实体，为此Multipart协议添加了分隔符，有自己的格式结构，大致如下：
-—AaB03x
-content-disposition: form-data; name=“name&#8221;
-bang
-&ndash;AaB03x
-content-disposition: form-data; name=&ldquo;pic&rdquo;; filename=“content.txt&#8221;
-Content-Type: text/plain
-&hellip; contents of bang.txt &hellip;
-&ndash;AaB03x&ndash;</p>
-
-<p>以上表示数据name=bang以及一个文件，content.txt是文件名，… contents of bang.txt …是文件实体内容。分隔符—AaB03x是可以自定义的，写在HTTP头部里：</p>
-
-<p>Content-type: multipart/form-data, boundary=AaB03x</p>
-
-<p>每一个部分都有自己的头部，表明这部分的数据类型以及其他一些参数，例如文件名，普通字段的key。最后一个分隔符会多加两横，表示数据已经结束：—AaB03x—。</p>
-
-<p>B.实现
-接下来说说怎样构造Multipart里的数据，最简单的方式就是直接拼数据，要发送一个文件，就直接把文件所有内容读取出来，再按上述协议加上头部和分隔符，拼接好数据后扔给NSURLRequest的body就可以发送了，很简单。但这样做是不可用的，因为文件可能很大，这样拼数据把整个文件读进内存，很可能把内存撑爆了。</p>
-
-<p>如下实例：</p>
-
-<pre><code>NSArray *allKeys = [_parametersDic allKeys];
-NSString *keyStr = @"";
-NSData *data = nil;
-if (allKeys.count == 1) {
-    keyStr = allKeys[0];
-    data = _parametersDic[keyStr];
-}
-LSAFHTTPClient *httpClient = [LSAFHTTPClient shareClient];
-NSMutableURLRequest* request = [httpClient requestWithMethod:@"POST" path:_methodName parameters:nil];
-request.timeoutInterval = 120;
-//分界线的标识符
-NSString *TWITTERFON_FORM_BOUNDARY = @"AaB03x";
-//分界线 --AaB03x
-NSString *MPboundary=[[NSString alloc]initWithFormat:@"--%@",TWITTERFON_FORM_BOUNDARY];
-//结束符 AaB03x--
-NSString *endMPboundary=[[NSString alloc]initWithFormat:@"%@--",MPboundary];
-//http body的字符串
-NSMutableString *body=[[NSMutableString alloc] init];
-////添加分界线，换行
-[body appendFormat:@"%@\r\n",MPboundary];
-//声明pic字段，文件名为boris.png
-[body appendFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"uploadImg.png\"\r\n", keyStr];
-//声明上传文件的格式
-[body appendFormat:@"Content-Type: image/png\r\n\r\n"];
-
-//声明结束符：--AaB03x--
-NSString *end=[[NSString alloc]initWithFormat:@"\r\n%@",endMPboundary];
-//声明myRequestData，用来放入http body
-NSMutableData *myRequestData=[NSMutableData data];
-//将body字符串转化为UTF8格式的二进制
-[myRequestData appendData:[body dataUsingEncoding:NSUTF8StringEncoding]];
-//将image的data加入
-[myRequestData appendData:data];
-//加入结束符--AaB03x--
-[myRequestData appendData:[end dataUsingEncoding:NSUTF8StringEncoding]];
-//set header
-NSString *content=[[NSString alloc]initWithFormat:@"multipart/form-data; boundary=%@",TWITTERFON_FORM_BOUNDARY];
-//设置HTTPHeader
-[request setValue:content forHTTPHeaderField:@"Content-Type"];
-[request setValue:kUserInformationValue forHTTPHeaderField:kServerInformationKey];
-[request setValue:@"ios" forHTTPHeaderField:@"client-type"];
-[request setValue:[NSString stringWithFormat:@"%d", [myRequestData length]] forHTTPHeaderField:@"Content-Length"];
-NSLog(@"%@", [request allHTTPHeaderFields]);
-//设置http body
-[request setHTTPBody:myRequestData];
-
-AFHTTPRequestOperation *operation = [httpClient HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, id responseObject) {
-    //concurrent deal block
-    RequestLog(@"concurrent deal block Success");
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        [self hanleSuccessResponseWithOperation:operation response:responseObject];
-    });
-} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-    RequestLog(@"concurrent deal block Fail");
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        [self handlerErrorResponse:error];
-    });
-}];
-
-[httpClient enqueueHTTPRequestOperation:operation];
-</code></pre>
-
-<p>第二种方法是不把文件读出来，不在内存拼，而是新建一个临时文件，在这个文件上拼接数据，再把文件地址扔给NSURLRequest的bodyStream，这样上传的时候是分片读取这个文件，不会撑爆内存，但这样每次上传都需要新建个临时文件，对这个临时文件的管理也挺麻烦的。</p>
-
-<p>第三种方法是构建自己的数据结构，只保存要上传的文件地址，边上传边拼数据，上传是分片的，拼数据也是分片的，拼到文件实体部分时直接从原来的文件分片读取。这方法没上述两种的问题，只是实现起来也没上述两种简单，AFNetworking就是实现这第三种方法，而且还更进一步，除了文件，还可以添加多个其他不同类型的数据，包括NSData，和InputStream。</p>
-
-<p>AFNetworking 里 multipart 请求的使用方式是这样：</p>
-
-<pre><code>AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager]; 
-NSDictionary *parameters = @{@"foo": @"bar"}; 
-NSURL *filePath = [NSURL fileURLWithPath:@"file://path/to/image.png"]; 
-[manager POST:@"http://example.com/resources.json" parameters:parameters    constructingBodyWithBlock:^(id formData) { 
-    [formData appendPartWithFileURL:filePath name:@"image" error:nil]; 
-} success:^(AFHTTPRequestOperation *operation, id responseObject) { 
-    NSLog(@"Success: %@", responseObject); 
-} failure:^(AFHTTPRequestOperation *operation, NSError *error) { 
-    NSLog(@"Error: %@", error); 
-}]; 
-</code></pre>
-
-<p>这里通过constructingBodyWithBlock向使用者提供了一个AFStreamingMultipartFormData对象，调这个对象的几种append方法就可以添加不同类型的数据，包括FileURL/NSData/NSInputStream，AFStreamingMultipartFormData内部把这些append的数据转成不同类型的 AFHTTPBodyPart，添加到自定义的 AFMultipartBodyStream 里。最后把 AFMultipartBodyStream 赋给原来 NSMutableURLRequest的bodyStream。NSURLConnection 发送请求时会读取这个 bodyStream，在读取数据时会调用这个 bodyStream 的 -read:maxLength: 方法，AFMultipartBodyStream 重写了这个方法，不断读取之前 append进来的 AFHTTPBodyPart 数据直到读完。</p>
-
-<p>AFHTTPBodyPart 封装了各部分数据的组装和读取，一个 AFHTTPBodyPart 就是一个数据块。实际上三种类型 (FileURL/NSData/NSInputStream) 的数据在 AFHTTPBodyPart 都转成 NSInputStream，读取数据时只需读这个 inputStream。inputStream 只保存了数据的实体，没有包括分隔符和头部，AFHTTPBodyPart 是边读取变拼接数据，用一个状态机确定现在数据读取到哪一部份，以及保存这个状态下已被读取的字节数，以此定位要读的数据位置，详见 AFHTTPBodyPart 的-read:maxLength:方法。</p>
-
-<p>AFMultipartBodyStream封装了整个multipart数据的读取，主要是根据读取的位置确定现在要读哪一个AFHTTPBodyPart。AFStreamingMultipartFormData对外提供友好的append接口，并把构造好的AFMultipartBodyStream赋回给NSMutableURLRequest，关系大致如下图：
-<img src="http://www.cocoachina.com/cms/uploads/allimg/140904/4196_140904100547_1.png" alt="Resize icon" /></p>
-
-<p>C.NSInputStream子类
-NSURLRequest 的 setHTTPBodyStream 接受的是一个 NSInputStream* 参数，那我们要自定义inputStream的话，创建一个 NSInputStream 的子类传给它是不是就可以了？实际上不行，这样做后用NSURLRequest 发出请求会导致 crash，提示 [xx _scheduleInCFRunLoop:forMode:]: unrecognized selector。</p>
-
-<p>这是因为NSURLRequest实际上接受的不是 NSInputStream 对象，而是 CoreFoundation 的 CFReadStreamRef 对象，因为 CFReadStreamRef 和 NSInputStream 是 toll-free bridged，可以自由转换，但CFReadStreamRef 会用到 CFStreamScheduleWithRunLoop 这个方法，当它调用到这个方法时，object-c 的 toll-free bridging 机制会调用 object-c 对象 NSInputStream 的相应函数，这里就调用到了_scheduleInCFRunLoop:forMode:，若不实现这个方法就会crash。</p>
-
-<h4>3.源码注释</h4>
-
-<p>AFURLRequestSerialization.m</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/3">&larr; Older</a>
@@ -1700,6 +1647,10 @@ NSURLRequest 的 setHTTPBodyStream 接受的是一个 NSInputStream* 参数，�
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/12/02/nsinvocationshi-yong/">NSInvocation使用</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/07/03/xiang-mu-cha-jian-hua-cocoapodsde-shi-yong/">项目插件化-CocoaPods的使用</a>
       </li>
     
@@ -1713,10 +1664,6 @@ NSURLRequest 的 setHTTPBodyStream 接受的是一个 NSInputStream* 参数，�
     
       <li class="post">
         <a href="/blog/2015/04/21/nei-cun-cun-chu-xiang-guan-zhi-shi/">内存存储相关知识及static和extern关键字的使用</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/04/16/iosying-yong-jia-gou/">iOS应用架构</a>
       </li>
     
   </ul>
