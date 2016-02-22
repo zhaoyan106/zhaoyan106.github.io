@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>iOS开发中一些小技巧 - My iOS Journey</title>
+  <title>八大排序算法 - My iOS Journey</title>
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="原文地址：http://www.cocoachina.com/ios/20141231/10783.html最近cocoachina上很火的一篇文章 1.TableView不显示没内容的Cell self.tableView.tableFooterView = [[UIView alloc] &hellip;">
+  <meta name="description" content="插入排序：直接插入排序、希尔排序 1、插入排序 效率： 稳定 空间复杂度O(1) 时间复杂度O(n2) 最差情况：反序，需要移动n*(n-1)/2个元素 最好情况：正序，不需要移动元素 数组在已排序或者是“近似排序”时，插入排序效率的最好情况运行时间为O(n)； &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://zhaoyan106.github.io/blog/2015/01/05/ioskai-fa-zhong-%5B%3F%5D-xie-xiao-ji-qiao">
+  <link rel="canonical" href="http://zhaoyan106.github.io/blog/2016/02/22/ba-da-pai-xu-suan-fa">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="My iOS Journey" type="application/atom+xml">
@@ -68,7 +68,7 @@
   
   <header>
     
-      <h1 class="entry-title">iOS开发中一些小技巧</h1>
+      <h1 class="entry-title">八大排序算法</h1>
     
     
       <p class="meta">
@@ -77,76 +77,67 @@
 
 
 
-<time class='entry-date' datetime='2015-01-05T11:13:29+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>5</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:13 am</span></time>
+<time class='entry-date' datetime='2016-02-22T10:36:43+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2016</span></span> <span class='time'>10:36 am</span></time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><p>原文地址：<a href="http://www.cocoachina.com/ios/20141231/10783.html">http://www.cocoachina.com/ios/20141231/10783.html</a>最近cocoachina上很火的一篇文章</p>
+<div class="entry-content"><h4>插入排序：直接插入排序、希尔排序</h4>
 
-<h4>1.TableView不显示没内容的Cell</h4>
+<h6>1、插入排序</h6>
 
-<pre><code>self.tableView.tableFooterView = [[UIView alloc] init];
-</code></pre>
+<h6>效率：</h6>
 
-<h4>2.自定义了leftBarbuttonItem左滑返回手势失效了</h4>
+<p>稳定</p>
 
-<pre><code>self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]
-                                     initWithImage:img
-                                     style:UIBarButtonItemStylePlain
-                                     target:self
-                                     action:@selector(onBack:)];
-self.navigationController.interactivePopGestureRecognizer.delegate = (id)self;
-</code></pre>
+<p>空间复杂度O(1)</p>
 
-<p>在iOS7以后系统自动支持了左侧滑动返回功能,但当设置了左侧返回按钮,就会失效,这个方法很好地解决了问题</p>
+<p>时间复杂度O(n2)</p>
 
-<h4>3.ScrollView莫名其妙不能在viewController划到顶怎么办?</h4>
+<p>最差情况：反序，需要移动n*(n-1)/2个元素</p>
 
-<pre><code>self.automaticallyAdjustsScrollViewInsets = NO;
-</code></pre>
+<p>最好情况：正序，不需要移动元素</p>
 
-<p>这个功能也是iOS7之后系统带的功能</p>
+<p>数组在已排序或者是“近似排序”时，插入排序效率的最好情况运行时间为O(n)；</p>
 
-<h4>4.像safari一样滑动的时候隐藏navigationbar?</h4>
+<p>插入排序最坏情况运行时间和平均情况运行时间都为O(n²)。</p>
 
-<pre><code>navigationController.hidesBarsOnSwipe = Yes
-</code></pre>
+<p>通常，插入排序呈现出二次排序算法中的最佳性能。</p>
 
-<h4>5.导航条返回键带的title太讨厌了,怎么让它消失!</h4>
+<p>对于具有较少元素（如n&lt;=15）的列表来说，二次算法十分有效。</p>
 
-<pre><code>[[UIBarButtonItem appearance] setBackButtonTitlePositionAdjustment:UIOffsetMake(0, -60) forBarMetrics:UIBarMetricsDefault];
-</code></pre>
+<p>在列表已被排序时，插入排序是线性算法O(n)。</p>
 
-<h4>6.怎么把tableview里cell的小对勾的颜色改成别的颜色？</h4>
+<p>在列表“近似排序”时，插入排序仍然是线性算法。</p>
 
-<pre><code>_mTableView.tintColor = [UIColor redColor];
-</code></pre>
+<p>在列表的许多元素已位于正确的位置上时，就会出现“近似排序”的条件。</p>
 
-<h4>7.本来我的statusbar是lightcontent的，结果用UIImagePickerController会导致我的statusbar的样式变成黑色，怎么办？</h4>
+<p>通过使用O(nlog2n)效率的算法（如快速排序）对数组进行部分排序，</p>
 
-<pre><code>- (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated
-{
-    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
-}
-</code></pre>
+<p>然后再进行选择排序，某些高级的排序算法就是这样实现的。
+2、希尔排序</p>
 
-<h4>8.怎么把我的navigationbar弄成透明的而不是带模糊的效果？</h4>
+<h4>选择排序：简单的选择排序、堆排序</h4>
 
-<pre><code>[self.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
-self.navigationBar.shadowImage = [UIImage new];
-self.navigationBar.translucent = YES;
-</code></pre>
+<p>1、选择排序</p>
 
-<h4>9.怎么改变uitextfield placeholder的颜色和位置？</h4>
+<p>2、堆排序</p>
 
-<pre><code>- (void) drawPlaceholderInRect:(CGRect)rect {
-    [[UIColor blueColor] setFill];
-    [self.placeholder drawInRect:rect withFont:self.font    lineBreakMode:UILineBreakModeTailTruncation alignment:self.textAlignment];
-}
-</code></pre>
+<h4>交换排序：冒泡排序、快速排序</h4>
+
+<p>1、冒泡排序</p>
+
+<p>2、快速排序</p>
+
+<h4>归并排序</h4>
+
+<h4>基数排序</h4>
+
+<p>当n较大，则应采用时间复杂度为O(nlog2n)的排序方法：<code>快速排序</code>、<code>堆排序</code>或<code>归并排序</code></p>
+
+<p><code>快速排序</code>：是目前基于<code>比较</code>的内部排序中被认为是最好的方法，当待排序的关键字是随机分布时，快速排序的平均时间最短；</p>
 </div>
 
 
@@ -162,7 +153,7 @@ self.navigationBar.translucent = YES;
 
 
 
-<time class='entry-date' datetime='2015-01-05T11:13:29+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>5</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:13 am</span></time>
+<time class='entry-date' datetime='2016-02-22T10:36:43+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2016</span></span> <span class='time'>10:36 am</span></time>
       
 
 
@@ -196,10 +187,10 @@ self.navigationBar.translucent = YES;
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2014/11/24/chang-yong-gong-ju-fang-fa-zong-jie/" title="Previous Post: 常用工具方法总结">&laquo; 常用工具方法总结</a>
+        <a class="basic-alignment left" href="/blog/2015/12/02/nsinvocationshi-yong/" title="Previous Post: NSInvocation使用">&laquo; NSInvocation使用</a>
       
       
-        <a class="basic-alignment right" href="/blog/2015/01/05/uiwebviewxiu-gai-ye-mian-xiang-guan/" title="Next Post: UIWebView修改页面相关">UIWebView修改页面相关 &raquo;</a>
+        <a class="basic-alignment right" href="/blog/2016/02/22/suan-fa-de-shi-jian-xiao-lu/" title="Next Post: 算法的时间效率">算法的时间效率 &raquo;</a>
       
     </p>
   </footer>
