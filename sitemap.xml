@@ -2,11 +2,11 @@
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>http://zhaoyan106.github.io/blog/2016/02/22/suan-fa-de-shi-jian-xiao-lu/</loc>
-    <lastmod>2016-02-22T11:08:59+08:00</lastmod>
+    <lastmod>2016-02-22T11:48:25+08:00</lastmod>
   </url>
   <url>
     <loc>http://zhaoyan106.github.io/blog/2016/02/22/ba-da-pai-xu-suan-fa/</loc>
-    <lastmod>2016-02-22T10:36:43+08:00</lastmod>
+    <lastmod>2016-02-22T11:46:54+08:00</lastmod>
   </url>
   <url>
     <loc>http://zhaoyan106.github.io/blog/2015/12/02/nsinvocationshi-yong/</loc>
@@ -113,11 +113,5 @@
   </url>
   <url>
     <loc>http://zhaoyan106.github.io/</loc>
-  </url>
-  <url>
-    <loc>http://zhaoyan106.github.io/posts/2/</loc>
-  </url>
-  <url>
-    <loc>http://zhaoyan106.github.io/posts/3/</loc>
   </url>
 </urlset>
