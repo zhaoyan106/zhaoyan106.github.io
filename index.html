@@ -9,7 +9,7 @@
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="插入排序：直接插入排序、希尔排序 1、插入排序 效率： 稳定 空间复杂度O(1) 时间复杂度O(n2) 最差情况：反序，需要移动n*(n-1)/2个元素 最好情况：正序，不需要移动元素 数组在已排序或者是“近似排序”时，插入排序效率的最好情况运行时间为O(n)； &hellip;">
+  <meta name="description" content="~ 特点 1 大部分程序的大部分指令之执行一次，或者最多几次。如果一个程序的所有指令都具有这样的性质，我们说这个程序的执行时间是常数。 logN 如果一个程序的运行时间是对数级的，则随着N的增大程序会渐渐慢下来，如果一个程序将一个大的问题分解成一系列更小的问题，每一步都将问题的规模缩减成几分之一 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -65,6 +65,73 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/02/22/suan-fa-de-shi-jian-xiao-lu/">算法的时间效率</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-02-22T11:08:59+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2016</span></span> <span class='time'>11:08 am</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><table>
+<thead>
+<tr>
+<th>~ </th>
+<th> 特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 </td>
+<td> 大部分程序的大部分指令之执行一次，或者最多几次。如果一个程序的所有指令都具有这样的性质，我们说这个程序的执行时间是常数。</td>
+</tr>
+<tr>
+<td>logN  </td>
+<td> 如果一个程序的运行时间是对数级的，则随着N的增大程序会渐渐慢下来，如果一个程序将一个大的问题分解成一系列更小的问题，每一步都将问题的规模缩减成几分之一，一般就会出现这样的运行时间函数。在我们所关心的范围内，可以认为运行时间小于一个大的常数。对数的基数会影响这个常数，但改变不会太大：当N=1000时，如果基数是10，logN等于3；如果基数是2，logN约等于10.当N=1 00 000，logN只是前值的两倍。当N时原来的两倍，logN只增长了一个常数因子：仅当从N增长到N平方时，logN才会增长到原来的两倍。</td>
+</tr>
+<tr>
+<td>N </td>
+<td> 如果程序的运行时间的线性的，很可能是这样的情况：对每个输入的元素都做了少量的处理。当N=1 000 000时，运行时间大概也就是这个数值；当N增长到原来的两倍时，运行时间大概也增长到原来的两倍。如果一个算法必须处理N个输入（或者产生N个输出），那么这种情况是最优的。</td>
+</tr>
+<tr>
+<td>NlogN </td>
+<td>  如果某个算法将问题分解成更小的子问题，独立地解决各个子问题，最后将结果综合起来，运行时间一般就是NlogN。我们找不到一个更好的形容，就暂且将这样的算法运行时间叫做NlogN。当N=1 000 000时，NlogN大约是20 000 000。当N增长到原来的两倍，运行时间超过原来的两倍，但超过不是太多。</td>
+</tr>
+<tr>
+<td>N² </td>
+<td> 如果一个算法的运行时间是二次的（quadratic），那么它一般只能用于一些规模较小的问题。这样的运行时间通常存在于需要处理每一对输入数据项的算法（在程序中很可能表现为一个嵌套循环）中，当N=1000时，运行时间是1 000 000；如果N增长到原来的两倍，则运行时间将增长到原来的四倍。</td>
+</tr>
+<tr>
+<td>N的三次方 </td>
+<td> 类似的，如果一个算法需要处理输入数据想的三元组（很可能表现为三重嵌套循环），其运行时间一般就是三次的，只能用于一些规模较小的问题。当N=100时，运行时间就是1 000 000；如果N增长到原来的两倍，运行时间将会增长到原来的八倍。</td>
+</tr>
+<tr>
+<td>2的N次方 </td>
+<td> 如果一个算法的运行时间是指数级的（exponential），一般它很难在实践中使用，即使这样的算法通常是对问题的直接求解。当N=20时，运行时间是1 000 000；如果增长到原来的两倍时，运行时间将是原时间的平方！</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1248,377 +1315,6 @@ constructingBodyWithBlock:^(id&lt;AFMultipartFormData&gt; formData) {
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/02/02/duo-xian-cheng-zong-jie/">多线程总结</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-02-02T10:15:38+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2015</span></span> <span class='time'>10:15 am</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2>一、线程</h2>
-
-<h4>1、线程中的术语</h4>
-
-<p>线程(线程)用于指代独立执行的代码段。</p>
-
-<p>进程(process)用于指代一个正在运行的可执行程序,它可以包含多个线程。</p>
-
-<p>任务(task)用于指代抽象的概念,表示需要执行工作。</p>
-
-<h4>2、线程的模式</h4>
-
-<p>线程启动之后,线程就进入三个状态中的任何一个:运行(running)、就绪(ready)、阻塞(blocked)</p>
-
-<p><code>(因为底层内核的支持,操作对象(Operation objectis)可能创建线程更快。它们使用内核 里面常驻线程池里面的线程来节省创建的时间,而不是每次都创建新的线程。)</code></p>
-
-<h4>3、线程的使用</h4>
-
-<p>1、隐式的开启一个线程</p>
-
-<pre><code>[NSThread detachNewThreadSelector:@selector(myThreadMainMethod:) toTarget:self withObject:nil];
-//使用 detachNewThreadSelector:toTarget:withObject:类方法来生成一个新的线程。
-</code></pre>
-
-<p>2、显示开启线程</p>
-
-<pre><code>[[NSThread alloc] initWithTarget:self selector:@selector(myThreadMainMethod:) object:nil];
-[myThread start];
-//创建一个新的 NSThread 对象,并调用它的 start 方法。
-</code></pre>
-
-<p>3、子类化NSthread</p>
-
-<pre><code>initWithTarget:selector:object:
-// 并重写run方法，main方法将成为线程入口
-</code></pre>
-
-<p>4、调用NSObject方法使用NSThread对象,它的线程当前真正运行,你可以给该线程发送 消息的唯一方法是在你应用程序里面的任何对象使用</p>
-
-<pre><code>performSelector:onThread:withObject:waitUntilDone:
-</code></pre>
-
-<p><code>（注意：目标线程必须在它的 run loop 里面运行，也就是说目标线程必须受到开启runloop，后面runloop会涉及）</code></p>
-
-<p>5、调用NSObject方法新生成一个脱离的线程,使用指定的方法作为新线程的主体入口点</p>
-
-<pre><code>performSelectorInBackground:withObject:
-</code></pre>
-
-<p><code>（注意：在selectore内部,你必须配置线程就像你在任何线程里面一样。比如,你可能需要设置一个自动 释放池(如果你没有使用垃圾回收机制),在你要使用它的时候配置线程的 run loop）</code></p>
-
-<h4>4、线程的主入口需要的配置</h4>
-
-<p>1、创建一个自动释放池</p>
-
-<p>如果应用程序使用的垃圾回收机制,而不是管理的内存模型,那么创建一个自动 释放池不是绝对必要的。在垃圾回收的应用程序里面,一个自动释放池是无害的,而 且大部分情况是被忽略。允许通过个代码管理必须同时支持垃圾回收和内存管理模 型。在这种情况下,内存管理模型必须支持自动释放池,当应用程序运行垃圾回收的 时候,自动释放池只是被忽略而已。</p>
-
-<p>2、设置异常处理</p>
-
-<p>3、设置一个runloop</p>
-
-<pre><code>+ (void)httpThreadWork{
-    @autoreleasepool {
-        // 线程命名，方便调试
-        [[NSThread currentThread] setName:@"eLongHttpThread"];
-
-        // runloop一直运行
-        NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
-        [runLoop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];
-        [runLoop run];
-    }
-}
-</code></pre>
-
-<hr />
-
-<h2>二、runloop</h2>
-
-<h4>1、runloop的基本介绍</h4>
-
-<p>使用 run loop 的目的是让你的线 程在有工作的时候忙于工作,而没工作的时候处于休眠状态（节能）。应用程序不需要显式的创建这些对象(run loop objects)，每个线程,包括程序的主线程都有与之对应的 run loop object。只有辅助线程（子线程）需要显式的运行它的。输入源(input source)和定时源 (timer source)。输入源传递异步事件,通常消息来自于其他线程或程序。定时源 则传递同步事件,发生在特定时间或者重复的时间间隔。两种源都使用程序的某一特 定的处理例程来处理到达的事件。<img src="http://img.blog.csdn.net/20130703215237531?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd3p6dmljdG9yeV90anNk/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="runloop icon" /></p>
-
-<h4>2、runloop模式</h4>
-
-<p>run loops 会生成关于 run loop 行为的通知 (notifications)。注册 run loop 观察者(run-loop Observers)可以收到这些通知, 并在线程上面使用它们来做额外的处理。在 run loop 运行过程中,<code>只有和模式相关的源才会被监视并允许他们传递事件消息。</code>(类似的,只有和模式相关的观察者会通知 run loop 的进程)。和其他模式关联的源只有在 run loop 运行在其模式下才会运行,否则处于暂停状态。
-    ￼NSDefaultRunLoopMode(Cocoa)  // 最常用的一种模式，大多数的时候都使用他
-    ￼￼kCFRunLoopDefaultMode (Core￼￼Foundation)
-    ￼NSRunLoopCommonModes(Cocoa) // 一般模式，注意网络请求使用这个，否则主线程刷新UI，网络请求会暂停
-    ￼￼kCFRunLoopCommonModes (CoreFoundation)</p>
-
-<h4>3、输入源</h4>
-
-<p>事件来源取决于输入源的种类:基于端口的输入源和自定义输入源。基于端口的输入源监听程序相应的端口。自定义输入源则监 听自定义的事件源。至于 run loop,它不关心输入源的是基于端口的输入源还是自定义的输入源。系统会实现两种输入源供你使用。</p>
-
-<p>两类输入源的区别在于如何显示: 基于端口的输入源由内核自动发送,而自定义的则需要人工从其他线程发送。</p>
-
-<p>1、基于端口的输入源Cocoa和CoreFoundation内置支持使用端口相关的对象和函数来创建的基于端口的源。例如,在Cocoa 里面你从来不需要直接创建输入源。你只要简单的创建端口对象,并使用NSPort的方法把该端口添加到runloop。端口对象会自己处理创建和配置输入源。</p>
-
-<p>2、自定义输入源，在Core Foundation,你必须人工创建端口和它的runloop源。在两种情况下，你都可以使用端口相关的函数(CFMachPortRef,CFMessagePortRef,CFSocketRef)来创建合适的对象。</p>
-
-<p>3、Cocoa执行Selector的源</p>
-
-<pre><code>￼performSelectorOnMainThread:withObject:waitUntilDone:
-￼￼performSelectorOnMainThread:withObject:waitUntilDone:modes
-
-performSelector:onThread:withObject:waitUntilDone:
-performSelector:onThread:withObject:waitUntilDone:modes
-
-performSelector:withObject:afterDelay:
-performSelector:withObject:afterDelay:inModes:
-
-￼￼￼￼￼cancelPreviousPerformRequestWithTarget:
-￼￼￼￼￼cancelPreviousPerformRequestWithTarget:selector:object:
-</code></pre>
-
-<p>4、定时源</p>
-
-<p>如果定时器被设定在某一特定时间开始并5秒重复一次,那么定时器会在那个特定时间后5秒启动,即使在那个特定的触发时间延迟了。如果定时器被延迟以至于它错过了一个或多个触发时间,那么定时器会在下一个最近的触发事件启动,而后面会按照触发间隔正常执行。</p>
-
-<h4>4、何时使用runloop</h4>
-
-<p>1、仅当在为你的程序创建辅助线程的时候,你才需要显式运行一个 run loop</p>
-
-<p>2、对于辅助线程,你需要判断一个run loop是否是必须的。如果是必须的,那么你要自己配置并启动它。你不需要在任何情况下都去启动一个线程的run loop。比如,你使用线程来处理一个预先定义的长时间运行的任务时,你应该避免启动runloop。</p>
-
-<p>3、Runloop在你要和线程有更多的交互时才需要,比如以下情况:</p>
-
-<p>使用端口或自定义输入源来和其他线程通信</p>
-
-<p>使用线程的定时器</p>
-
-<p>Cocoa中使用任何performSelector&hellip;的方法</p>
-
-<p>使线程周期性工作</p>
-
-<h4>5、runloop对象</h4>
-
-<p>1、获取runloop对象</p>
-
-<p>为了获得当前线程的 run loop,Cocoa 程序中,使用 NSRunLoop 的 currentRunLoop 类方法来检索一个NSRunLoop 对象。</p>
-
-<p>2、配置runloop对象</p>
-
-<p>在你在辅助线程运行 run loop 之前,你必须至少添加一输入源或定时器给它。 如果 run loop 没有任何源需要监视的话,它会在你启动之际立马退出。</p>
-
-<p><code>（当前长时间运行的线程配置 run loop 的时候,最好添加至少一个输入源到 run loop 以接收消息。虽然你可以使用附属的定时器来进入 run loop,但是一旦定时器 触发后,它通常就变为无效了,这会导致 run loop 退出。虽然附加一个循环的定时 器可以让 run loop 运行一个相对较长的周期,但是这也会导致周期性的唤醒线程, 这实际上是轮询(polling)的另一种形式而已。与之相反,输入源会一直等待某事 件发生,在事情导致前它让线程处于休眠状态。）</code></p>
-
-<p>3、启动runloop</p>
-
-<p>有几种方式可以启动runloop,包括以下这些:</p>
-
-<p>无条件的</p>
-
-<p>无条件的进入 run loop 是最简单的方法,但也最不推荐使用的。因为这样会使你的线程处在一个永久的循环中,这会让你对 run loop本身的控制很少。你可以添加或删除输入源和定时器,但是退出 run loop 的唯一方法是杀死它。没有任何办法 可以让这run loop运行在自定义模式下。</p>
-
-<p>设置超时时间</p>
-
-<p>替代无条件进入 run loop 更好的办法是用预设超时时间来运行 run loop,这样 run loop 运作直到某一事件到达或者规定的时间已经到期。如果是事件到达,消息 会被传递给相应的处理程序来处理,然后 run loop 退出。你可以重新启动 run loop 来等待下一事件。如果是规定时间到期了,你只需简单的重启 run loop 或使用此段 时间来做任何的其他工作。</p>
-
-<p>特定模式</p>
-
-<p>除了超时机制,你也可以使用特定的模式来运行你的 run loop。模式和超时不是 互斥的,他们可以在启动 run loop 的时候同时使用。</p>
-
-<p>4、退出runloop</p>
-
-<p>给runloop设置超时时间</p>
-
-<p>如果可以配置的话,推荐使用第一种方法。指定一个超时时间可以使 run loop 退出前完成所有正常操作,包括发送消息给 run loop 观察者。</p>
-
-<p>通知runloop停止</p>
-
-<p>使用 CFRunLoopStop 来显式的停止 run loop 和使用超时时间产生的结果相似。Run loop 把所有剩余的通知发送出去再退出。与设置超时的不同的是你可以在无条 件启动的 run loop 里面使用该技术。
-尽管移除 run loop 的输入源和定时器也可能导致 run loop 退出,但这并不是可靠的退出 run loop 的方法。一些系统例程会添加输入源到 run loop 里面来处理所需事件。因为你的代码未必会考虑到这些输入源,这样可能导致你无法没从系统例程中移除它们。</p>
-
-<h4>6、定义自定义输入源</h4>
-
-<p>1、创建自定义输入源包括定义一下内容
-输入源要处理的信息
-如何与其他线程进行交互
-处理与其他线程之间的交互
-终止输入源
-2、配置定时源
-为了创建一个定时源,你所需要做只是创建一个定时器对象并把它调度到你的runloop。Cocoa程序中使用NSTimer类来创建一个新的定时器对象,而 Core Foundation 中使用 CFRunLoopTimerRef 不透明类型。本质上,NSTimer 类是 Core Foundation 的简单扩展,它提供了便利的特征,例如能使用相同的方法创建和调配定时器。
-Cocoa 中可以使用以下 NSTimer 类方法来创建并调配一个定时器:
-    scheduledTimerWithTimeInterval:target:selector:userInfo:repeats:    scheduledTimerWithTimeInterval:invocation:repeats:
-上述方法创建了定时器并以默认模式把它们添加到当前线程的run loop。你可以手工的创建 NSTimer对象,并通过NSRunLoop 的addTimer:forMode:把它添加到run loop。两种方法都做了相同的事,区别在于你对定时器配置的控制权。例如,如果你手工创建定时器并把它添加到 run loop,你可以选择要添加的模式而不使用默认模式。
-显示了如何使用这这两种方法创建定时器。第一个定时器在初始化后1秒开始运行,此后每隔0.1秒运行。第二个定时器则在初始化后0.2秒开始运行,此后每隔0.2秒运行。</p>
-
-<pre><code>NSRunLoop* myRunLoop = [NSRunLoop currentRunLoop];
-NSDate* futureDate = [NSDate dateWithTimeIntervalSinceNow:1.0];
-NSTimer* myTimer = [[NSTimer alloc] initWithFireDate:futureDate interval:0.1 target:self selector:@selector(myDoFireTimer1:) userInfo:nil repeats:YES];
-￼[myRunLoop addTimer:myTimer forMode:NSDefaultRunLoopMode];
-
-// Create and schedule the second timer.    [NSTimer scheduledTimerWithTimeInterval:0.2 target:self selector:@selector(myDoFireTimer2:) userInfo:nil repeats:YES];
-</code></pre>
-
-<p>3、配置基于端口的输入源
-Cocoa 和 Core Foundation 都提供了基于端口的对象用于线程或进程间的通信。以下部分显示如何使用几种不同类型的端口对象建立端口通信。￼￼
-配置 NSMachPort 对象
-为了和 NSMachPort 对象建立稳定的本地连接,你需要创建端口对象并将之加入 相应的线程的 run loop。当运行辅助线程的时候,你传递端口对象到线程的主体入 口点。辅助线程可以使用相同的端口对象将消息返回给原线程。</p>
-
-<p>a) 实现主线程的代码</p>
-
-<pre><code>- (void)launchThread{
-    NSPort *myport = [NSMachPort port];
-    if (myport) {
-        [myport setDelegate:self];
-        [[NSRunLoop currentRunLoop] addPort:myport forMode:NSDefaultRunLoopMode];
-        [NSThread detachNewThreadSelector:@selector(LaunchThreadWithPort:) toTarget:self withObject:myport];
-    }
-}
-</code></pre>
-
-<p>为了在你的线程间建立双向的通信,你需要让你的工作线程在签到的消息中发送自己的本地端口到主线程。主线程接收到签到消息后就可以知道辅助线程运行正常, 并且提供了发送消息给辅助线程的方法。
-主要线程的 handlePortMessage:方法。当由数据到达线程的本地端口时,该方法被调用。当签到消息到达时,此方法可以直接从辅助线程里面检索 端口并保存下来以备后续使用。
-    - (void)handlePortMessage:(NSPortMessage <em>)portMessage{
-        unsigned int message = [portMessage msgid];
-        NSPort </em>distantPort = nil;
-        if (message == kCheckinMessage) {
-            // Get the worker thread’s communications port.
-            distantPort = [portMessage sendMessegae];
-            // Retain and save the worker port for later use.
-            [self storeDistantPort];
-        }else{
-            // Handle other messages.
-        }
-    }</p>
-
-<p>b) 辅助线程的实现代码</p>
-
-<p>对于辅助工作线程,你必须配置线程使用特定的端口以发送消息返回给主要线程。
-创建了线程的自动释放池后,紧接着创建工作对象驱动线程运行。工作对象的 sendCheckinMessage:方法创建了工作线程的本地端口并发送签到消息回主线程。
-    + (void)LaunchThreadWithPort:(id)inData{        NSAutoreleasePool<em> pool = [[NSAutoreleasePool alloc] init];
-        NSPort </em>distantPort = (NSPort <em>)inData;
-        UIViewController</em> workerObj = [[self alloc] init];
-        [workerObj sendCheckinMessage:distantPort];
-        [distantPort release];
-        // Let the run loop process things.
-        do{
-            [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];</p>
-
-<pre><code>    }while (![workerObj shouldExit]);
-    [workerObj release];
-    [pool release];
-}
-</code></pre>
-
-<p>当使用 NSMachPort 时候,本地和远程线程可以使用相同的端口对象在线程间进行单边通信。换句话说,一个线程创建的本地端口对象成为另一个线程的远程端口对象。</p>
-
-<p>显示了辅助线程的签到例程,该方法为之后的通信设置自己的本地端口,然后发送签到消息给主线程。它使用 LaunchThreadWithPort:方法中收到的端口对象做为目标消息。</p>
-
-<pre><code>- (void)sendCheckinMessage:(NSPort*)outPort{        // Retain and save the remote port for future use.      [self setRemotePort:outPort];
-    // Create and configure the worker thread port.     NSPort* myPort = [NSMachPort port];
-    [myPort setDelegate:self];      [[NSRunLoop currentRunLoop] addPort:myPort forMode:NSDefaultRunLoopMode];       // Create the check-in message.
-    NSPortMessage* messageObj = [[NSPortMessage alloc] initWithSendPort:outPort receivePort:myPort components:nil];     if (messageObj){            // Finish configuring the message and send it immediately.          [messageObj setMsgId:setMsgid:kCheckinMessage];         [messageObj sendBeforeDate:[NSDate date]];      }￼￼
-}
-</code></pre>
-
-<hr />
-
-<h2>三、线程同步</h2>
-
-<p>火车票卖票案例，使用NSLock,NSCondition</p>
-
-<pre><code>#import &lt;UIKit/UIKit.h&gt;   
-
-@class ViewController;   
-
-@interface AppDelegate : UIResponder &lt;UIApplicationDelegate&gt;   
-{   
-    int tickets;   
-    int count;   
-    NSThread* ticketsThreadone;   
-    NSThread* ticketsThreadtwo;   
-    NSCondition* ticketsCondition;   
-    NSLock *theLock;   
-}   
-@property (strong, nonatomic) UIWindow *window;   
-
-@property (strong, nonatomic) ViewController *viewController;   
-
-@end   
-
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions   
-{   
-
-    tickets = 100;   
-    count = 0;   
-    theLock = [[NSLock alloc] init];   
-    // 锁对象   
-    ticketsCondition = [[NSCondition alloc] init];   
-    ticketsThreadone = [[NSThread alloc] initWithTarget:self selector:@selector(run) object:nil];   
-    [ticketsThreadone setName:@"Thread-1"];   
-    [ticketsThreadone start];   
-
-
-    ticketsThreadtwo = [[NSThread alloc] initWithTarget:self selector:@selector(run) object:nil];   
-    [ticketsThreadtwo setName:@"Thread-2"];   
-    [ticketsThreadtwo start];   
-
-    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];   
-    // Override point for customization after application launch.   
-    self.viewController = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];   
-    self.window.rootViewController = self.viewController;   
-    [self.window makeKeyAndVisible];   
-    return YES;   
-}   
-
-- (void)run{   
-    while (TRUE) {   
-        // 上锁   
-//        [ticketsCondition lock];   
-        [theLock lock];   
-        if(tickets &gt;= 0){   
-            [NSThread sleepForTimeInterval:0.09];   
-            count = 100 - tickets;   
-            NSLog(@"当前票数是:%d,售出:%d,线程名:%@",tickets,count,[[NSThread currentThread] name]);   
-            tickets--;   
-        }else{   
-            break;   
-        }   
-        [theLock unlock];   
-//        [ticketsCondition unlock];   
-    }   
-}   
-</code></pre>
-
-<p>如果没有线程同步的lock，卖票数可能是-1.加上lock之后线程同步保证了数据的正确性。</p>
-
-<p>上面例子使用了两种锁，一种NSCondition ，一种是：NSLock。 NSCondition我已经注释了。</p>
-
-<p>其他同步</p>
-
-<p>可以使用指令 @synchronized 来简化 NSLock的使用，这样我们就不必显示编写创建NSLock,加锁并解锁相关代码。</p>
-
-<pre><code>- (void)doSomeThing:(id)anObj 
-{ 
-    @synchronized(anObj) 
-    { 
-        // Everything between the braces is protected by the @synchronized directive. 
-    } 
-}
-</code></pre>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/2">&larr; Older</a>
@@ -1634,6 +1330,10 @@ Cocoa 和 Core Foundation 都提供了基于端口的对象用于线程或进程
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2016/02/22/suan-fa-de-shi-jian-xiao-lu/">算法的时间效率</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2016/02/22/ba-da-pai-xu-suan-fa/">八大排序算法</a>
       </li>
     
@@ -1647,10 +1347,6 @@ Cocoa 和 Core Foundation 都提供了基于端口的对象用于线程或进程
     
       <li class="post">
         <a href="/blog/2015/05/13/effective-objective-c-2-dot-0zong-jie/">Effective Objective-C 2.0总结</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/04/30/best-practices/">Best Practices</a>
       </li>
     
   </ul>
