@@ -9,7 +9,7 @@
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="NSInvocation可以对某个对象发送消息(多参数使用),可以处理参数和返回值 1、创建NSInvocation对象需要一个方法签名 NSMethodSignature * sig = [self methodSignatureForSelector:sel] 2、 &hellip;">
+  <meta name="description" content="插入排序：直接插入排序、希尔排序 1、插入排序 效率： 稳定 空间复杂度O(1) 时间复杂度O(n2) 最差情况：反序，需要移动n*(n-1)/2个元素 最好情况：正序，不需要移动元素 数组在已排序或者是“近似排序”时，插入排序效率的最好情况运行时间为O(n)； &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -65,6 +65,88 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/02/22/ba-da-pai-xu-suan-fa/">八大排序算法</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-02-22T10:36:43+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2016</span></span> <span class='time'>10:36 am</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h4>插入排序：直接插入排序、希尔排序</h4>
+
+<h6>1、插入排序</h6>
+
+<h6>效率：</h6>
+
+<p>稳定</p>
+
+<p>空间复杂度O(1)</p>
+
+<p>时间复杂度O(n2)</p>
+
+<p>最差情况：反序，需要移动n*(n-1)/2个元素</p>
+
+<p>最好情况：正序，不需要移动元素</p>
+
+<p>数组在已排序或者是“近似排序”时，插入排序效率的最好情况运行时间为O(n)；</p>
+
+<p>插入排序最坏情况运行时间和平均情况运行时间都为O(n²)。</p>
+
+<p>通常，插入排序呈现出二次排序算法中的最佳性能。</p>
+
+<p>对于具有较少元素（如n&lt;=15）的列表来说，二次算法十分有效。</p>
+
+<p>在列表已被排序时，插入排序是线性算法O(n)。</p>
+
+<p>在列表“近似排序”时，插入排序仍然是线性算法。</p>
+
+<p>在列表的许多元素已位于正确的位置上时，就会出现“近似排序”的条件。</p>
+
+<p>通过使用O(nlog2n)效率的算法（如快速排序）对数组进行部分排序，</p>
+
+<p>然后再进行选择排序，某些高级的排序算法就是这样实现的。
+2、希尔排序</p>
+
+<h4>选择排序：简单的选择排序、堆排序</h4>
+
+<p>1、选择排序</p>
+
+<p>2、堆排序</p>
+
+<h4>交换排序：冒泡排序、快速排序</h4>
+
+<p>1、冒泡排序</p>
+
+<p>2、快速排序</p>
+
+<h4>归并排序</h4>
+
+<h4>基数排序</h4>
+
+<p>当n较大，则应采用时间复杂度为O(nlog2n)的排序方法：<code>快速排序</code>、<code>堆排序</code>或<code>归并排序</code></p>
+
+<p><code>快速排序</code>：是目前基于<code>比较</code>的内部排序中被认为是最好的方法，当待排序的关键字是随机分布时，快速排序的平均时间最短；</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1537,233 +1619,6 @@ Cocoa 和 Core Foundation 都提供了基于端口的对象用于线程或进程
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/01/26/wang-luo-duo-xian-cheng-ying-yong/">网络多线程应用</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-01-26T16:46:41+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>26</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>4:46 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2>一、发送网络请求所需</h2>
-
-<p>网络请求中一定会用的类:NSOperation、NSOperationQueue、NSRunLoop、NSURLRequest、NSURLConnection，这些都是发送网络请求必须得，其中NSOperation、NSOperationQueue、NSRunLoop这些是用在多线程发送网络请求中的。</p>
-
-<h4>1、NSOperation</h4>
-
-<h6>NSOperation有三种使用方法：NSInvocationOperation、NSBlockOperation、自定义NSOperation（NSOperation的子类）</h6>
-
-<p>1、NSInvocationOperation：创建operation object。如果你已经有现有的方法来执行需要的任务，就可以使用这个类。</p>
-
-<p>2、NSBlockOperation：可以直接使用的类，用来并发地执行一个或多个block对象。operation object使用“组”的语义来执行多个block对象，所有相关的block都执行完成之后，operation object才算完成。</p>
-
-<p>3、自定义NSOperation：继承NSOperation可以完全控制operation object的实现，包括修改操作执行和状态报告的方式。</p>
-
-<h6>operation objects都支持以下关键特性：</h6>
-
-<p>1、支持建立基于图的operation objects依赖。可以阻止某个operation运行，直到它依赖的所有operation都已经完成。</p>
-
-<p>2、支持可选的completion block，在operation的主任务完成后调用。</p>
-
-<p>3、支持应用使用KVO通知来监控operation的执行状态。</p>
-
-<p>4、支持operation优先级，从而影响相对的执行顺序</p>
-
-<p>5、支持取消，允许你中止正在执行的任务</p>
-
-<h6>自定义NSOperation</h6>
-
-<p>NSOperation 类提供通用的子类继承点，而且实现了许多重要的基础设施来处理依赖和KVO通知。继承所需的工作量主要取决于你要实现非并发还是并发的operation。</p>
-
-<p>定义非并发operation要简单许多，只需要执行主任务，并正确地响应取消事件;NSOperation 处理了其它所有事情。对于并发operation，你必须替换某些现有的基础设施代码。</p>
-
-<p>串行：</p>
-
-<p>1、每个operation对象至少需要实现以下方法：</p>
-
-<p>2、自定义initialization方法：初始化，将operation 对象设置为已知状态</p>
-
-<p>3、自定义main方法：执行你的任务</p>
-
-<p>4、你也可以选择性地实现以下方法：</p>
-
-<p>5、main方法中需要调用的其它自定义方法</p>
-
-<p>6、Accessor方法：设置和访问operation对象的数据</p>
-
-<p>7、dealloc方法：清理operation对象分配的所有内存</p>
-
-<p>8、NSCoding 协议的方法：允许operation对象archive和unarchive</p>
-
-<p>并行：</p>
-
-<pre><code>- (void)start;
-</code></pre>
-
-<p>（<code>必须</code>）所有<code>并发</code>操作都必须覆盖这个方法，以自定义的实现替换默认行为。手动执行一个操作时，你会调用start方法。因此你对这个方法的实现是操作的起点，设置一个线程或其它执行环境，来执行你的任务。你的实现在任何时候都绝对不能调用super。</p>
-
-<pre><code>- (void)main;
-</code></pre>
-
-<p>（<code>可选</code>）这个方法通常用来实现operation对象相关联的任务。尽管你可以在start方法中执行任务，使用main来实现任务可以让你的代码更加清晰地分离设置和任务代码</p>
-
-<pre><code>isExecuting、isFinished
-</code></pre>
-
-<p>（<code>必须</code>）并发操作负责设置自己的执行环境，并向外部client报告执行环境的状态。因此并发操作必须维护某些状态信息，以知道是否正在执行任务，是否已经完成任务。使用这两个方法报告自己的状态。
-这两个方法的实现必须能够在其它多个线程中同时调用。另外这些方法报告的状态变化时，还需要为相应的key path产生适当的KVO通知。</p>
-
-<pre><code>isConcurrent
-</code></pre>
-
-<p>（必须）标识一个操作是否并发operation，覆盖这个方法并返回YES</p>
-
-<h4>2、NSOperationQueue</h4>
-
-<p>Operation Queues是Cocoa版本的并发dispatch queue，由 NSOperationQueue 类实现。dispatch queue总是按先进先出的顺序执行任务，而 Operation Queues 在确定任务执行顺序时，还会考虑其它因素。最主要的一个因素是指定任务是否依赖于另一个任务的完成。你在定义任务时配置依赖性，从而创建复杂的任务执行顺序图。</p>
-
-<p>提交到Operation Queues的任务必须是 NSOperation 对象，operation object封装了你要执行的工作，以及所需的所有数据。由于 NSOperation 是一个抽象基类，通常你需要定义自定义子类来执行任务。不过Foundation framework自带了一些具体子类，你可以创建并执行相关的任务。</p>
-
-<p>Operation objects会产生key-value observing(KVO)通知，对于监控任务的进程非常有用。虽然operation queue总是并发地执行任务，你可以使用依赖，在需要时确保顺序执行</p>
-
-<h2>二、封装NSURLRequest</h2>
-
-<p>通过一个继承自NSObject的类，提供相关的类方法，快速创建网络请求。</p>
-
-<pre><code>NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
-NSMutableString *targetUrl = [[NSMutableString alloc] init];
-[request setValue:self.channelID forHTTPHeaderField:@"channelid"];
-[request setValue:self.version forHTTPHeaderField:@"version"];
-[request setValue:self.deviceID forHTTPHeaderField:@"deviceid"];
-[request setValue:self.authCode forHTTPHeaderField:@"AuthCode"];
-return request;
-</code></pre>
-
-<h2>三、自定义NSOperation</h2>
-
-<p>重写start方法</p>
-
-<pre><code>// 状态机
-typedef enum {
-    eLongOperationPausedState      = -1,   // 暂停
-    eLongOperationReadyState       = 1,    // 准备就绪
-    eLongOperationExecutingState   = 2,    // 正在运行
-    eLongOperationFinishedState    = 3,    // 完成
-}elongOperationState;
-
-@property (nonatomic, assign) elongOperationState state;    // 状态机
-
-@property (nonatomic, strong, readonly) NSMutableURLRequest *currentReq;    // 网络请求
-
-@property (nonatomic,retain) NSRecursiveLock *lock;    // 数据锁
-
-// 创建一个单例线程用来处理所有请求
-+ (NSThread *)httpRequest{
-    static NSThread *httpThread = nil;
-    static dispatch_once_t oncePredicate;
-    dispatch_once(&amp;oncePredicate, ^{
-        httpThread = [[NSThread alloc] initWithTarget:self selector:@selector(httpThreadWork) object:nil];
-        [httpThread start];
-    });
-    return httpThread;
-}
-
-// 子线程显式创建runloop 
-+ (void)httpThreadWork{
-    @autoreleasepool {
-        // 线程命名，方便调试
-        [[NSThread currentThread] setName:@"eLongHttpThread"];
-        // runloop一直运行
-        NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
-        [runLoop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];
-        [runLoop run];
-    }
-}
-
-// 创建网络请求，初始化数据锁，设置状态机为ready状态
-- (id)initWithRequest:(NSMutableURLRequest *)request {
-    if (self = [super init]) {
-        self.currentReq = request;
-        NSRecursiveLock *lock = [[NSRecursiveLock alloc] init];
-        self.lock = lock;
-        self.lock.name = @"elong.httpOperation.lock";
-        _state = eLongOperationReadyState;
-    }
-    return self;
-}
-
-// 重写start方法，当自定义operation加入到队列中自动并发调用
-- (void)start{
-    [self.lock lock];
-    if ([self isCancelled]) {
-        [self performSelector:@selector(cancelConnection) onThread:[[self class] httpRequest] withObject:nil waitUntilDone:NO modes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
-    }else if ([self isReady]) {
-        self.state = eLongOperationExecutingState;
-        [self performSelector:@selector(operationDidStart) onThread:[[self class] httpRequest] withObject:nil waitUntilDone:NO modes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
-    }
-    [self.lock unlock];
-}
-
-// 创建NSURLConnection并开始
-- (void)operationDidStart {
-    [self.lock lock];
-    if (![self isCancelled]) {
-        //  startImmediately:NO 一定要设置为NO否则无法修改runloop
-        NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:self.currentReq delegate:self startImmediately:NO];
-        self.connection = connection;
-        NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
-        // 这里需要设置RunLoop模式为NSRunLoopCommonModes，否则会影响主线程刷新UI会暂停网络,将connection加入runloop或者
-        [self.connection scheduleInRunLoop:runLoop forMode:NSRunLoopCommonModes];
-        [self.connection start];
-    }
-    [self.lock unlock];
-}
-</code></pre>
-
-<h2>四、利用NSOperationQueue开启并发网络请求</h2>
-
-<pre><code>- (id)init{
-    self = [super init];
-    if (!self) {
-        return nil;
-    }
-    // 创建网络请求队列
-    static dispatch_once_t oncePredicate;
-    dispatch_once(&amp;oncePredicate, ^{
-        httpQueue = [[NSOperationQueue alloc] init];    // 创建请求队列
-        httpQueue.maxConcurrentOperationCount = 4;      // 最大并发数
-    });
-    self.callBackObjectDict = [[NSMutableDictionary alloc] initWithCapacity:3];
-    NSRecursiveLock *lock = [[NSRecursiveLock alloc] init];
-    self.lock = lock;
-    self.lock.name = @"elong.httpReq.lock";
-    return self;
-}
-
-- (void)startWith:(eLongHTTPRequestOperation *)httpRequestOperation{
-    [httpQueue addOperation:httpRequestOperation];
-}
-</code></pre>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/2">&larr; Older</a>
@@ -1777,6 +1632,10 @@ typedef enum {
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2016/02/22/ba-da-pai-xu-suan-fa/">八大排序算法</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2015/12/02/nsinvocationshi-yong/">NSInvocation使用</a>
@@ -1794,10 +1653,6 @@ typedef enum {
         <a href="/blog/2015/04/30/best-practices/">Best Practices</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2015/04/21/nei-cun-cun-chu-xiang-guan-zhi-shi/">内存存储相关知识及static和extern关键字的使用</a>
-      </li>
-    
   </ul>
 </section>
 
@@ -1811,7 +1666,7 @@ typedef enum {
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2015 - zhao yan -
+  Copyright &copy; 2016 - zhao yan -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

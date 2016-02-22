@@ -5,12 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Effective Objective-C 2.0总结 - My iOS Journey</title>
+  <title>八大排序算法 - My iOS Journey</title>
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="第三条：多用字面量语法，少用预制等价的方法。 需要注意 NSMutableArray *arrayM = [@[@"1",@"2",@"3"] mutableCopy]; 第四条：多用类型常量，少用#define预处理指令 #define ANIMATION_DURATION 0.3
-Static &hellip;">
+  <meta name="description" content="插入排序：直接插入排序、希尔排序 1、插入排序 效率： 稳定 空间复杂度O(1) 时间复杂度O(n2) 最差情况：反序，需要移动n*(n-1)/2个元素 最好情况：正序，不需要移动元素 数组在已排序或者是“近似排序”时，插入排序效率的最好情况运行时间为O(n)； &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -19,7 +18,7 @@ Static &hellip;">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://zhaoyan106.github.io/blog/2015/05/13/effective-objective-c-2-dot-0zong-jie">
+  <link rel="canonical" href="http://zhaoyan106.github.io/blog/2016/02/22/ba-da-pai-xu-suan-fa">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="My iOS Journey" type="application/atom+xml">
@@ -69,7 +68,7 @@ Static &hellip;">
   
   <header>
     
-      <h1 class="entry-title">Effective Objective-C 2.0总结</h1>
+      <h1 class="entry-title">八大排序算法</h1>
     
     
       <p class="meta">
@@ -78,66 +77,67 @@ Static &hellip;">
 
 
 
-<time class='entry-date' datetime='2015-05-13T15:32:57+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>3:32 pm</span></time>
+<time class='entry-date' datetime='2016-02-22T10:36:43+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2016</span></span> <span class='time'>10:36 am</span></time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><h6>第三条：多用字面量语法，少用预制等价的方法。</h6>
+<div class="entry-content"><h4>插入排序：直接插入排序、希尔排序</h4>
 
-<p><code>需要注意 NSMutableArray *arrayM = [@[@"1",@"2",@"3"] mutableCopy];</code></p>
+<h6>1、插入排序</h6>
 
-<h6>第四条：多用类型常量，少用#define预处理指令</h6>
+<h6>效率：</h6>
 
-<pre><code>#define ANIMATION_DURATION 0.3
-Static const NSTimeInterval KAnimationDuration = 0.3;
-</code></pre>
+<p>稳定</p>
 
-<h6>第七条：在对象内部尽量直接访问实例变量</h6>
+<p>空间复杂度O(1)</p>
 
-<p><code>在对象内部读取时直接访问实例变量,设置时使用self.（懒加载除外）</code></p>
+<p>时间复杂度O(n2)</p>
 
-<p>  1、如果不使用self.可能会造成copy属性不能实现。</p>
+<p>最差情况：反序，需要移动n*(n-1)/2个元素</p>
 
-<p>  2、KVO不触发</p>
+<p>最好情况：正序，不需要移动元素</p>
 
-<p>  3、直接读取效率较高</p>
+<p>数组在已排序或者是“近似排序”时，插入排序效率的最好情况运行时间为O(n)；</p>
 
-<p>  4、子类可能重写get方法，使用_更安全</p>
+<p>插入排序最坏情况运行时间和平均情况运行时间都为O(n²)。</p>
 
-<h6>第12条：理解消息转发机制 (✨✨✨✨✨✨)</h6>
+<p>通常，插入排序呈现出二次排序算法中的最佳性能。</p>
 
-<p><code>unrecongiezed selector send to instance 0x87,当找不到对应方法时会实现消息转发机制</code></p>
+<p>对于具有较少元素（如n&lt;=15）的列表来说，二次算法十分有效。</p>
 
-<p>对象在收到无法解读的消息后，首先会调用</p>
+<p>在列表已被排序时，插入排序是线性算法O(n)。</p>
 
-<pre><code>+ （BOOL)resolveInstanceMehtod:(SEL)selector
-</code></pre>
+<p>在列表“近似排序”时，插入排序仍然是线性算法。</p>
 
-<h6>第13条：用“方法调配技术” 调试 “黑盒方法”(✨✨✨✨✨✨)</h6>
+<p>在列表的许多元素已位于正确的位置上时，就会出现“近似排序”的条件。</p>
 
-<pre><code>// 交换方法实现
-void method_exchangeImplementations(&lt;#Method m1#&gt;, &lt;#Method m2#&gt;)
-// 获取对象方法
-Method class_getInstanceMethod(&lt;#__unsafe_unretained Class cls#&gt;, &lt;#SEL name#&gt;)
-</code></pre>
+<p>通过使用O(nlog2n)效率的算法（如快速排序）对数组进行部分排序，</p>
 
-<h6>第14条：理解“类对象”的用意</h6>
+<p>然后再进行选择排序，某些高级的排序算法就是这样实现的。
+2、希尔排序</p>
 
-<pre><code>typedef struct objc_object{
-    Class isa;
-} *id;
-</code></pre>
+<h4>选择排序：简单的选择排序、堆排序</h4>
 
-<h6>第15条：多用派发队列，少用同步锁</h6>
+<p>1、选择排序</p>
 
-<p>同步锁效率较低</p>
+<p>2、堆排序</p>
 
-<h6>第16条：多用GCD,少用performSelector系列方法</h6>
+<h4>交换排序：冒泡排序、快速排序</h4>
 
-<p>在使用performSelector方法时容易引起ARC不自动使用，造成内存泄露。</p>
+<p>1、冒泡排序</p>
+
+<p>2、快速排序</p>
+
+<h4>归并排序</h4>
+
+<h4>基数排序</h4>
+
+<p>当n较大，则应采用时间复杂度为O(nlog2n)的排序方法：<code>快速排序</code>、<code>堆排序</code>或<code>归并排序</code></p>
+
+<p><code>快速排序</code>：是目前基于<code>比较</code>的内部排序中被认为是最好的方法，当待排序的关键字是随机分布时，快速排序的平均时间最短；</p>
 </div>
 
 
@@ -153,7 +153,7 @@ Method class_getInstanceMethod(&lt;#__unsafe_unretained Class cls#&gt;, &lt;#SEL
 
 
 
-<time class='entry-date' datetime='2015-05-13T15:32:57+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>3:32 pm</span></time>
+<time class='entry-date' datetime='2016-02-22T10:36:43+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2016</span></span> <span class='time'>10:36 am</span></time>
       
 
 
@@ -187,10 +187,8 @@ Method class_getInstanceMethod(&lt;#__unsafe_unretained Class cls#&gt;, &lt;#SEL
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2015/04/30/best-practices/" title="Previous Post: Best Practices">&laquo; Best Practices</a>
+        <a class="basic-alignment left" href="/blog/2015/12/02/nsinvocationshi-yong/" title="Previous Post: NSInvocation使用">&laquo; NSInvocation使用</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2015/07/03/xiang-mu-cha-jian-hua-cocoapodsde-shi-yong/" title="Next Post: 项目插件化-CocoaPods的使用">项目插件化-CocoaPods的使用 &raquo;</a>
       
     </p>
   </footer>
