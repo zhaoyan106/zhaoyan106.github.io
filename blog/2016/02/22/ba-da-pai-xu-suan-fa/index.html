@@ -9,7 +9,7 @@
   <meta name="author" content="zhao yan">
 
   
-  <meta name="description" content="插入排序：直接插入排序、希尔排序 1、直接插入排序 O(n²) 思路： （1） 设置监视哨r[0]，将待插入纪录的值赋值给r[0]； （2） 设置开始查找的位置j； （3） 在数组中进行搜索，搜索中将第j个纪录后移，直至r[0]≥r[j]为止； （4） 将r[0]插入r[j+1]的位置上。 代码 &hellip;">
+  <meta name="description" content="一、插入排序：直接插入排序、希尔排序 1、直接插入排序 O(n²) 思路： （1） 设置监视哨r[0]，将待插入纪录的值赋值给r[0]； （2） 设置开始查找的位置j； （3） 在数组中进行搜索，搜索中将第j个纪录后移，直至r[0]≥r[j]为止； （4） 将r[0]插入r[j+1]的位置上。 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -84,7 +84,7 @@
   </header>
 
 
-<div class="entry-content"><h4>插入排序：直接插入排序、希尔排序</h4>
+<div class="entry-content"><h4>一、插入排序：直接插入排序、希尔排序</h4>
 
 <h5>1、直接插入排序 O(n²)</h5>
 
@@ -105,6 +105,7 @@
     for (i = 1; i &lt; n; i++) {
         j = i - 1;
         temp = arr[i];
+        // 比temp的数据向后移
         while (j &gt; -1 &amp;&amp; temp &lt; arr[j]) {
             arr[j + 1] = arr[j];
             j--;
@@ -153,8 +154,6 @@
 }
 </code></pre>
 
-<p>3、</p>
-
 <h6>总结：</h6>
 
 <p>稳定</p>
@@ -187,17 +186,158 @@
 
 <h6>2、希尔排序</h6>
 
+<p>思路：
+1.先将整个待排元素序列分割成若干个子序列（由相隔某个“增量”的元素组成的）分别进行直接插入排序</p>
+
+<p>2.然后依次缩减增量再进行排序.</p>
+
+<p>3.待整个序列中的元素基本有序（增量足够小）时,对全体元素进行一次直接插入排序。</p>
+
+<p>因为直接插入排序在元素基本有序的情况下（接近最好情况），效率是很高的，因此希尔排序在时间效率上比前两种方法有较大提高</p>
+
+<pre><code>void shellsort(int a[], int n)
+{
+    int j, gap;
+    for (gap = n / 2; gap &gt; 0; gap /= 2){
+        for (j = gap; j &lt; n; j++){//从数组第gap个元素开始
+            if (a[j] &lt; a[j - gap])//每个元素与自己组内的数据进行直接插入排序
+            {
+                int temp = a[j];
+                int k = j - gap;
+                while (k &gt;= 0 &amp;&amp; a[k] &gt; temp)
+                {
+                    a[k + gap] = a[k];
+                    k -= gap;
+                }
+                a[k + gap] = temp;
+            }
+        }
+    }
+}
+</code></pre>
+
 <h4>选择排序：简单的选择排序、堆排序</h4>
 
 <h6>1、选择排序</h6>
 
+<p>原理：选择排序的思想非常直接，不是要排序么？那好，我就从所有序列中先找到最小的，然后放到第一个位置。之后再看剩余元素中最小的，放到第二个位置……以此类推，就可以完成整个的排序工作了（不稳定）</p>
+
+<pre><code>void selectSort(int arr[],int n){
+    for (int i = 0 ; i &lt; n - 1; i++) {
+        int min = i;
+        for (int j = i + 1; j &lt; n; j++) {
+            if (arr[min] &gt; arr[j]) {
+                min = j;
+            }
+        }
+        int temp = arr[i];
+        arr[i] = arr[min];
+        arr[min] = temp;
+    }
+}
+</code></pre>
+
 <h6>2、堆排序</h6>
 
-<p>交换排序：冒泡排序、快速排序</p>
+<pre><code>void swap(int *a,int *b){
+    int temp = * a;
+    *a = *b ;
+    *b = temp;
+}
+
+void HeapAdjust(int *a,int i,int size)  //调整堆
+{
+    int lchild=2*i + 1;       //i的左孩子节点序号
+    int rchild=2*i + 2;     //i的右孩子节点序号
+    int max=i;            //临时变量
+    if(i&lt;=size/2)          //如果i不是叶节点就不用进行调整
+    {
+        if(lchild&lt;=size&amp;&amp;a[lchild]&gt;a[max])
+        {
+            max=lchild;
+        }
+        if(rchild&lt;=size&amp;&amp;a[rchild]&gt;a[max])
+        {
+            max=rchild;
+        }
+        if(max!=i)
+        {
+            swap(&amp;a[i], &amp;a[max]);
+            HeapAdjust(a,max,size);    //避免调整之后以max为父节点的子树不是堆
+        }
+    }
+}
+
+void BuildHeap(int *a,int size)    //建立堆
+{
+    int i;
+    for(i=size/2;i &gt;= 0;i--)    //非叶节点最大序号值为size/2
+    {
+        HeapAdjust(a,i,size-1);
+    }
+}
+
+void HeapSort(int *a,int size)    //堆排序
+{
+    int i;
+    BuildHeap(a,size);
+    for(i=size-1;i&gt;=0;i--)
+    {
+        //cout&lt;&lt;a[1]&lt;&lt;" ";
+        swap(&amp;a[0],&amp;a[i]);
+
+        //交换堆顶和最后一个元素，即每次将剩余元素中的最大者放到最后面
+        //BuildHeap(a,i-1);        //将余下元素重新建立为大顶堆
+        HeapAdjust(a,0,i-1);      //重新调整堆顶节点成为大顶堆
+    }
+}
+</code></pre>
+
+<h4>交换排序：冒泡排序、快速排序</h4>
 
 <h6>1、冒泡排序</h6>
 
+<pre><code>void bubbleSort(int arr[],int n){
+    for (int i = 0 ; i &lt; n; i++) {
+        for (int j = i+1; j &lt; n-1 ; j++) {
+            int temp = arr[i];
+            if (arr[i] &gt; arr[j]) {
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
+
+    }
+}
+</code></pre>
+
 <h6>2、快速排序</h6>
+
+<pre><code>//快速排序
+void quick_sort(int s[], int l, int r)
+{
+    if (l &lt; r)
+    {
+        //Swap(s[l], s[(l + r) / 2]); //将中间的这个数和第一个数交换 参见注1
+        int i = l, j = r, x = s[l];
+        while (i &lt; j)
+        {
+            while(i &lt; j &amp;&amp; s[j] &gt;= x) // 从右向左找第一个小于x的数
+                j--;  
+            if(i &lt; j) 
+                s[i++] = s[j];
+
+            while(i &lt; j &amp;&amp; s[i] &lt; x) // 从左向右找第一个大于等于x的数
+                i++;  
+            if(i &lt; j) 
+                s[j--] = s[i];
+        }
+        s[i] = x;
+        quick_sort(s, l, i - 1); // 递归调用 
+        quick_sort(s, i + 1, r);
+    }
+}
+</code></pre>
 
 <h4>归并排序</h4>
 
