@@ -341,6 +341,48 @@ void quick_sort(int s[], int l, int r)
 
 <h4>归并排序</h4>
 
+<p>归并排序原理</p>
+
+<p>归并排序具体工作原理如下（假设序列共有n个元素）：</p>
+
+<p>将序列每相邻两个数字进行归并操作（merge)，形成floor(n/2)个序列，排序后每个序列包含两个元素</p>
+
+<p>将上述序列再次归并，形成floor(n/4)个序列，每个序列包含四个元素</p>
+
+<p>重复步骤2，直到所有元素排序完毕</p>
+
+<pre><code>void Merge(int sourceArr[],int tempArr[], int startIndex, int midIndex, int endIndex)
+{
+    int i = startIndex, j=midIndex+1, k = startIndex;
+    while(i!=midIndex+1 &amp;&amp; j!=endIndex+1)
+    {
+        if(sourceArr[i] &gt;= sourceArr[j])
+            tempArr[k++] = sourceArr[j++];
+        else
+            tempArr[k++] = sourceArr[i++];
+    }
+    while(i != midIndex+1)
+        tempArr[k++] = sourceArr[i++];
+    while(j != endIndex+1)
+        tempArr[k++] = sourceArr[j++];
+    for(i=startIndex; i&lt;=endIndex; i++)
+        sourceArr[i] = tempArr[i];
+}
+
+//内部使用递归
+void MergeSort(int sourceArr[], int tempArr[], int startIndex, int endIndex)
+{
+    int midIndex;
+    if(startIndex &lt; endIndex)
+    {
+        midIndex = (startIndex + endIndex) / 2;
+        MergeSort(sourceArr, tempArr, startIndex, midIndex);
+        MergeSort(sourceArr, tempArr, midIndex+1, endIndex);
+        Merge(sourceArr, tempArr, startIndex, midIndex, endIndex);
+    }
+}
+</code></pre>
+
 <h4>基数排序</h4>
 
 <p>当n较大，则应采用时间复杂度为O(nlogn)的排序方法：<code>快速排序、堆排序或归并排序</code></p>
